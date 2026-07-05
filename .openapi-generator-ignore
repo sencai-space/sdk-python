@@ -1,0 +1,5 @@
+# Ručně psané soubory — openapi-generator-cli je při regeneraci (scripts/sdk-generate.sh)
+# nikdy nepřepíše. Viz komentář v scripts/sdk-generate.sh pro generated-vs-hand-written rozhodnutí.
+README.md
+CHANGELOG.md
+.env.example
