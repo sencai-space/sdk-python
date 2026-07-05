@@ -44,7 +44,7 @@ config = Configuration(
 
 with ApiClient(config) as client:
     cloud_instances = CloudInstanceApi(client)
-    result = cloud_instances.list_cloud_instances()
+    result = cloud_instances.find_cloud_instance()
 ```
 
 `Configuration.host` i autentizace jsou vždy konfigurovatelné — balíček neobsahuje žádnou
