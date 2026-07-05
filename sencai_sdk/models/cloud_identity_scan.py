@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -36,7 +36,7 @@ class CloudIdentityScan(BaseModel):
     advanced_protection_users: Optional[StrictInt] = None
     scc_integration_enabled: Optional[StrictBool] = None
     context_aware_policies_count: Optional[StrictInt] = None
-    findings: Optional[Dict[str, Any]] = None
+    findings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     last_scanned_at: Optional[datetime] = None
     __properties: ClassVar[List[str]] = ["organisation", "has_cloud_identity_premium", "context_aware_access_enabled", "advanced_protection_users", "scc_integration_enabled", "context_aware_policies_count", "findings", "last_scanned_at"]
 
@@ -82,6 +82,11 @@ class CloudIdentityScan(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.findings is None and "findings" in self.model_fields_set:
+            _dict['findings'] = None
+
         return _dict
 
     @classmethod

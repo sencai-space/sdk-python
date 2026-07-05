@@ -38,8 +38,8 @@ class CreateCloudResourceRequestData(BaseModel):
     region: StrictStr
     status: StrictStr
     external_id: Optional[StrictStr] = Field(default=None, description="Provider-side identifikátor zdroje (ARN / resource id / bucket name).")
-    spec: Optional[Dict[str, Any]] = Field(default=None, description="Požadovaná kind-specifická konfigurace (ManagedDatabaseSpec / ObjectStorageSpec / CloudConfig).")
-    outputs: Optional[Dict[str, Any]] = Field(default=None, description="Provider výstupy (ip, endpoint, bucket url, …) — bez secretů.")
+    spec: Optional[Any] = Field(default=None, description="Požadovaná kind-specifická konfigurace (ManagedDatabaseSpec / ObjectStorageSpec / CloudConfig).")
+    outputs: Optional[Any] = Field(default=None, description="Provider výstupy (ip, endpoint, bucket url, …) — bez secretů.")
     endpoint: Optional[StrictStr] = Field(default=None, description="DB host:port nebo URL bucketu (bez credentials).")
     connection_secret: Optional[StrictStr] = Field(default=None, description="AES-256-GCM šifrovaný connection string / přístupový secret. NIKDY se nevrací v API plaintext.")
     monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
@@ -47,7 +47,7 @@ class CreateCloudResourceRequestData(BaseModel):
     error_message: Optional[StrictStr] = None
     provisioned_at: Optional[datetime] = None
     terminated_at: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     created_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -152,6 +152,21 @@ class CreateCloudResourceRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of cloud_instance
         if self.cloud_instance:
             _dict['cloud_instance'] = self.cloud_instance.to_dict()
+        # set to None if spec (nullable) is None
+        # and model_fields_set contains the field
+        if self.spec is None and "spec" in self.model_fields_set:
+            _dict['spec'] = None
+
+        # set to None if outputs (nullable) is None
+        # and model_fields_set contains the field
+        if self.outputs is None and "outputs" in self.model_fields_set:
+            _dict['outputs'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

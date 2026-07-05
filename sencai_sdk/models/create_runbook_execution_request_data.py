@@ -34,14 +34,15 @@ class CreateRunbookExecutionRequestData(BaseModel):
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     triggered_by: StrictStr
     status: StrictStr
-    result: Optional[Dict[str, Any]] = Field(default=None, description="Execution result payload from agent. Array of {action, success, output, error}.")
+    result: Optional[Any] = Field(default=None, description="Execution result payload from agent. Array of {action, success, output, error}.")
     dry_run: Optional[StrictBool] = None
     approved_at: Optional[datetime] = None
     expires_at: Optional[datetime] = Field(default=None, description="Approval TTL — execution is auto-cancelled if not approved by this time (now+4h on create when confirmation_required).")
     approval_token: Optional[StrictStr] = None
     agent_target: Optional[StrictStr] = Field(default=None, description="agent_id (documentId) of the agent to execute the runbook on.")
     error_message: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["runbook", "organisation", "triggered_by", "status", "result", "dry_run", "approved_at", "expires_at", "approval_token", "agent_target", "error_message"]
+    triggered_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    __properties: ClassVar[List[str]] = ["runbook", "organisation", "triggered_by", "status", "result", "dry_run", "approved_at", "expires_at", "approval_token", "agent_target", "error_message", "triggered_by_user"]
 
     @field_validator('triggered_by')
     def triggered_by_validate_enum(cls, value):
@@ -102,6 +103,14 @@ class CreateRunbookExecutionRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of triggered_by_user
+        if self.triggered_by_user:
+            _dict['triggered_by_user'] = self.triggered_by_user.to_dict()
+        # set to None if result (nullable) is None
+        # and model_fields_set contains the field
+        if self.result is None and "result" in self.model_fields_set:
+            _dict['result'] = None
+
         return _dict
 
     @classmethod
@@ -124,7 +133,8 @@ class CreateRunbookExecutionRequestData(BaseModel):
             "expires_at": obj.get("expires_at"),
             "approval_token": obj.get("approval_token"),
             "agent_target": obj.get("agent_target"),
-            "error_message": obj.get("error_message")
+            "error_message": obj.get("error_message"),
+            "triggered_by_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["triggered_by_user"]) if obj.get("triggered_by_user") is not None else None
         })
         return _obj
 

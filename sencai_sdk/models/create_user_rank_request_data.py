@@ -33,7 +33,7 @@ class CreateUserRankRequestData(BaseModel):
     user: CreateAccessReviewRequestDataReviewer
     xp_total: StrictInt
     rank_level: StrictStr
-    badges: Optional[Dict[str, Any]] = Field(default=None, description="Array of { badge_code, awarded_at } — badge_code references badge-definition.code")
+    badges: Optional[Any] = Field(default=None, description="Array of { badge_code, awarded_at } — badge_code references badge-definition.code")
     automation_score: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Latest automation-score snapshot; historical values live in gamification-event, not here")
     current_streak_days: StrictInt
     longest_streak_days: StrictInt
@@ -89,6 +89,11 @@ class CreateUserRankRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of user
         if self.user:
             _dict['user'] = self.user.to_dict()
+        # set to None if badges (nullable) is None
+        # and model_fields_set contains the field
+        if self.badges is None and "badges" in self.model_fields_set:
+            _dict['badges'] = None
+
         return _dict
 
     @classmethod

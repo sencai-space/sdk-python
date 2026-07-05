@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.agent_policy import AgentPolicy
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,82 @@ class FindAgentPolicy200ResponseDataInner(BaseModel):
     """
     FindAgentPolicy200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=200)]
+    organisation: CreateAccessReviewRequestDataReviewer
+    scope_type: StrictStr = Field(description="Determines what scope_value refers to: org = org-level policy, environment = named env (dev/prod/…), action_type = action type pattern.")
+    scope_value: Optional[StrictStr] = Field(default=None, description="The scoped value: org documentId, environment name, or action type pattern. Null means applies to all within the org.")
+    autonomy_level: StrictStr = Field(description="L0=observe only (no writes), L1=suggest only (no writes), L2=execute with approval, L3=auto-execute within policy.")
+    freeze_windows: Optional[Any] = Field(default=None, description="Array of time windows where all agent actions are blocked. Format: [{name: string, start: 'HH:MM', end: 'HH:MM', days: number[], timezone: string}]. days: 0=Sunday…6=Saturday.")
+    max_blast_radius: Optional[StrictStr] = Field(default=None, description="Maximum scope of impact a single agent action may have under this policy.")
+    allowed_action_types: Optional[Any] = Field(default=None, description="Explicit allowlist of action type strings. Null = all action types are allowed within the autonomy_level.")
+    blocked_action_types: Optional[Any] = Field(default=None, description="Explicit blocklist of action type strings. Takes precedence over allowed_action_types.")
+    is_active: StrictBool
+    created_by_agent: Optional[StrictBool] = Field(default=None, description="True when this policy was created by an agent. Used by no-self-policy-mutation guard to reject agent-initiated mutations.")
+    policy_document: Optional[Any] = Field(default=None, description="Legacy OPA-compatible policy document. Format: { allow_actions: string[], deny_actions: string[], conditions: { max_instances_per_day?: number, allowed_regions?: string[], ... } }")
+    scope: Optional[StrictStr] = Field(default=None, description="Legacy: Policy specificity scope for OPA matching priority (per-action > per-env > per-provider > global).")
+    provider: Optional[StrictStr] = None
+    environment: Optional[StrictStr] = None
+    action_pattern: Optional[StrictStr] = Field(default=None, description="Legacy: Glob-style pattern matched against the requested action. '*' matches all.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AgentPolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "organisation", "scope_type", "scope_value", "autonomy_level", "freeze_windows", "max_blast_radius", "allowed_action_types", "blocked_action_types", "is_active", "created_by_agent", "policy_document", "scope", "provider", "environment", "action_pattern", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('scope_type')
+    def scope_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['org', 'environment', 'action_type']):
+            raise ValueError("must be one of enum values ('org', 'environment', 'action_type')")
+        return value
+
+    @field_validator('autonomy_level')
+    def autonomy_level_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['L0', 'L1', 'L2', 'L3']):
+            raise ValueError("must be one of enum values ('L0', 'L1', 'L2', 'L3')")
+        return value
+
+    @field_validator('max_blast_radius')
+    def max_blast_radius_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['single_resource', 'service_tier', 'availability_zone', 'region']):
+            raise ValueError("must be one of enum values ('single_resource', 'service_tier', 'availability_zone', 'region')")
+        return value
+
+    @field_validator('scope')
+    def scope_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['global', 'per-provider', 'per-env', 'per-action']):
+            raise ValueError("must be one of enum values ('global', 'per-provider', 'per-env', 'per-action')")
+        return value
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws', 'azure', 'gcp', 'hetzner', 'all']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'hetzner', 'all')")
+        return value
+
+    @field_validator('environment')
+    def environment_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['dev', 'staging', 'prod', 'sandbox', 'all']):
+            raise ValueError("must be one of enum values ('dev', 'staging', 'prod', 'sandbox', 'all')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +147,29 @@ class FindAgentPolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if freeze_windows (nullable) is None
+        # and model_fields_set contains the field
+        if self.freeze_windows is None and "freeze_windows" in self.model_fields_set:
+            _dict['freeze_windows'] = None
+
+        # set to None if allowed_action_types (nullable) is None
+        # and model_fields_set contains the field
+        if self.allowed_action_types is None and "allowed_action_types" in self.model_fields_set:
+            _dict['allowed_action_types'] = None
+
+        # set to None if blocked_action_types (nullable) is None
+        # and model_fields_set contains the field
+        if self.blocked_action_types is None and "blocked_action_types" in self.model_fields_set:
+            _dict['blocked_action_types'] = None
+
+        # set to None if policy_document (nullable) is None
+        # and model_fields_set contains the field
+        if self.policy_document is None and "policy_document" in self.model_fields_set:
+            _dict['policy_document'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +187,24 @@ class FindAgentPolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "scope_type": obj.get("scope_type"),
+            "scope_value": obj.get("scope_value"),
+            "autonomy_level": obj.get("autonomy_level"),
+            "freeze_windows": obj.get("freeze_windows"),
+            "max_blast_radius": obj.get("max_blast_radius"),
+            "allowed_action_types": obj.get("allowed_action_types"),
+            "blocked_action_types": obj.get("blocked_action_types"),
+            "is_active": obj.get("is_active"),
+            "created_by_agent": obj.get("created_by_agent"),
+            "policy_document": obj.get("policy_document"),
+            "scope": obj.get("scope"),
+            "provider": obj.get("provider"),
+            "environment": obj.get("environment"),
+            "action_pattern": obj.get("action_pattern"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AgentPolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -21,7 +21,6 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.audit_anchor import AuditAnchor
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,17 @@ class FindAuditAnchor200ResponseDataInner(BaseModel):
     """
     FindAuditAnchor200ResponseDataInner
     """ # noqa: E501
+    anchor_hash: StrictStr
+    signature: StrictStr
+    public_key_fingerprint: StrictStr
+    anchored_entry_id: StrictStr
+    entries_count: Optional[StrictInt] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AuditAnchor] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["anchor_hash", "signature", "public_key_fingerprint", "anchored_entry_id", "entries_count", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +80,6 @@ class FindAuditAnchor200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +97,13 @@ class FindAuditAnchor200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "anchor_hash": obj.get("anchor_hash"),
+            "signature": obj.get("signature"),
+            "public_key_fingerprint": obj.get("public_key_fingerprint"),
+            "anchored_entry_id": obj.get("anchored_entry_id"),
+            "entries_count": obj.get("entries_count"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AuditAnchor.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

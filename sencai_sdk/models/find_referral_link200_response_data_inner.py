@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.referral_link import ReferralLink
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,31 @@ class FindReferralLink200ResponseDataInner(BaseModel):
     """
     FindReferralLink200ResponseDataInner
     """ # noqa: E501
+    code: StrictStr
+    reward_type: Optional[StrictStr] = None
+    reward_value: Optional[Union[StrictFloat, StrictInt]] = None
+    reward_currency: Optional[StrictStr] = None
+    uses_count: Optional[StrictInt] = None
+    max_uses: Optional[StrictInt] = None
+    active: Optional[StrictBool] = None
+    expires_at: Optional[datetime] = None
+    creator_org: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ReferralLink] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["code", "reward_type", "reward_value", "reward_currency", "uses_count", "max_uses", "active", "expires_at", "creator_org", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('reward_type')
+    def reward_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['credit', 'discount', 'trial_extension']):
+            raise ValueError("must be one of enum values ('credit', 'discount', 'trial_extension')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +95,9 @@ class FindReferralLink200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of creator_org
+        if self.creator_org:
+            _dict['creator_org'] = self.creator_org.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +115,17 @@ class FindReferralLink200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "code": obj.get("code"),
+            "reward_type": obj.get("reward_type"),
+            "reward_value": obj.get("reward_value"),
+            "reward_currency": obj.get("reward_currency"),
+            "uses_count": obj.get("uses_count"),
+            "max_uses": obj.get("max_uses"),
+            "active": obj.get("active"),
+            "expires_at": obj.get("expires_at"),
+            "creator_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["creator_org"]) if obj.get("creator_org") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ReferralLink.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

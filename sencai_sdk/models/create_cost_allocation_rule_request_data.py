@@ -34,7 +34,7 @@ class CreateCostAllocationRuleRequestData(BaseModel):
     provider: StrictStr = Field(description="Cloud provider this rule applies to. 'all' matches any provider.")
     resource_type: Optional[StrictStr] = Field(default=None, description="Matches cost-record service field (e.g. 'NatGateway', 'LoadBalancer', 'all'). Empty or 'all' = matches any.")
     algorithm: StrictStr = Field(description="Split algorithm. 'even' = equal split; 'custom' = use weights JSON; 'usage-weighted' = usage metric split (v1: treated as even).")
-    weights: Optional[Dict[str, Any]] = Field(default=None, description="For custom algorithm: { \"team-a\": 40, \"team-b\": 35, \"team-c\": 25 } — percentages summing to 100.")
+    weights: Optional[Any] = Field(default=None, description="For custom algorithm: { \"team-a\": 40, \"team-b\": 35, \"team-c\": 25 } — percentages summing to 100.")
     allocation_tag_key: Optional[StrictStr] = Field(default=None, description="Which tag key to group cost recipients by (default: 'cost-center').")
     effective_from: date = Field(description="Date from which this rule is effective.")
     is_active: Optional[StrictBool] = Field(default=None, description="When false the rule is soft-disabled without deleting it.")
@@ -99,6 +99,11 @@ class CreateCostAllocationRuleRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if weights (nullable) is None
+        # and model_fields_set contains the field
+        if self.weights is None and "weights" in self.model_fields_set:
+            _dict['weights'] = None
+
         return _dict
 
     @classmethod

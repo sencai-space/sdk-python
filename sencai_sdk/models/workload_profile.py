@@ -33,8 +33,8 @@ class WorkloadProfile(BaseModel):
     instance_id: Optional[StrictStr] = Field(default=None, description="documentId of the source cloud-instance record")
     instance_name: Optional[StrictStr] = None
     profile_type: StrictStr
-    peak_hours: Optional[Dict[str, Any]] = Field(default=None, description="Array of hour integers (0-23) when CPU/memory is high")
-    idle_hours: Optional[Dict[str, Any]] = Field(default=None, description="Array of hour integers (0-23) when instance is underutilised")
+    peak_hours: Optional[Any] = Field(default=None, description="Array of hour integers (0-23) when CPU/memory is high")
+    idle_hours: Optional[Any] = Field(default=None, description="Array of hour integers (0-23) when instance is underutilised")
     avg_cpu_pct: Optional[Union[StrictFloat, StrictInt]] = None
     avg_memory_pct: Optional[Union[StrictFloat, StrictInt]] = None
     current_instance_type: Optional[StrictStr] = Field(default=None, description="Current instance type e.g. m5.2xlarge")
@@ -107,6 +107,16 @@ class WorkloadProfile(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if peak_hours (nullable) is None
+        # and model_fields_set contains the field
+        if self.peak_hours is None and "peak_hours" in self.model_fields_set:
+            _dict['peak_hours'] = None
+
+        # set to None if idle_hours (nullable) is None
+        # and model_fields_set contains the field
+        if self.idle_hours is None and "idle_hours" in self.model_fields_set:
+            _dict['idle_hours'] = None
+
         return _dict
 
     @classmethod

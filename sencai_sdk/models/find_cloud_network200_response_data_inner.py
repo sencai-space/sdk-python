@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_network import CloudNetwork
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,40 @@ class FindCloudNetwork200ResponseDataInner(BaseModel):
     """
     FindCloudNetwork200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    provider: StrictStr
+    region: StrictStr
+    cidr_block: Optional[StrictStr] = None
+    state: Optional[StrictStr] = None
+    external_id: Optional[StrictStr] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    credential: Optional[CreateAccessReviewRequestDataReviewer] = None
+    subnets: Optional[CreateAccessReviewRequestDataReviewer] = None
+    security_groups: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudNetwork] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "provider", "region", "cidr_block", "state", "external_id", "metadata", "organisation", "credential", "subnets", "security_groups", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'vultr']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'vultr')")
+        return value
+
+    @field_validator('state')
+    def state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'available', 'deleting', 'deleted', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'available', 'deleting', 'deleted', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +104,23 @@ class FindCloudNetwork200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of credential
+        if self.credential:
+            _dict['credential'] = self.credential.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of subnets
+        if self.subnets:
+            _dict['subnets'] = self.subnets.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of security_groups
+        if self.security_groups:
+            _dict['security_groups'] = self.security_groups.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +138,19 @@ class FindCloudNetwork200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "provider": obj.get("provider"),
+            "region": obj.get("region"),
+            "cidr_block": obj.get("cidr_block"),
+            "state": obj.get("state"),
+            "external_id": obj.get("external_id"),
+            "metadata": obj.get("metadata"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "credential": CreateAccessReviewRequestDataReviewer.from_dict(obj["credential"]) if obj.get("credential") is not None else None,
+            "subnets": CreateAccessReviewRequestDataReviewer.from_dict(obj["subnets"]) if obj.get("subnets") is not None else None,
+            "security_groups": CreateAccessReviewRequestDataReviewer.from_dict(obj["security_groups"]) if obj.get("security_groups") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudNetwork.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

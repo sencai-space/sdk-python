@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -36,7 +36,7 @@ class CreateCloudSubnetRequestData(BaseModel):
     route_table_id: Optional[StrictStr] = None
     external_id: Optional[StrictStr] = None
     state: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     network: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "cidr_block", "availability_zone", "is_public", "route_table_id", "external_id", "state", "metadata", "network", "organisation"]
@@ -96,6 +96,11 @@ class CreateCloudSubnetRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

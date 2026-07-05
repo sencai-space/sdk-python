@@ -21,7 +21,7 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.scim_token import ScimToken
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,18 @@ class FindScimToken200ResponseDataInner(BaseModel):
     """
     FindScimToken200ResponseDataInner
     """ # noqa: E501
+    token_hash: StrictStr
+    label: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    last_used_at: Optional[datetime] = None
+    revoked_at: Optional[datetime] = None
+    expires_at: datetime
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ScimToken] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["token_hash", "label", "organisation", "last_used_at", "revoked_at", "expires_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +82,9 @@ class FindScimToken200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +102,14 @@ class FindScimToken200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "token_hash": obj.get("token_hash"),
+            "label": obj.get("label"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "last_used_at": obj.get("last_used_at"),
+            "revoked_at": obj.get("revoked_at"),
+            "expires_at": obj.get("expires_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ScimToken.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

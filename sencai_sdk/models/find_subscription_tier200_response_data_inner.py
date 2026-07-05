@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.subscription_tier import SubscriptionTier
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,37 @@ class FindSubscriptionTier200ResponseDataInner(BaseModel):
     """
     FindSubscriptionTier200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    slug: StrictStr
+    max_managed_hosts: Optional[StrictInt] = None
+    max_organisations: Optional[StrictInt] = None
+    max_cloud_instances: Optional[StrictInt] = None
+    price_monthly_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    price_yearly_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    features: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    is_free_tier: Optional[StrictBool] = None
+    is_active: Optional[StrictBool] = None
+    trial_days: Optional[StrictInt] = None
+    status: Optional[StrictStr] = None
+    activated_at: Optional[datetime] = None
+    grace_expires_at: Optional[datetime] = None
+    suspended_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SubscriptionTier] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "slug", "max_managed_hosts", "max_organisations", "max_cloud_instances", "price_monthly_usd", "price_yearly_usd", "features", "is_free_tier", "is_active", "trial_days", "status", "activated_at", "grace_expires_at", "suspended_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'active', 'grace_period', 'suspended', 'cancelled']):
+            raise ValueError("must be one of enum values ('draft', 'active', 'grace_period', 'suspended', 'cancelled')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +100,11 @@ class FindSubscriptionTier200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if features (nullable) is None
+        # and model_fields_set contains the field
+        if self.features is None and "features" in self.model_fields_set:
+            _dict['features'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +122,23 @@ class FindSubscriptionTier200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "slug": obj.get("slug"),
+            "max_managed_hosts": obj.get("max_managed_hosts"),
+            "max_organisations": obj.get("max_organisations"),
+            "max_cloud_instances": obj.get("max_cloud_instances"),
+            "price_monthly_usd": obj.get("price_monthly_usd"),
+            "price_yearly_usd": obj.get("price_yearly_usd"),
+            "features": obj.get("features"),
+            "is_free_tier": obj.get("is_free_tier"),
+            "is_active": obj.get("is_active"),
+            "trial_days": obj.get("trial_days"),
+            "status": obj.get("status"),
+            "activated_at": obj.get("activated_at"),
+            "grace_expires_at": obj.get("grace_expires_at"),
+            "suspended_at": obj.get("suspended_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SubscriptionTier.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

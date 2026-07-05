@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -33,7 +33,7 @@ class CreateAgentUpdatePolicyRequestData(BaseModel):
     binary_sha256: Optional[StrictStr] = None
     cosign_signature: Optional[StrictStr] = None
     sbom_url: Optional[StrictStr] = None
-    staged_rollout: Optional[Dict[str, Any]] = None
+    staged_rollout: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     current_ring: Optional[StrictStr] = None
     healthcheck_failures: Optional[StrictInt] = None
     auto_pause_threshold: Optional[StrictInt] = None
@@ -101,6 +101,11 @@ class CreateAgentUpdatePolicyRequestData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if staged_rollout (nullable) is None
+        # and model_fields_set contains the field
+        if self.staged_rollout is None and "staged_rollout" in self.model_fields_set:
+            _dict['staged_rollout'] = None
+
         return _dict
 
     @classmethod

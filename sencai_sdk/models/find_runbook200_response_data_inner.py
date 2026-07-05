@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.runbook import Runbook
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,35 @@ class FindRunbook200ResponseDataInner(BaseModel):
     """
     FindRunbook200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    description: Optional[StrictStr] = None
+    trigger_type: StrictStr
+    trigger_condition: Optional[Any] = Field(default=None, description="Alert filter condition, e.g. {metric: 'cpu_percent', operator: '>', threshold: 90}. Relevant only when trigger_type=alert.")
+    actions: Optional[Any] = Field(description="Ordered array of actions: [{type: string, params: {}}]. Supported types: restart_service, clear_disk_space, kill_process, run_approved_script.")
+    confirmation_required: Optional[StrictBool] = None
+    cooldown_minutes: Optional[StrictInt] = Field(default=None, description="Minimum minutes between executions of this runbook for a given organisation.")
+    is_active: Optional[StrictBool] = None
+    last_triggered_at: Optional[datetime] = None
+    alert_name: Optional[Annotated[str, Field(strict=True, max_length=120)]] = Field(default=None, description="Alertmanager alertname label that triggers this runbook (e.g. HighErrorRate). Leave blank to disable alert-based triggering.")
+    auto_trigger: Optional[StrictBool] = Field(default=None, description="When true, receiving an Alertmanager alert matching alert_name will automatically log this runbook as triggered.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    version: Optional[StrictInt] = Field(default=None, description="Version number — incremented by createVersion action.")
+    parent_version_id: Optional[StrictStr] = Field(default=None, description="documentId of the runbook this version was forked from (null for the root version).")
+    is_draft: Optional[StrictBool] = Field(default=None, description="Draft flag — set to true when created via createVersion until promoted.")
+    version_notes: Optional[StrictStr] = Field(default=None, description="Human-readable notes describing what changed in this version.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Runbook] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "trigger_type", "trigger_condition", "actions", "confirmation_required", "cooldown_minutes", "is_active", "last_triggered_at", "alert_name", "auto_trigger", "organisation", "version", "parent_version_id", "is_draft", "version_notes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('trigger_type')
+    def trigger_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['manual', 'alert']):
+            raise ValueError("must be one of enum values ('manual', 'alert')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +100,19 @@ class FindRunbook200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if trigger_condition (nullable) is None
+        # and model_fields_set contains the field
+        if self.trigger_condition is None and "trigger_condition" in self.model_fields_set:
+            _dict['trigger_condition'] = None
+
+        # set to None if actions (nullable) is None
+        # and model_fields_set contains the field
+        if self.actions is None and "actions" in self.model_fields_set:
+            _dict['actions'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +130,24 @@ class FindRunbook200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "trigger_type": obj.get("trigger_type"),
+            "trigger_condition": obj.get("trigger_condition"),
+            "actions": obj.get("actions"),
+            "confirmation_required": obj.get("confirmation_required"),
+            "cooldown_minutes": obj.get("cooldown_minutes"),
+            "is_active": obj.get("is_active"),
+            "last_triggered_at": obj.get("last_triggered_at"),
+            "alert_name": obj.get("alert_name"),
+            "auto_trigger": obj.get("auto_trigger"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "version": obj.get("version"),
+            "parent_version_id": obj.get("parent_version_id"),
+            "is_draft": obj.get("is_draft"),
+            "version_notes": obj.get("version_notes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Runbook.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

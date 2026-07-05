@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.org_operation import OrgOperation
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,34 @@ class FindOrgOperation200ResponseDataInner(BaseModel):
     """
     FindOrgOperation200ResponseDataInner
     """ # noqa: E501
+    operation_type: StrictStr
+    source_org_id: StrictStr = Field(description="documentId of the source organisation")
+    target_org_id: Optional[StrictStr] = Field(default=None, description="documentId of the target (merge) or newly created (split) organisation")
+    status: StrictStr
+    config: Optional[Any] = Field(default=None, description="Merge: {}. Split: { member_ids: string[], instance_ids: string[] }")
+    error_message: Optional[StrictStr] = None
+    initiated_by: Optional[StrictStr] = Field(default=None, description="Email of the user who initiated the operation")
+    completed_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[OrgOperation] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["operation_type", "source_org_id", "target_org_id", "status", "config", "error_message", "initiated_by", "completed_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('operation_type')
+    def operation_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['merge', 'split']):
+            raise ValueError("must be one of enum values ('merge', 'split')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'in_progress', 'completed', 'failed', 'rolled_back']):
+            raise ValueError("must be one of enum values ('pending', 'in_progress', 'completed', 'failed', 'rolled_back')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +97,11 @@ class FindOrgOperation200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if config (nullable) is None
+        # and model_fields_set contains the field
+        if self.config is None and "config" in self.model_fields_set:
+            _dict['config'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +119,16 @@ class FindOrgOperation200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "operation_type": obj.get("operation_type"),
+            "source_org_id": obj.get("source_org_id"),
+            "target_org_id": obj.get("target_org_id"),
+            "status": obj.get("status"),
+            "config": obj.get("config"),
+            "error_message": obj.get("error_message"),
+            "initiated_by": obj.get("initiated_by"),
+            "completed_at": obj.get("completed_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": OrgOperation.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

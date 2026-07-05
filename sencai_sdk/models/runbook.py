@@ -34,8 +34,8 @@ class Runbook(BaseModel):
     name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
     description: Optional[StrictStr] = None
     trigger_type: StrictStr
-    trigger_condition: Optional[Dict[str, Any]] = Field(default=None, description="Alert filter condition, e.g. {metric: 'cpu_percent', operator: '>', threshold: 90}. Relevant only when trigger_type=alert.")
-    actions: Dict[str, Any] = Field(description="Ordered array of actions: [{type: string, params: {}}]. Supported types: restart_service, clear_disk_space, kill_process, run_approved_script.")
+    trigger_condition: Optional[Any] = Field(default=None, description="Alert filter condition, e.g. {metric: 'cpu_percent', operator: '>', threshold: 90}. Relevant only when trigger_type=alert.")
+    actions: Optional[Any] = Field(description="Ordered array of actions: [{type: string, params: {}}]. Supported types: restart_service, clear_disk_space, kill_process, run_approved_script.")
     confirmation_required: Optional[StrictBool] = None
     cooldown_minutes: Optional[StrictInt] = Field(default=None, description="Minimum minutes between executions of this runbook for a given organisation.")
     is_active: Optional[StrictBool] = None
@@ -98,6 +98,16 @@ class Runbook(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if trigger_condition (nullable) is None
+        # and model_fields_set contains the field
+        if self.trigger_condition is None and "trigger_condition" in self.model_fields_set:
+            _dict['trigger_condition'] = None
+
+        # set to None if actions (nullable) is None
+        # and model_fields_set contains the field
+        if self.actions is None and "actions" in self.model_fields_set:
+            _dict['actions'] = None
+
         return _dict
 
     @classmethod

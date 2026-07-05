@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.edge_cache_rule import EdgeCacheRule
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,41 @@ class FindEdgeCacheRule200ResponseDataInner(BaseModel):
     """
     FindEdgeCacheRule200ResponseDataInner
     """ # noqa: E501
+    path_pattern: StrictStr = Field(description="URL path pattern matched by this rule, e.g. /static/* or /api/*.")
+    ttl_seconds: Optional[StrictInt] = Field(default=None, description="Cache TTL in seconds. 0 = bypass (do not cache).")
+    query_string_caching: Optional[StrictStr] = Field(default=None, description="Controls how query strings affect the cache key.")
+    cookie_forwarding: Optional[StrictStr] = Field(default=None, description="Controls whether cookies are forwarded to the origin.")
+    compress: Optional[StrictBool] = Field(default=None, description="Whether the CDN should compress eligible responses (gzip/Brotli).")
+    allowed_methods: Optional[Any] = Field(default=None, description="HTTP methods allowed through this behavior (string[]), e.g. [\"GET\",\"HEAD\"].")
+    is_active: Optional[StrictBool] = Field(default=None, description="Whether this rule is currently applied to the distribution.")
+    cdn_distribution: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[EdgeCacheRule] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["path_pattern", "ttl_seconds", "query_string_caching", "cookie_forwarding", "compress", "allowed_methods", "is_active", "cdn_distribution", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('query_string_caching')
+    def query_string_caching_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['all', 'none', 'whitelist']):
+            raise ValueError("must be one of enum values ('all', 'none', 'whitelist')")
+        return value
+
+    @field_validator('cookie_forwarding')
+    def cookie_forwarding_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['all', 'none', 'whitelist']):
+            raise ValueError("must be one of enum values ('all', 'none', 'whitelist')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +105,17 @@ class FindEdgeCacheRule200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cdn_distribution
+        if self.cdn_distribution:
+            _dict['cdn_distribution'] = self.cdn_distribution.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if allowed_methods (nullable) is None
+        # and model_fields_set contains the field
+        if self.allowed_methods is None and "allowed_methods" in self.model_fields_set:
+            _dict['allowed_methods'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +133,17 @@ class FindEdgeCacheRule200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "path_pattern": obj.get("path_pattern"),
+            "ttl_seconds": obj.get("ttl_seconds"),
+            "query_string_caching": obj.get("query_string_caching"),
+            "cookie_forwarding": obj.get("cookie_forwarding"),
+            "compress": obj.get("compress"),
+            "allowed_methods": obj.get("allowed_methods"),
+            "is_active": obj.get("is_active"),
+            "cdn_distribution": CreateAccessReviewRequestDataReviewer.from_dict(obj["cdn_distribution"]) if obj.get("cdn_distribution") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": EdgeCacheRule.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

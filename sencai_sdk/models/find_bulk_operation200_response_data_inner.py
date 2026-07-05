@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.bulk_operation import BulkOperation
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,40 @@ class FindBulkOperation200ResponseDataInner(BaseModel):
     """
     FindBulkOperation200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr = Field(description="Human-readable operation name, e.g. 'Apply security patches to web tier'")
+    operation_type: StrictStr
+    target_resource_type: Optional[StrictStr] = Field(default=None, description="e.g. cloud-instance, fleet-agent")
+    target_filters: Optional[Any] = Field(default=None, description="Filter criteria for targeting resources, e.g. {tags: ['web-tier'], providers: ['hetzner']}")
+    dry_run_result: Optional[Any] = Field(default=None, description="Preview result: {affected_count, affected_tenants: [{org_name, resource_count}], skipped_tenants: [{org_name, reason}]}")
+    execution_result: Optional[Any] = Field(default=None, description="Per-tenant results after execution")
+    status: StrictStr
+    tenant_count: Optional[StrictInt] = Field(default=None, description="Number of targeted managed tenants")
+    resource_count: Optional[StrictInt] = Field(default=None, description="Total resources targeted")
+    skipped_count: Optional[StrictInt] = Field(default=None, description="Tenants skipped due to missing capability")
+    operator_org: Optional[CreateAccessReviewRequestDataReviewer] = None
+    executed_by: Optional[CreateAccessReviewRequestDataReviewer] = None
+    executed_at: Optional[datetime] = None
+    payload: Optional[Any] = Field(default=None, description="Operation-specific parameters (patch version, tag key/value, etc.)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BulkOperation] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "operation_type", "target_resource_type", "target_filters", "dry_run_result", "execution_result", "status", "tenant_count", "resource_count", "skipped_count", "operator_org", "executed_by", "executed_at", "payload", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('operation_type')
+    def operation_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['patch', 'tag_apply', 'security_group_update', 'policy_apply']):
+            raise ValueError("must be one of enum values ('patch', 'tag_apply', 'security_group_update', 'policy_apply')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['draft', 'dry_running', 'dry_ran', 'executing', 'completed', 'failed', 'cancelled']):
+            raise ValueError("must be one of enum values ('draft', 'dry_running', 'dry_ran', 'executing', 'completed', 'failed', 'cancelled')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +104,32 @@ class FindBulkOperation200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of operator_org
+        if self.operator_org:
+            _dict['operator_org'] = self.operator_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of executed_by
+        if self.executed_by:
+            _dict['executed_by'] = self.executed_by.to_dict()
+        # set to None if target_filters (nullable) is None
+        # and model_fields_set contains the field
+        if self.target_filters is None and "target_filters" in self.model_fields_set:
+            _dict['target_filters'] = None
+
+        # set to None if dry_run_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.dry_run_result is None and "dry_run_result" in self.model_fields_set:
+            _dict['dry_run_result'] = None
+
+        # set to None if execution_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.execution_result is None and "execution_result" in self.model_fields_set:
+            _dict['execution_result'] = None
+
+        # set to None if payload (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload is None and "payload" in self.model_fields_set:
+            _dict['payload'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +147,22 @@ class FindBulkOperation200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "operation_type": obj.get("operation_type"),
+            "target_resource_type": obj.get("target_resource_type"),
+            "target_filters": obj.get("target_filters"),
+            "dry_run_result": obj.get("dry_run_result"),
+            "execution_result": obj.get("execution_result"),
+            "status": obj.get("status"),
+            "tenant_count": obj.get("tenant_count"),
+            "resource_count": obj.get("resource_count"),
+            "skipped_count": obj.get("skipped_count"),
+            "operator_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["operator_org"]) if obj.get("operator_org") is not None else None,
+            "executed_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["executed_by"]) if obj.get("executed_by") is not None else None,
+            "executed_at": obj.get("executed_at"),
+            "payload": obj.get("payload"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BulkOperation.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -39,8 +39,8 @@ class WorkspaceWatchdogEvent(BaseModel):
     resource: Optional[StrictStr] = None
     ip_address: Optional[StrictStr] = None
     user_agent: Optional[StrictStr] = None
-    raw_event: Optional[Dict[str, Any]] = None
-    event_data: Optional[Dict[str, Any]] = None
+    raw_event: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    event_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     status: StrictStr
     notes: Optional[StrictStr] = None
     occurred_at: datetime
@@ -113,6 +113,16 @@ class WorkspaceWatchdogEvent(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of workspace_tenant
         if self.workspace_tenant:
             _dict['workspace_tenant'] = self.workspace_tenant.to_dict()
+        # set to None if raw_event (nullable) is None
+        # and model_fields_set contains the field
+        if self.raw_event is None and "raw_event" in self.model_fields_set:
+            _dict['raw_event'] = None
+
+        # set to None if event_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.event_data is None and "event_data" in self.model_fields_set:
+            _dict['event_data'] = None
+
         return _dict
 
     @classmethod

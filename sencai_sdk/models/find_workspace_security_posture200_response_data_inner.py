@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.workspace_security_posture import WorkspaceSecurityPosture
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,22 @@ class FindWorkspaceSecurityPosture200ResponseDataInner(BaseModel):
     """
     FindWorkspaceSecurityPosture200ResponseDataInner
     """ # noqa: E501
+    organisation: CreateAccessReviewRequestDataReviewer
+    total_users: Optional[StrictInt] = None
+    users_without_2sv: Optional[StrictInt] = None
+    users_with_weak_password: Optional[StrictInt] = None
+    unreviewed_oauth_apps: Optional[StrictInt] = None
+    oauth_apps: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    suspicious_logins_24h: Optional[StrictInt] = None
+    admin_accounts_without_2sv: Optional[StrictInt] = None
+    last_assessed_at: datetime
+    posture_score: Optional[Union[StrictFloat, StrictInt]] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WorkspaceSecurityPosture] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "total_users", "users_without_2sv", "users_with_weak_password", "unreviewed_oauth_apps", "oauth_apps", "suspicious_logins_24h", "admin_accounts_without_2sv", "last_assessed_at", "posture_score", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +86,14 @@ class FindWorkspaceSecurityPosture200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if oauth_apps (nullable) is None
+        # and model_fields_set contains the field
+        if self.oauth_apps is None and "oauth_apps" in self.model_fields_set:
+            _dict['oauth_apps'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +111,18 @@ class FindWorkspaceSecurityPosture200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "total_users": obj.get("total_users"),
+            "users_without_2sv": obj.get("users_without_2sv"),
+            "users_with_weak_password": obj.get("users_with_weak_password"),
+            "unreviewed_oauth_apps": obj.get("unreviewed_oauth_apps"),
+            "oauth_apps": obj.get("oauth_apps"),
+            "suspicious_logins_24h": obj.get("suspicious_logins_24h"),
+            "admin_accounts_without_2sv": obj.get("admin_accounts_without_2sv"),
+            "last_assessed_at": obj.get("last_assessed_at"),
+            "posture_score": obj.get("posture_score"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WorkspaceSecurityPosture.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

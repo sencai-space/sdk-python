@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.webhook_delivery import WebhookDelivery
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,33 @@ class FindWebhookDelivery200ResponseDataInner(BaseModel):
     """
     FindWebhookDelivery200ResponseDataInner
     """ # noqa: E501
+    endpoint_url: StrictStr
+    event_type: StrictStr
+    payload_hash: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    response_code: Optional[StrictInt] = None
+    response_body: Optional[StrictStr] = None
+    attempt_count: Optional[StrictInt] = None
+    last_attempt_at: Optional[datetime] = None
+    next_retry_at: Optional[datetime] = None
+    error_message: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WebhookDelivery] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["endpoint_url", "event_type", "payload_hash", "status", "response_code", "response_body", "attempt_count", "last_attempt_at", "next_retry_at", "error_message", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'delivered', 'failed', 'replayed']):
+            raise ValueError("must be one of enum values ('pending', 'delivered', 'failed', 'replayed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +97,9 @@ class FindWebhookDelivery200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +117,19 @@ class FindWebhookDelivery200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "endpoint_url": obj.get("endpoint_url"),
+            "event_type": obj.get("event_type"),
+            "payload_hash": obj.get("payload_hash"),
+            "status": obj.get("status"),
+            "response_code": obj.get("response_code"),
+            "response_body": obj.get("response_body"),
+            "attempt_count": obj.get("attempt_count"),
+            "last_attempt_at": obj.get("last_attempt_at"),
+            "next_retry_at": obj.get("next_retry_at"),
+            "error_message": obj.get("error_message"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WebhookDelivery.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

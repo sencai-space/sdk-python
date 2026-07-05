@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -34,7 +34,7 @@ class PlatformEvent(BaseModel):
     source_service: StrictStr
     correlation_id: Optional[StrictStr] = None
     idempotency_key: Optional[StrictStr] = None
-    payload: Dict[str, Any]
+    payload: Optional[Any] = Field(description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     actor_user_id: Optional[StrictStr] = None
     risk_level: Optional[StrictStr] = None
@@ -94,6 +94,11 @@ class PlatformEvent(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if payload (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload is None and "payload" in self.model_fields_set:
+            _dict['payload'] = None
+
         return _dict
 
     @classmethod

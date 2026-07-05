@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.registration import Registration
+from typing_extensions import Annotated
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,30 @@ class FindRegistration200ResponseDataInner(BaseModel):
     """
     FindRegistration200ResponseDataInner
     """ # noqa: E501
+    username: Annotated[str, Field(min_length=3, strict=True)]
+    email: StrictStr
+    password: Optional[Annotated[str, Field(min_length=10, strict=True)]] = None
+    first_name: Optional[StrictStr] = Field(default=None, alias="firstName")
+    last_name: Optional[StrictStr] = Field(default=None, alias="lastName")
+    enabled: Optional[StrictBool] = None
+    email_verified: Optional[StrictBool] = Field(default=None, alias="emailVerified")
+    registration_status: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Registration] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["username", "email", "password", "firstName", "lastName", "enabled", "emailVerified", "registration_status", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('registration_status')
+    def registration_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'processed', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'processed', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +94,6 @@ class FindRegistration200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +111,16 @@ class FindRegistration200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "username": obj.get("username"),
+            "email": obj.get("email"),
+            "password": obj.get("password"),
+            "firstName": obj.get("firstName"),
+            "lastName": obj.get("lastName"),
+            "enabled": obj.get("enabled"),
+            "emailVerified": obj.get("emailVerified"),
+            "registration_status": obj.get("registration_status"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Registration.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

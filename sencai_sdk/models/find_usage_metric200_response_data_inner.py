@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.usage_metric import UsageMetric
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,33 @@ class FindUsageMetric200ResponseDataInner(BaseModel):
     """
     FindUsageMetric200ResponseDataInner
     """ # noqa: E501
+    metric_name: StrictStr
+    interval: Optional[StrictStr] = None
+    value: Union[StrictFloat, StrictInt]
+    value_min: Optional[Union[StrictFloat, StrictInt]] = None
+    value_max: Optional[Union[StrictFloat, StrictInt]] = None
+    sample_count: Optional[StrictInt] = None
+    period_start: datetime
+    period_end: datetime
+    dimension: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    idempotency_key: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[UsageMetric] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["metric_name", "interval", "value", "value_min", "value_max", "sample_count", "period_start", "period_end", "dimension", "organisation", "idempotency_key", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('interval')
+    def interval_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['hourly', 'daily', 'weekly', 'monthly']):
+            raise ValueError("must be one of enum values ('hourly', 'daily', 'weekly', 'monthly')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +97,9 @@ class FindUsageMetric200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +117,19 @@ class FindUsageMetric200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "metric_name": obj.get("metric_name"),
+            "interval": obj.get("interval"),
+            "value": obj.get("value"),
+            "value_min": obj.get("value_min"),
+            "value_max": obj.get("value_max"),
+            "sample_count": obj.get("sample_count"),
+            "period_start": obj.get("period_start"),
+            "period_end": obj.get("period_end"),
+            "dimension": obj.get("dimension"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "idempotency_key": obj.get("idempotency_key"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": UsageMetric.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

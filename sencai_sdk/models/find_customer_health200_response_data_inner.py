@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.customer_health import CustomerHealth
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,37 @@ class FindCustomerHealth200ResponseDataInner(BaseModel):
     """
     FindCustomerHealth200ResponseDataInner
     """ # noqa: E501
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    health_score: Optional[Union[StrictFloat, StrictInt]] = None
+    usage_score: Optional[Union[StrictFloat, StrictInt]] = None
+    growth_score: Optional[Union[StrictFloat, StrictInt]] = None
+    feature_score: Optional[Union[StrictFloat, StrictInt]] = None
+    support_score: Optional[Union[StrictFloat, StrictInt]] = None
+    churn_risk: Optional[StrictStr] = None
+    churn_signals: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    last_login_at: Optional[datetime] = None
+    days_since_login: Optional[StrictInt] = None
+    active_instances: Optional[StrictInt] = None
+    open_tickets: Optional[StrictInt] = None
+    nps_score: Optional[StrictInt] = None
+    last_evaluated_at: Optional[datetime] = None
+    csm_notes: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CustomerHealth] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "health_score", "usage_score", "growth_score", "feature_score", "support_score", "churn_risk", "churn_signals", "last_login_at", "days_since_login", "active_instances", "open_tickets", "nps_score", "last_evaluated_at", "csm_notes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('churn_risk')
+    def churn_risk_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['low', 'medium', 'high', 'critical']):
+            raise ValueError("must be one of enum values ('low', 'medium', 'high', 'critical')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +101,14 @@ class FindCustomerHealth200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if churn_signals (nullable) is None
+        # and model_fields_set contains the field
+        if self.churn_signals is None and "churn_signals" in self.model_fields_set:
+            _dict['churn_signals'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +126,23 @@ class FindCustomerHealth200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "health_score": obj.get("health_score"),
+            "usage_score": obj.get("usage_score"),
+            "growth_score": obj.get("growth_score"),
+            "feature_score": obj.get("feature_score"),
+            "support_score": obj.get("support_score"),
+            "churn_risk": obj.get("churn_risk"),
+            "churn_signals": obj.get("churn_signals"),
+            "last_login_at": obj.get("last_login_at"),
+            "days_since_login": obj.get("days_since_login"),
+            "active_instances": obj.get("active_instances"),
+            "open_tickets": obj.get("open_tickets"),
+            "nps_score": obj.get("nps_score"),
+            "last_evaluated_at": obj.get("last_evaluated_at"),
+            "csm_notes": obj.get("csm_notes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CustomerHealth.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

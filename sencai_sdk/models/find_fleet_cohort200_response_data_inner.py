@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.fleet_cohort import FleetCohort
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,42 @@ class FindFleetCohort200ResponseDataInner(BaseModel):
     """
     FindFleetCohort200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    org_doc_id: Optional[StrictStr] = None
+    platform_filter: Optional[StrictStr] = None
+    query: Optional[StrictStr] = None
+    schedule_interval_seconds: Optional[StrictInt] = None
+    fleetdm_policy_id: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    host_count: Optional[StrictInt] = None
+    last_result: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[FleetCohort] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "org_doc_id", "platform_filter", "query", "schedule_interval_seconds", "fleetdm_policy_id", "status", "host_count", "last_result", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('platform_filter')
+    def platform_filter_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['all', 'linux', 'windows', 'macos']):
+            raise ValueError("must be one of enum values ('all', 'linux', 'windows', 'macos')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'active', 'paused']):
+            raise ValueError("must be one of enum values ('draft', 'active', 'paused')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,14 @@ class FindFleetCohort200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if last_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.last_result is None and "last_result" in self.model_fields_set:
+            _dict['last_result'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +131,18 @@ class FindFleetCohort200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "org_doc_id": obj.get("org_doc_id"),
+            "platform_filter": obj.get("platform_filter"),
+            "query": obj.get("query"),
+            "schedule_interval_seconds": obj.get("schedule_interval_seconds"),
+            "fleetdm_policy_id": obj.get("fleetdm_policy_id"),
+            "status": obj.get("status"),
+            "host_count": obj.get("host_count"),
+            "last_result": obj.get("last_result"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": FleetCohort.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

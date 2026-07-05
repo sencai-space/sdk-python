@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.legal_acceptance import LegalAcceptance
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,36 @@ class FindOneLegalAcceptance200ResponseData(BaseModel):
     """
     FindOneLegalAcceptance200ResponseData
     """ # noqa: E501
+    legal_document: CreateAccessReviewRequestDataReviewer
+    user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    accepted_at: datetime
+    ip_address: Optional[StrictStr] = None
+    user_agent: Optional[StrictStr] = None
+    document_version: Optional[StrictStr] = None
+    document_type: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    signed_name: Optional[StrictStr] = None
+    signed_title: Optional[StrictStr] = None
+    signed_ip: Optional[StrictStr] = None
+    countersigned_at: Optional[datetime] = None
+    countersigned_by: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[LegalAcceptance] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["legal_document", "user", "organisation", "accepted_at", "ip_address", "user_agent", "document_version", "document_type", "status", "signed_name", "signed_title", "signed_ip", "countersigned_at", "countersigned_by", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'signed', 'countersigned', 'revoked']):
+            raise ValueError("must be one of enum values ('pending', 'signed', 'countersigned', 'revoked')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +100,15 @@ class FindOneLegalAcceptance200ResponseData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of legal_document
+        if self.legal_document:
+            _dict['legal_document'] = self.legal_document.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of user
+        if self.user:
+            _dict['user'] = self.user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +126,22 @@ class FindOneLegalAcceptance200ResponseData(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "legal_document": CreateAccessReviewRequestDataReviewer.from_dict(obj["legal_document"]) if obj.get("legal_document") is not None else None,
+            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "accepted_at": obj.get("accepted_at"),
+            "ip_address": obj.get("ip_address"),
+            "user_agent": obj.get("user_agent"),
+            "document_version": obj.get("document_version"),
+            "document_type": obj.get("document_type"),
+            "status": obj.get("status"),
+            "signed_name": obj.get("signed_name"),
+            "signed_title": obj.get("signed_title"),
+            "signed_ip": obj.get("signed_ip"),
+            "countersigned_at": obj.get("countersigned_at"),
+            "countersigned_by": obj.get("countersigned_by"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": LegalAcceptance.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

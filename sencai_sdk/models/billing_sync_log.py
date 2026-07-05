@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -33,12 +33,12 @@ class BillingSyncLog(BaseModel):
     adapter: StrictStr
     sync_type: StrictStr
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
-    usage_event_ids: Optional[Dict[str, Any]] = None
+    usage_event_ids: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     external_id: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
     synced_at: datetime
     error_message: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["adapter", "sync_type", "organisation", "usage_event_ids", "external_id", "status", "synced_at", "error_message", "metadata"]
 
     @field_validator('adapter')
@@ -107,6 +107,16 @@ class BillingSyncLog(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if usage_event_ids (nullable) is None
+        # and model_fields_set contains the field
+        if self.usage_event_ids is None and "usage_event_ids" in self.model_fields_set:
+            _dict['usage_event_ids'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.escalation_policy import EscalationPolicy
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,29 @@ class FindEscalationPolicy200ResponseDataInner(BaseModel):
     """
     FindEscalationPolicy200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    provider: Optional[StrictStr] = None
+    routing_key: Optional[StrictStr] = None
+    api_key_encrypted: Optional[StrictStr] = None
+    severity_map: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    enabled: Optional[StrictBool] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[EscalationPolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "provider", "routing_key", "api_key_encrypted", "severity_map", "enabled", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pagerduty', 'opsgenie']):
+            raise ValueError("must be one of enum values ('pagerduty', 'opsgenie')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,14 @@ class FindEscalationPolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if severity_map (nullable) is None
+        # and model_fields_set contains the field
+        if self.severity_map is None and "severity_map" in self.model_fields_set:
+            _dict['severity_map'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +118,15 @@ class FindEscalationPolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "provider": obj.get("provider"),
+            "routing_key": obj.get("routing_key"),
+            "api_key_encrypted": obj.get("api_key_encrypted"),
+            "severity_map": obj.get("severity_map"),
+            "enabled": obj.get("enabled"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": EscalationPolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

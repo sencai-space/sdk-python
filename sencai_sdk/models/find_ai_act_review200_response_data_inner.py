@@ -18,10 +18,10 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.ai_act_review import AiActReview
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,55 @@ class FindAiActReview200ResponseDataInner(BaseModel):
     """
     FindAiActReview200ResponseDataInner
     """ # noqa: E501
+    org_doc_id: StrictStr
+    system_name: StrictStr
+    risk_category: StrictStr
+    use_case: Optional[StrictStr] = None
+    review_status: Optional[StrictStr] = None
+    transparency_measures: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    human_oversight_mechanism: Optional[StrictStr] = None
+    data_governance_notes: Optional[StrictStr] = None
+    conformity_assessment: Optional[StrictStr] = None
+    registration_required: Optional[StrictBool] = None
+    review_date: Optional[date] = None
+    next_review_date: Optional[date] = None
+    reviewer: Optional[StrictStr] = None
+    findings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    remediation_plan: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AiActReview] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["org_doc_id", "system_name", "risk_category", "use_case", "review_status", "transparency_measures", "human_oversight_mechanism", "data_governance_notes", "conformity_assessment", "registration_required", "review_date", "next_review_date", "reviewer", "findings", "remediation_plan", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('risk_category')
+    def risk_category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['unacceptable', 'high', 'limited', 'minimal']):
+            raise ValueError("must be one of enum values ('unacceptable', 'high', 'limited', 'minimal')")
+        return value
+
+    @field_validator('review_status')
+    def review_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'under_review', 'approved', 'rejected', 'archived']):
+            raise ValueError("must be one of enum values ('draft', 'under_review', 'approved', 'rejected', 'archived')")
+        return value
+
+    @field_validator('conformity_assessment')
+    def conformity_assessment_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['not_required', 'self_assessment', 'third_party']):
+            raise ValueError("must be one of enum values ('not_required', 'self_assessment', 'third_party')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +119,19 @@ class FindAiActReview200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if transparency_measures (nullable) is None
+        # and model_fields_set contains the field
+        if self.transparency_measures is None and "transparency_measures" in self.model_fields_set:
+            _dict['transparency_measures'] = None
+
+        # set to None if findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.findings is None and "findings" in self.model_fields_set:
+            _dict['findings'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +149,24 @@ class FindAiActReview200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "org_doc_id": obj.get("org_doc_id"),
+            "system_name": obj.get("system_name"),
+            "risk_category": obj.get("risk_category"),
+            "use_case": obj.get("use_case"),
+            "review_status": obj.get("review_status"),
+            "transparency_measures": obj.get("transparency_measures"),
+            "human_oversight_mechanism": obj.get("human_oversight_mechanism"),
+            "data_governance_notes": obj.get("data_governance_notes"),
+            "conformity_assessment": obj.get("conformity_assessment"),
+            "registration_required": obj.get("registration_required"),
+            "review_date": obj.get("review_date"),
+            "next_review_date": obj.get("next_review_date"),
+            "reviewer": obj.get("reviewer"),
+            "findings": obj.get("findings"),
+            "remediation_plan": obj.get("remediation_plan"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AiActReview.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

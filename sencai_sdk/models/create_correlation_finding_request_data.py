@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,7 +32,7 @@ class CreateCorrelationFindingRequestData(BaseModel):
     """ # noqa: E501
     pattern: StrictStr
     confidence: Optional[StrictStr] = None
-    affected_services: Optional[Dict[str, Any]] = None
+    affected_services: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     evidence_count: Optional[StrictInt] = None
     evidence_summary: Optional[StrictStr] = None
     finding_type: Optional[StrictStr] = None
@@ -114,6 +114,11 @@ class CreateCorrelationFindingRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if affected_services (nullable) is None
+        # and model_fields_set contains the field
+        if self.affected_services is None and "affected_services" in self.model_fields_set:
+            _dict['affected_services'] = None
+
         return _dict
 
     @classmethod

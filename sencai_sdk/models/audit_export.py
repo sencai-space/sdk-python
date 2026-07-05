@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -33,7 +33,7 @@ class AuditExport(BaseModel):
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     requested_by: Optional[StrictStr] = None
     format: Optional[StrictStr] = None
-    filters: Optional[Dict[str, Any]] = None
+    filters: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     status: Optional[StrictStr] = None
     file_url: Optional[StrictStr] = None
     expires_at: Optional[datetime] = None
@@ -105,6 +105,11 @@ class AuditExport(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if filters (nullable) is None
+        # and model_fields_set contains the field
+        if self.filters is None and "filters" in self.model_fields_set:
+            _dict['filters'] = None
+
         return _dict
 
     @classmethod

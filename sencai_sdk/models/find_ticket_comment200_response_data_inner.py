@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.ticket_comment import TicketComment
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,17 @@ class FindTicketComment200ResponseDataInner(BaseModel):
     """
     FindTicketComment200ResponseDataInner
     """ # noqa: E501
+    body: StrictStr
+    author_name: Optional[StrictStr] = None
+    author_email: Optional[StrictStr] = None
+    is_internal: Optional[StrictBool] = None
+    ticket: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[TicketComment] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["body", "author_name", "author_email", "is_internal", "ticket", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +81,9 @@ class FindTicketComment200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of ticket
+        if self.ticket:
+            _dict['ticket'] = self.ticket.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +101,13 @@ class FindTicketComment200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "body": obj.get("body"),
+            "author_name": obj.get("author_name"),
+            "author_email": obj.get("author_email"),
+            "is_internal": obj.get("is_internal"),
+            "ticket": CreateAccessReviewRequestDataReviewer.from_dict(obj["ticket"]) if obj.get("ticket") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": TicketComment.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.audit_export import AuditExport
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,43 @@ class FindAuditExport200ResponseDataInner(BaseModel):
     """
     FindAuditExport200ResponseDataInner
     """ # noqa: E501
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    requested_by: Optional[StrictStr] = None
+    format: Optional[StrictStr] = None
+    filters: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    status: Optional[StrictStr] = None
+    file_url: Optional[StrictStr] = None
+    expires_at: Optional[datetime] = None
+    record_count: Optional[StrictInt] = None
+    error_message: Optional[StrictStr] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AuditExport] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "requested_by", "format", "filters", "status", "file_url", "expires_at", "record_count", "error_message", "started_at", "completed_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('format')
+    def format_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['csv', 'json']):
+            raise ValueError("must be one of enum values ('csv', 'json')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'processing', 'completed', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'processing', 'completed', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +107,14 @@ class FindAuditExport200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if filters (nullable) is None
+        # and model_fields_set contains the field
+        if self.filters is None and "filters" in self.model_fields_set:
+            _dict['filters'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +132,19 @@ class FindAuditExport200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "requested_by": obj.get("requested_by"),
+            "format": obj.get("format"),
+            "filters": obj.get("filters"),
+            "status": obj.get("status"),
+            "file_url": obj.get("file_url"),
+            "expires_at": obj.get("expires_at"),
+            "record_count": obj.get("record_count"),
+            "error_message": obj.get("error_message"),
+            "started_at": obj.get("started_at"),
+            "completed_at": obj.get("completed_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AuditExport.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

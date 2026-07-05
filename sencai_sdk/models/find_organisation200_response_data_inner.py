@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.organisation import Organisation
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,116 @@ class FindOrganisation200ResponseDataInner(BaseModel):
     """
     FindOrganisation200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    slug: Optional[StrictStr] = None
+    description: Optional[StrictStr] = None
+    logo: Optional[StrictStr] = None
+    street_number: Optional[StrictStr] = None
+    vat_id: Optional[StrictStr] = None
+    company_id: Optional[StrictStr] = None
+    zip_code: Optional[StrictInt] = None
+    state: Optional[StrictStr] = None
+    num_of_users: Optional[StrictInt] = None
+    org_disabled: Optional[StrictBool] = None
+    creator: Optional[StrictStr] = None
+    users: Optional[CreateAccessReviewRequestDataReviewer] = None
+    members: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cloud_credentials: Optional[CreateAccessReviewRequestDataReviewer] = None
+    sencai_agents: Optional[CreateAccessReviewRequestDataReviewer] = None
+    account_type: Optional[CreateAccessReviewRequestDataReviewer] = None
+    gitea_org_name: Optional[StrictStr] = None
+    gitea_org_id: Optional[StrictInt] = None
+    gitea_registry_url: Optional[StrictStr] = None
+    deleted_at: Optional[datetime] = None
+    budget_monthly: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Měsíční cloud budget limit organizace (F2.C.09). 0/null = bez limitu.")
+    budget_currency: Optional[StrictStr] = None
+    budget_notifications: Optional[Any] = Field(default=None, description="Seznam emailů pro budget alerty (F2.C.09).")
+    budget_state: StrictStr = Field(description="Aktuální stav vůči budgetu: ok / soft (>=70%) / hard (>=100%, blokuje provisioning) — počítá FinOps watchdog (F2.C.09).")
+    budget_period_spend: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Cache aktuální útraty za sledované období (aktualizuje budget watchdog).")
+    budget_override: Optional[StrictBool] = Field(default=None, description="Owner/admin override hard-limit blokace ('Continue anyway' s audit logem).")
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
+    workspace_domain: Optional[StrictStr] = Field(default=None, description="Google Workspace domain for SSO (hd claim). Set to enable Google Workspace login button for this organisation (F2.W.01). Example: firma.cz")
+    sso_enforced: Optional[StrictBool] = Field(default=None, description="F4.ENTERPRISE.02 — when true, password-grant (email+password) login is rejected for every user belonging to this organisation; only Google Workspace / EntraId SSO login is accepted. May only be enabled while the org has at least one SSO method actually configured (workspace_domain set, or an enabled ms365-integration with entra_tenant_id) — enforced server-side in organisation.update, not just a UI toggle.")
+    plan_type: Optional[StrictStr] = Field(default=None, description="PLG subscription plan of the organisation (F2.FLEET.03). Determines agent_limit and feature access.")
+    agent_limit: Optional[StrictInt] = Field(default=None, description="Maximum number of enrolled agents allowed under the current plan (F2.FLEET.03). Default 3 for free tier.")
+    account_tier: Optional[StrictStr] = Field(default=None, description="Subscription tier controlling instance/member limits (F2.M.01).")
+    max_instances: Optional[StrictInt] = Field(default=None, description="Maximum number of non-terminated cloud instances allowed under the current tier (F2.M.01).")
+    max_members: Optional[StrictInt] = Field(default=None, description="Maximum number of organisation members allowed under the current tier (F2.M.01).")
+    max_monthly_budget: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Maximum monthly cloud budget in EUR allowed under the current tier (F2.M.01).")
+    plan_valid_until: Optional[datetime] = Field(default=None, description="Expiry date of the current paid plan. null = no expiry (free tier or unlimited enterprise).")
+    cookie_consents: Optional[CreateAccessReviewRequestDataReviewer] = None
+    ropa_entries: Optional[CreateAccessReviewRequestDataReviewer] = None
+    platform_events: Optional[CreateAccessReviewRequestDataReviewer] = None
+    org_status: Optional[StrictStr] = Field(default=None, description="Lifecycle status of the organisation. archived = set by org merge/split operation (F2.MULTI.04). grace_period (F3.USERPLAN.02) = this org exceeds its owner's User Plan capacity (max_organisations_owned/max_members_per_org) after their personal trial fell back to Free — 14-day grace window (org_status_changed_at) before sencai-watchdog auto-suspends it; never archived/deleted by this path. suspended here is the SAME read-only mechanism used by the org-level dunning watchdog (F3.BILLING.03) — reused, not reinvented.")
+    org_status_changed_at: Optional[datetime] = Field(default=None, description="F3.USERPLAN.02 — timestamp of the last org_status transition driven by the User Plan grace-period watchdog (grace_period/suspended). Used to compute the 14-day grace window. Distinct from any org-level dunning timestamp (F3.BILLING.03 keeps its own state on subscription-enrollment).")
+    billing_country: Optional[StrictStr] = Field(default=None, description="ISO 3166-1 alpha-2 country code of the billing/registered address (F3.LEGAL.03). Drives VAT/DPH computation in computeTax().")
+    is_business: Optional[StrictBool] = Field(default=None, description="Whether this organisation is a business (B2B) customer vs a private individual (B2C) for VAT purposes (F3.LEGAL.03).")
+    vat_validated: Optional[StrictBool] = Field(default=None, description="Whether vat_id was last confirmed valid against the EU VIES registry (F3.LEGAL.03). False also covers 'VIES was unreachable' — treat as 'not confirmed', never blocks checkout.")
+    vat_validated_at: Optional[datetime] = Field(default=None, description="Timestamp of the last VIES validation attempt for vat_id (F3.LEGAL.03). Used as the 24h cache TTL anchor in POST /api/billing/validate-vat.")
+    ip_allowlist: Optional[Any] = Field(default=None, description="F4.ENTERPRISE.03 — JSON array of CIDR ranges (IPv4/IPv6, e.g. [\"203.0.113.0/24\", \"2001:db8::/32\"]) restricting platform access for members of this organisation. Nullable/empty = no restriction (backward-compatible default). Enforced server-side by global::ip-allowlist-guard against the resolved client IP (X-Forwarded-For aware, see middleware doc comment).")
+    lemmy_community_id: Optional[StrictInt] = Field(default=None, description="F4.FORUM.05 — numeric Lemmy community id auto-provisioned for this organisation by forum-connector. Null until the async organisation.forum-community-requested event has been processed (best-effort, never blocks org creation).")
+    lemmy_community_name: Optional[StrictStr] = Field(default=None, description="F4.FORUM.05 — sanitized Lemmy community `name` (URL-safe slug) matching lemmy_community_id, kept alongside it so the frontend can link straight to forum.sencai.space/c/<name> without an extra Lemmy lookup.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Organisation] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "slug", "description", "logo", "street_number", "vat_id", "company_id", "zip_code", "state", "num_of_users", "org_disabled", "creator", "users", "members", "cloud_credentials", "sencai_agents", "account_type", "gitea_org_name", "gitea_org_id", "gitea_registry_url", "deleted_at", "budget_monthly", "budget_currency", "budget_notifications", "budget_state", "budget_period_spend", "budget_override", "home_region", "cell_id", "workspace_domain", "sso_enforced", "plan_type", "agent_limit", "account_tier", "max_instances", "max_members", "max_monthly_budget", "plan_valid_until", "cookie_consents", "ropa_entries", "platform_events", "org_status", "org_status_changed_at", "billing_country", "is_business", "vat_validated", "vat_validated_at", "ip_allowlist", "lemmy_community_id", "lemmy_community_name", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('budget_currency')
+    def budget_currency_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['EUR', 'USD', 'CZK', 'GBP']):
+            raise ValueError("must be one of enum values ('EUR', 'USD', 'CZK', 'GBP')")
+        return value
+
+    @field_validator('budget_state')
+    def budget_state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['ok', 'soft', 'hard']):
+            raise ValueError("must be one of enum values ('ok', 'soft', 'hard')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
+
+    @field_validator('plan_type')
+    def plan_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['free', 'starter', 'pro', 'enterprise']):
+            raise ValueError("must be one of enum values ('free', 'starter', 'pro', 'enterprise')")
+        return value
+
+    @field_validator('account_tier')
+    def account_tier_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['free', 'starter', 'professional', 'enterprise']):
+            raise ValueError("must be one of enum values ('free', 'starter', 'professional', 'enterprise')")
+        return value
+
+    @field_validator('org_status')
+    def org_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'archived', 'suspended', 'grace_period']):
+            raise ValueError("must be one of enum values ('active', 'archived', 'suspended', 'grace_period')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +180,40 @@ class FindOrganisation200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of users
+        if self.users:
+            _dict['users'] = self.users.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of members
+        if self.members:
+            _dict['members'] = self.members.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_credentials
+        if self.cloud_credentials:
+            _dict['cloud_credentials'] = self.cloud_credentials.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of sencai_agents
+        if self.sencai_agents:
+            _dict['sencai_agents'] = self.sencai_agents.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of account_type
+        if self.account_type:
+            _dict['account_type'] = self.account_type.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cookie_consents
+        if self.cookie_consents:
+            _dict['cookie_consents'] = self.cookie_consents.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of ropa_entries
+        if self.ropa_entries:
+            _dict['ropa_entries'] = self.ropa_entries.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of platform_events
+        if self.platform_events:
+            _dict['platform_events'] = self.platform_events.to_dict()
+        # set to None if budget_notifications (nullable) is None
+        # and model_fields_set contains the field
+        if self.budget_notifications is None and "budget_notifications" in self.model_fields_set:
+            _dict['budget_notifications'] = None
+
+        # set to None if ip_allowlist (nullable) is None
+        # and model_fields_set contains the field
+        if self.ip_allowlist is None and "ip_allowlist" in self.model_fields_set:
+            _dict['ip_allowlist'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +231,58 @@ class FindOrganisation200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "slug": obj.get("slug"),
+            "description": obj.get("description"),
+            "logo": obj.get("logo"),
+            "street_number": obj.get("street_number"),
+            "vat_id": obj.get("vat_id"),
+            "company_id": obj.get("company_id"),
+            "zip_code": obj.get("zip_code"),
+            "state": obj.get("state"),
+            "num_of_users": obj.get("num_of_users"),
+            "org_disabled": obj.get("org_disabled"),
+            "creator": obj.get("creator"),
+            "users": CreateAccessReviewRequestDataReviewer.from_dict(obj["users"]) if obj.get("users") is not None else None,
+            "members": CreateAccessReviewRequestDataReviewer.from_dict(obj["members"]) if obj.get("members") is not None else None,
+            "cloud_credentials": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_credentials"]) if obj.get("cloud_credentials") is not None else None,
+            "sencai_agents": CreateAccessReviewRequestDataReviewer.from_dict(obj["sencai_agents"]) if obj.get("sencai_agents") is not None else None,
+            "account_type": CreateAccessReviewRequestDataReviewer.from_dict(obj["account_type"]) if obj.get("account_type") is not None else None,
+            "gitea_org_name": obj.get("gitea_org_name"),
+            "gitea_org_id": obj.get("gitea_org_id"),
+            "gitea_registry_url": obj.get("gitea_registry_url"),
+            "deleted_at": obj.get("deleted_at"),
+            "budget_monthly": obj.get("budget_monthly"),
+            "budget_currency": obj.get("budget_currency"),
+            "budget_notifications": obj.get("budget_notifications"),
+            "budget_state": obj.get("budget_state"),
+            "budget_period_spend": obj.get("budget_period_spend"),
+            "budget_override": obj.get("budget_override"),
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
+            "workspace_domain": obj.get("workspace_domain"),
+            "sso_enforced": obj.get("sso_enforced"),
+            "plan_type": obj.get("plan_type"),
+            "agent_limit": obj.get("agent_limit"),
+            "account_tier": obj.get("account_tier"),
+            "max_instances": obj.get("max_instances"),
+            "max_members": obj.get("max_members"),
+            "max_monthly_budget": obj.get("max_monthly_budget"),
+            "plan_valid_until": obj.get("plan_valid_until"),
+            "cookie_consents": CreateAccessReviewRequestDataReviewer.from_dict(obj["cookie_consents"]) if obj.get("cookie_consents") is not None else None,
+            "ropa_entries": CreateAccessReviewRequestDataReviewer.from_dict(obj["ropa_entries"]) if obj.get("ropa_entries") is not None else None,
+            "platform_events": CreateAccessReviewRequestDataReviewer.from_dict(obj["platform_events"]) if obj.get("platform_events") is not None else None,
+            "org_status": obj.get("org_status"),
+            "org_status_changed_at": obj.get("org_status_changed_at"),
+            "billing_country": obj.get("billing_country"),
+            "is_business": obj.get("is_business"),
+            "vat_validated": obj.get("vat_validated"),
+            "vat_validated_at": obj.get("vat_validated_at"),
+            "ip_allowlist": obj.get("ip_allowlist"),
+            "lemmy_community_id": obj.get("lemmy_community_id"),
+            "lemmy_community_name": obj.get("lemmy_community_name"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Organisation.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

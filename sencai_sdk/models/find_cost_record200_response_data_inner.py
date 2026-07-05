@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cost_record import CostRecord
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,65 @@ class FindCostRecord200ResponseDataInner(BaseModel):
     """
     FindCostRecord200ResponseDataInner
     """ # noqa: E501
+    provider: StrictStr
+    service_name: Optional[StrictStr] = Field(default=None, description="FOCUS ServiceName — čitelný název cloudové služby (napr. EC2, RDS, AKS, Cloud Run).")
+    resource_id: Optional[StrictStr] = Field(default=None, description="FOCUS ResourceId — jednoznačný identifikátor zdroje u providera.")
+    resource_type: Optional[StrictStr] = Field(default=None, description="FOCUS ResourceType — typ zdroje (napr. AWS::EC2::Instance, Microsoft.Compute/virtualMachines).")
+    billed_cost: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="FOCUS EffectiveCost — výsledná cena po uplatnění slev, commitmentů a SP.")
+    list_cost: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="FOCUS ListCost — sazebníková cena před jakýmikoliv slevami.")
+    currency: Optional[StrictStr] = Field(default=None, description="ISO 4217 kód měny (EUR, USD, CZK, GBP, …).")
+    billing_period_start: Optional[datetime] = Field(default=None, description="FOCUS BillingPeriodStart — začátek fakturačního období (UTC).")
+    billing_period_end: Optional[datetime] = Field(default=None, description="FOCUS BillingPeriodEnd — konec fakturačního období (UTC).")
+    region: Optional[StrictStr] = Field(default=None, description="Cloud region/zóna kde byl resource provozován.")
+    account_id: Optional[StrictStr] = Field(default=None, description="Cloud account/subscription/project ID — FOCUS BillingAccountId.")
+    tags: Optional[Any] = Field(default=None, description="Resource tagy v původní podobě z providera (key-value mapa).")
+    focus_schema_version: Optional[StrictStr] = Field(default=None, description="Verze FOCUS schématu, podle které byl záznam vygenerován.")
+    category: Optional[StrictStr] = Field(default=None, description="Sencai kategorie nákladů — vstup pro COGS breakdown a margin kalkulaci.")
+    source: Optional[StrictStr] = Field(default=None, description="Zdroj dat: aws_cur (Cost & Usage Report), azure_cost_export, gcp_billing_export, manual.")
+    ingested_at: Optional[datetime] = Field(default=None, description="Timestamp kdy byl záznam ingested do Sencai (UTC).")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CostRecord] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["provider", "service_name", "resource_id", "resource_type", "billed_cost", "list_cost", "currency", "billing_period_start", "billing_period_end", "region", "account_id", "tags", "focus_schema_version", "category", "source", "ingested_at", "organisation", "home_region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'custom']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'custom')")
+        return value
+
+    @field_validator('category')
+    def category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['ai_inference', 'compute', 'storage', 'network', 'database', 'monitoring', 'other']):
+            raise ValueError("must be one of enum values ('ai_inference', 'compute', 'storage', 'network', 'database', 'monitoring', 'other')")
+        return value
+
+    @field_validator('source')
+    def source_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws_cur', 'azure_cost_export', 'gcp_billing_export', 'manual']):
+            raise ValueError("must be one of enum values ('aws_cur', 'azure_cost_export', 'gcp_billing_export', 'manual')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +129,14 @@ class FindCostRecord200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +154,27 @@ class FindCostRecord200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "provider": obj.get("provider"),
+            "service_name": obj.get("service_name"),
+            "resource_id": obj.get("resource_id"),
+            "resource_type": obj.get("resource_type"),
+            "billed_cost": obj.get("billed_cost"),
+            "list_cost": obj.get("list_cost"),
+            "currency": obj.get("currency"),
+            "billing_period_start": obj.get("billing_period_start"),
+            "billing_period_end": obj.get("billing_period_end"),
+            "region": obj.get("region"),
+            "account_id": obj.get("account_id"),
+            "tags": obj.get("tags"),
+            "focus_schema_version": obj.get("focus_schema_version"),
+            "category": obj.get("category"),
+            "source": obj.get("source"),
+            "ingested_at": obj.get("ingested_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CostRecord.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

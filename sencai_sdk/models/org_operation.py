@@ -33,7 +33,7 @@ class OrgOperation(BaseModel):
     source_org_id: StrictStr = Field(description="documentId of the source organisation")
     target_org_id: Optional[StrictStr] = Field(default=None, description="documentId of the target (merge) or newly created (split) organisation")
     status: StrictStr
-    config: Optional[Dict[str, Any]] = Field(default=None, description="Merge: {}. Split: { member_ids: string[], instance_ids: string[] }")
+    config: Optional[Any] = Field(default=None, description="Merge: {}. Split: { member_ids: string[], instance_ids: string[] }")
     error_message: Optional[StrictStr] = None
     initiated_by: Optional[StrictStr] = Field(default=None, description="Email of the user who initiated the operation")
     completed_at: Optional[datetime] = None
@@ -92,6 +92,11 @@ class OrgOperation(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if config (nullable) is None
+        # and model_fields_set contains the field
+        if self.config is None and "config" in self.model_fields_set:
+            _dict['config'] = None
+
         return _dict
 
     @classmethod

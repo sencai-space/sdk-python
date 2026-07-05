@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_connector_status import CloudConnectorStatus
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,139 @@ class FindCloudConnectorStatus200ResponseDataInner(BaseModel):
     """
     FindCloudConnectorStatus200ResponseDataInner
     """ # noqa: E501
+    instance_id: StrictStr = Field(alias="instanceId")
+    region: StrictStr
+    provider: StrictStr
+    deployment_region: StrictStr = Field(alias="deploymentRegion")
+    ccstatus: StrictStr
+    last_heartbeat: datetime = Field(alias="lastHeartbeat")
+    uptime_minutes: StrictInt = Field(alias="uptimeMinutes")
+    version: StrictStr
+    total_jobs: Optional[StrictInt] = Field(default=None, alias="totalJobs")
+    pending_jobs: Optional[StrictInt] = Field(default=None, alias="pendingJobs")
+    running_jobs: Optional[StrictInt] = Field(default=None, alias="runningJobs")
+    success_jobs: Optional[StrictInt] = Field(default=None, alias="successJobs")
+    failed_jobs: Optional[StrictInt] = Field(default=None, alias="failedJobs")
+    aws_health: Optional[StrictStr] = Field(default=None, alias="awsHealth")
+    gcp_health: Optional[StrictStr] = Field(default=None, alias="gcpHealth")
+    azure_health: Optional[StrictStr] = Field(default=None, alias="azureHealth")
+    scaleway_health: Optional[StrictStr] = Field(default=None, alias="scalewayHealth")
+    ovhcloud_health: Optional[StrictStr] = Field(default=None, alias="ovhcloudHealth")
+    hetzner_health: Optional[StrictStr] = Field(default=None, alias="hetznerHealth")
+    upcloud_health: Optional[StrictStr] = Field(default=None, alias="upcloudHealth")
+    digitalocean_health: Optional[StrictStr] = Field(default=None, alias="digitaloceanHealth")
+    queue_status: Optional[StrictStr] = Field(default=None, alias="queueStatus")
+    backend_integration: Optional[StrictBool] = Field(default=None, alias="backendIntegration")
+    available_regions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="availableRegions")
+    active_regions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="activeRegions")
+    supported_providers: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="supportedProviders")
+    deployment_capabilities: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="deploymentCapabilities")
+    avg_response_time_ms: Optional[StrictInt] = Field(default=None, alias="avgResponseTimeMs")
+    success_rate: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="successRate")
+    throughput_jobs_per_hour: Optional[StrictInt] = Field(default=None, alias="throughputJobsPerHour")
+    error_rate: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="errorRate")
+    memory_usage_mb: Optional[StrictInt] = Field(default=None, alias="memoryUsageMB")
+    cpu_usage_percent: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="cpuUsagePercent")
+    connector_info: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="connectorInfo")
+    last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
+    diagnostic_info: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="diagnosticInfo")
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudConnectorStatus] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["instanceId", "region", "provider", "deploymentRegion", "ccstatus", "lastHeartbeat", "uptimeMinutes", "version", "totalJobs", "pendingJobs", "runningJobs", "successJobs", "failedJobs", "awsHealth", "gcpHealth", "azureHealth", "scalewayHealth", "ovhcloudHealth", "hetznerHealth", "upcloudHealth", "digitaloceanHealth", "queueStatus", "backendIntegration", "availableRegions", "activeRegions", "supportedProviders", "deploymentCapabilities", "avgResponseTimeMs", "successRate", "throughputJobsPerHour", "errorRate", "memoryUsageMB", "cpuUsagePercent", "connectorInfo", "lastError", "diagnosticInfo", "metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('aws_health')
+    def aws_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('gcp_health')
+    def gcp_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('azure_health')
+    def azure_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('scaleway_health')
+    def scaleway_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('ovhcloud_health')
+    def ovhcloud_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('hetzner_health')
+    def hetzner_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('upcloud_health')
+    def upcloud_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('digitalocean_health')
+    def digitalocean_health_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'unknown', 'not_configured']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'unknown', 'not_configured')")
+        return value
+
+    @field_validator('queue_status')
+    def queue_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['connected', 'disconnected', 'unknown']):
+            raise ValueError("must be one of enum values ('connected', 'disconnected', 'unknown')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +202,41 @@ class FindCloudConnectorStatus200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if available_regions (nullable) is None
+        # and model_fields_set contains the field
+        if self.available_regions is None and "available_regions" in self.model_fields_set:
+            _dict['availableRegions'] = None
+
+        # set to None if active_regions (nullable) is None
+        # and model_fields_set contains the field
+        if self.active_regions is None and "active_regions" in self.model_fields_set:
+            _dict['activeRegions'] = None
+
+        # set to None if supported_providers (nullable) is None
+        # and model_fields_set contains the field
+        if self.supported_providers is None and "supported_providers" in self.model_fields_set:
+            _dict['supportedProviders'] = None
+
+        # set to None if deployment_capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.deployment_capabilities is None and "deployment_capabilities" in self.model_fields_set:
+            _dict['deploymentCapabilities'] = None
+
+        # set to None if connector_info (nullable) is None
+        # and model_fields_set contains the field
+        if self.connector_info is None and "connector_info" in self.model_fields_set:
+            _dict['connectorInfo'] = None
+
+        # set to None if diagnostic_info (nullable) is None
+        # and model_fields_set contains the field
+        if self.diagnostic_info is None and "diagnostic_info" in self.model_fields_set:
+            _dict['diagnosticInfo'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +254,45 @@ class FindCloudConnectorStatus200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "instanceId": obj.get("instanceId"),
+            "region": obj.get("region"),
+            "provider": obj.get("provider"),
+            "deploymentRegion": obj.get("deploymentRegion"),
+            "ccstatus": obj.get("ccstatus"),
+            "lastHeartbeat": obj.get("lastHeartbeat"),
+            "uptimeMinutes": obj.get("uptimeMinutes"),
+            "version": obj.get("version"),
+            "totalJobs": obj.get("totalJobs"),
+            "pendingJobs": obj.get("pendingJobs"),
+            "runningJobs": obj.get("runningJobs"),
+            "successJobs": obj.get("successJobs"),
+            "failedJobs": obj.get("failedJobs"),
+            "awsHealth": obj.get("awsHealth"),
+            "gcpHealth": obj.get("gcpHealth"),
+            "azureHealth": obj.get("azureHealth"),
+            "scalewayHealth": obj.get("scalewayHealth"),
+            "ovhcloudHealth": obj.get("ovhcloudHealth"),
+            "hetznerHealth": obj.get("hetznerHealth"),
+            "upcloudHealth": obj.get("upcloudHealth"),
+            "digitaloceanHealth": obj.get("digitaloceanHealth"),
+            "queueStatus": obj.get("queueStatus"),
+            "backendIntegration": obj.get("backendIntegration"),
+            "availableRegions": obj.get("availableRegions"),
+            "activeRegions": obj.get("activeRegions"),
+            "supportedProviders": obj.get("supportedProviders"),
+            "deploymentCapabilities": obj.get("deploymentCapabilities"),
+            "avgResponseTimeMs": obj.get("avgResponseTimeMs"),
+            "successRate": obj.get("successRate"),
+            "throughputJobsPerHour": obj.get("throughputJobsPerHour"),
+            "errorRate": obj.get("errorRate"),
+            "memoryUsageMB": obj.get("memoryUsageMB"),
+            "cpuUsagePercent": obj.get("cpuUsagePercent"),
+            "connectorInfo": obj.get("connectorInfo"),
+            "lastError": obj.get("lastError"),
+            "diagnosticInfo": obj.get("diagnosticInfo"),
+            "metadata": obj.get("metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudConnectorStatus.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

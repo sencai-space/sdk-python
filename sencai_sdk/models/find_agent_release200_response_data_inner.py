@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.agent_release import AgentRelease
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,33 @@ class FindAgentRelease200ResponseDataInner(BaseModel):
     """
     FindAgentRelease200ResponseDataInner
     """ # noqa: E501
+    version: StrictStr
+    binary_url: Optional[StrictStr] = None
+    checksum_sha256: Optional[StrictStr] = None
+    release_notes: Optional[StrictStr] = None
+    rollout_policy: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    rollout_percentage: Optional[StrictInt] = None
+    is_stable: Optional[StrictBool] = None
+    channel: Optional[StrictStr] = None
+    min_agent_version: Optional[StrictStr] = None
+    binary_urls: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    architectures: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AgentRelease] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["version", "binary_url", "checksum_sha256", "release_notes", "rollout_policy", "rollout_percentage", "is_stable", "channel", "min_agent_version", "binary_urls", "architectures", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('channel')
+    def channel_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['stable', 'beta', 'canary']):
+            raise ValueError("must be one of enum values ('stable', 'beta', 'canary')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +96,21 @@ class FindAgentRelease200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if rollout_policy (nullable) is None
+        # and model_fields_set contains the field
+        if self.rollout_policy is None and "rollout_policy" in self.model_fields_set:
+            _dict['rollout_policy'] = None
+
+        # set to None if binary_urls (nullable) is None
+        # and model_fields_set contains the field
+        if self.binary_urls is None and "binary_urls" in self.model_fields_set:
+            _dict['binary_urls'] = None
+
+        # set to None if architectures (nullable) is None
+        # and model_fields_set contains the field
+        if self.architectures is None and "architectures" in self.model_fields_set:
+            _dict['architectures'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +128,19 @@ class FindAgentRelease200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "version": obj.get("version"),
+            "binary_url": obj.get("binary_url"),
+            "checksum_sha256": obj.get("checksum_sha256"),
+            "release_notes": obj.get("release_notes"),
+            "rollout_policy": obj.get("rollout_policy"),
+            "rollout_percentage": obj.get("rollout_percentage"),
+            "is_stable": obj.get("is_stable"),
+            "channel": obj.get("channel"),
+            "min_agent_version": obj.get("min_agent_version"),
+            "binary_urls": obj.get("binary_urls"),
+            "architectures": obj.get("architectures"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AgentRelease.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

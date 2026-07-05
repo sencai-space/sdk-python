@@ -18,10 +18,11 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.audit_artifact import AuditArtifact
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,32 @@ class FindAuditArtifact200ResponseDataInner(BaseModel):
     """
     FindAuditArtifact200ResponseDataInner
     """ # noqa: E501
+    title: Annotated[str, Field(strict=True, max_length=255)]
+    category: StrictStr
+    description: Optional[StrictStr] = None
+    version: Optional[StrictStr] = None
+    effective_from: Optional[date] = None
+    effective_to: Optional[date] = None
+    file_url: Optional[StrictStr] = None
+    file_size_bytes: Optional[StrictInt] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    linked_controls: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    is_public: Optional[StrictBool] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    uploaded_by: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AuditArtifact] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["title", "category", "description", "version", "effective_from", "effective_to", "file_url", "file_size_bytes", "tags", "linked_controls", "is_public", "organisation", "uploaded_by", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('category')
+    def category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['policy', 'procedure', 'cert', 'report', 'dpa', 'training', 'other']):
+            raise ValueError("must be one of enum values ('policy', 'procedure', 'cert', 'report', 'dpa', 'training', 'other')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +97,19 @@ class FindAuditArtifact200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if linked_controls (nullable) is None
+        # and model_fields_set contains the field
+        if self.linked_controls is None and "linked_controls" in self.model_fields_set:
+            _dict['linked_controls'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +127,21 @@ class FindAuditArtifact200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "title": obj.get("title"),
+            "category": obj.get("category"),
+            "description": obj.get("description"),
+            "version": obj.get("version"),
+            "effective_from": obj.get("effective_from"),
+            "effective_to": obj.get("effective_to"),
+            "file_url": obj.get("file_url"),
+            "file_size_bytes": obj.get("file_size_bytes"),
+            "tags": obj.get("tags"),
+            "linked_controls": obj.get("linked_controls"),
+            "is_public": obj.get("is_public"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "uploaded_by": obj.get("uploaded_by"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AuditArtifact.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

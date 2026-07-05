@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.support_ticket import SupportTicket
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,85 @@ class FindSupportTicket200ResponseDataInner(BaseModel):
     """
     FindSupportTicket200ResponseDataInner
     """ # noqa: E501
+    subject: Annotated[str, Field(strict=True, max_length=255)]
+    description: StrictStr
+    category: Optional[StrictStr] = None
+    priority: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    ticket_number: Optional[StrictStr] = None
+    reporter_email: StrictStr
+    reporter_name: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    assigned_to: Optional[StrictStr] = None
+    resolved_at: Optional[datetime] = None
+    first_response_at: Optional[datetime] = None
+    sla_breach: Optional[StrictBool] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    freshdesk_ticket_id: Optional[StrictStr] = None
+    comments: Optional[CreateAccessReviewRequestDataReviewer] = None
+    feedback_type: Optional[StrictStr] = None
+    source: Optional[StrictStr] = None
+    page_url: Optional[StrictStr] = None
+    browser: Optional[StrictStr] = None
+    trace_id: Optional[StrictStr] = None
+    screenshot: Optional[Dict[str, Any]] = Field(default=None, description="Strapi media object (upload plugin)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SupportTicket] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["subject", "description", "category", "priority", "status", "ticket_number", "reporter_email", "reporter_name", "organisation", "assigned_to", "resolved_at", "first_response_at", "sla_breach", "tags", "metadata", "freshdesk_ticket_id", "comments", "feedback_type", "source", "page_url", "browser", "trace_id", "screenshot", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('category')
+    def category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['bug', 'feature_request', 'question', 'incident', 'billing', 'other']):
+            raise ValueError("must be one of enum values ('bug', 'feature_request', 'question', 'incident', 'billing', 'other')")
+        return value
+
+    @field_validator('priority')
+    def priority_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['p1', 'p2', 'p3', 'p4']):
+            raise ValueError("must be one of enum values ('p1', 'p2', 'p3', 'p4')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['open', 'in_progress', 'waiting_customer', 'resolved', 'closed']):
+            raise ValueError("must be one of enum values ('open', 'in_progress', 'waiting_customer', 'resolved', 'closed')")
+        return value
+
+    @field_validator('feedback_type')
+    def feedback_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['bug', 'feature', 'general']):
+            raise ValueError("must be one of enum values ('bug', 'feature', 'general')")
+        return value
+
+    @field_validator('source')
+    def source_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['support_portal', 'feedback_widget']):
+            raise ValueError("must be one of enum values ('support_portal', 'feedback_widget')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +150,22 @@ class FindSupportTicket200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of comments
+        if self.comments:
+            _dict['comments'] = self.comments.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +183,31 @@ class FindSupportTicket200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "subject": obj.get("subject"),
+            "description": obj.get("description"),
+            "category": obj.get("category"),
+            "priority": obj.get("priority"),
+            "status": obj.get("status"),
+            "ticket_number": obj.get("ticket_number"),
+            "reporter_email": obj.get("reporter_email"),
+            "reporter_name": obj.get("reporter_name"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "assigned_to": obj.get("assigned_to"),
+            "resolved_at": obj.get("resolved_at"),
+            "first_response_at": obj.get("first_response_at"),
+            "sla_breach": obj.get("sla_breach"),
+            "tags": obj.get("tags"),
+            "metadata": obj.get("metadata"),
+            "freshdesk_ticket_id": obj.get("freshdesk_ticket_id"),
+            "comments": CreateAccessReviewRequestDataReviewer.from_dict(obj["comments"]) if obj.get("comments") is not None else None,
+            "feedback_type": obj.get("feedback_type"),
+            "source": obj.get("source"),
+            "page_url": obj.get("page_url"),
+            "browser": obj.get("browser"),
+            "trace_id": obj.get("trace_id"),
+            "screenshot": obj.get("screenshot"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SupportTicket.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

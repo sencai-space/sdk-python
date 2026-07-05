@@ -41,7 +41,7 @@ class GitConnectorStatus(BaseModel):
     apps_repositories: Optional[StrictInt] = Field(default=None, alias="appsRepositories")
     last_sync_date: Optional[datetime] = Field(default=None, alias="lastSyncDate")
     last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["instanceId", "gitstatus", "lastHeartbeat", "uptime", "version", "toolboxStatus", "appsStatus", "totalRepositories", "toolboxRepositories", "appsRepositories", "lastSyncDate", "lastError", "metadata"]
 
     @field_validator('gitstatus')
@@ -113,6 +113,11 @@ class GitConnectorStatus(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

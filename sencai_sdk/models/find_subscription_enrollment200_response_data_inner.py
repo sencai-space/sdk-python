@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.subscription_enrollment import SubscriptionEnrollment
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,51 @@ class FindSubscriptionEnrollment200ResponseDataInner(BaseModel):
     """
     FindSubscriptionEnrollment200ResponseDataInner
     """ # noqa: E501
+    status: Optional[StrictStr] = None
+    plan_id: Optional[StrictStr] = None
+    plan_name: Optional[StrictStr] = None
+    started_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    cancelled_at: Optional[datetime] = None
+    cancel_reason: Optional[StrictStr] = None
+    retention_offer_shown: Optional[StrictBool] = None
+    auto_renew: Optional[StrictBool] = None
+    stripe_customer_id: Optional[StrictStr] = None
+    stripe_subscription_id: Optional[StrictStr] = None
+    stripe_price_id: Optional[StrictStr] = None
+    current_period_end: Optional[datetime] = None
+    cancel_at_period_end: Optional[StrictBool] = Field(default=None, description="F3.BILLING.02 — subscription is scheduled to cancel at current_period_end (Stripe cancel_at_period_end=true) rather than immediately. Enables reactivate before the period ends.")
+    pending_tier_change: Optional[Any] = Field(default=None, description="F3.BILLING.02 — set when a period-end downgrade is scheduled (Stripe subscription_schedule / update at period end): { newTierId, newPlanName, effective_at }. Cleared once Stripe confirms the change via customer.subscription.updated.")
+    addons: Optional[Any] = Field(default=None, description="F3.BILLING.02 — active addon Stripe subscription line items: [{ addon_id, stripe_price_id, quantity, stripe_item_id }]. Mirrors Stripe as the source of truth; updated by /addons action and the subscription.updated webhook.")
+    dunning_state: Optional[StrictStr] = Field(default=None, description="F3.BILLING.03 — sencai-watchdog dunning state machine. none = current on payment; payment_failed = day 0 (invoice.payment_failed received); grace_period = day 7 unpaid (in-app banner warning); suspended = day 14 unpaid (org.org_status also flips to 'suspended', read-only enforcement); terminated = day 30 unpaid (non-critical cloud instances terminated + org archived, gated behind WATCHDOG_AUTO_TERMINATE). Reset to 'none' on invoice.paid (restore). Owned exclusively by sencai-watchdog via service-secret endpoints — never written by any user-facing route.")
+    dunning_state_changed_at: Optional[datetime] = Field(default=None, description="F3.BILLING.03 — timestamp of the last dunning_state transition. Used by sencai-watchdog to compute day-count thresholds (7d/14d/30d) idempotently across hourly cron runs.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SubscriptionEnrollment] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["status", "plan_id", "plan_name", "started_at", "expires_at", "cancelled_at", "cancel_reason", "retention_offer_shown", "auto_renew", "stripe_customer_id", "stripe_subscription_id", "stripe_price_id", "current_period_end", "cancel_at_period_end", "pending_tier_change", "addons", "dunning_state", "dunning_state_changed_at", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'pending_downgrade', 'cancelled', 'expired']):
+            raise ValueError("must be one of enum values ('active', 'pending_downgrade', 'cancelled', 'expired')")
+        return value
+
+    @field_validator('dunning_state')
+    def dunning_state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['none', 'payment_failed', 'grace_period', 'suspended', 'terminated']):
+            raise ValueError("must be one of enum values ('none', 'payment_failed', 'grace_period', 'suspended', 'terminated')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +115,19 @@ class FindSubscriptionEnrollment200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if pending_tier_change (nullable) is None
+        # and model_fields_set contains the field
+        if self.pending_tier_change is None and "pending_tier_change" in self.model_fields_set:
+            _dict['pending_tier_change'] = None
+
+        # set to None if addons (nullable) is None
+        # and model_fields_set contains the field
+        if self.addons is None and "addons" in self.model_fields_set:
+            _dict['addons'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +145,27 @@ class FindSubscriptionEnrollment200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "status": obj.get("status"),
+            "plan_id": obj.get("plan_id"),
+            "plan_name": obj.get("plan_name"),
+            "started_at": obj.get("started_at"),
+            "expires_at": obj.get("expires_at"),
+            "cancelled_at": obj.get("cancelled_at"),
+            "cancel_reason": obj.get("cancel_reason"),
+            "retention_offer_shown": obj.get("retention_offer_shown"),
+            "auto_renew": obj.get("auto_renew"),
+            "stripe_customer_id": obj.get("stripe_customer_id"),
+            "stripe_subscription_id": obj.get("stripe_subscription_id"),
+            "stripe_price_id": obj.get("stripe_price_id"),
+            "current_period_end": obj.get("current_period_end"),
+            "cancel_at_period_end": obj.get("cancel_at_period_end"),
+            "pending_tier_change": obj.get("pending_tier_change"),
+            "addons": obj.get("addons"),
+            "dunning_state": obj.get("dunning_state"),
+            "dunning_state_changed_at": obj.get("dunning_state_changed_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SubscriptionEnrollment.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -38,7 +38,7 @@ class AiOversightReview(BaseModel):
     approved_by: Optional[StrictStr] = None
     approved_at: Optional[datetime] = None
     effective_from: Optional[datetime] = None
-    level_history: Optional[Dict[str, Any]] = None
+    level_history: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["organisation", "current_level", "requested_level", "status", "review_notes", "approved_by", "approved_at", "effective_from", "level_history"]
 
     @field_validator('status')
@@ -93,6 +93,11 @@ class AiOversightReview(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if level_history (nullable) is None
+        # and model_fields_set contains the field
+        if self.level_history is None and "level_history" in self.model_fields_set:
+            _dict['level_history'] = None
+
         return _dict
 
     @classmethod

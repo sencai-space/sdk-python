@@ -40,7 +40,7 @@ class CreateUserSubscriptionEnrollmentRequestData(BaseModel):
     stripe_customer_id: Optional[StrictStr] = Field(default=None, description="Convention: user-${userId}, symmetric to the existing org-${orgId} convention (see billing-adapter.ts / checkout.ts).")
     stripe_subscription_id: Optional[StrictStr] = None
     sponsorship_invitation_token: Optional[StrictStr] = Field(default=None, description="F3.USERPLAN.04 — 7-day JWT (mirrors organisation-member.invitation_token) proving the sponsor invited THIS beneficiary. Set on POST /:sponsorId/sponsor, cleared once accepted (or replaced by a new invite).")
-    pending_sponsorship: Optional[Dict[str, Any]] = Field(default=None, description="F3.USERPLAN.04 — set while a sponsorship invitation is outstanding (not yet accepted by the beneficiary): { sponsorId, sponsorEnrollmentId, tierId, beneficiaryEmail, invitedAt }. Cleared on accept (sponsor/plan/status become authoritative) or on a fresh re-invite.")
+    pending_sponsorship: Optional[Any] = Field(default=None, description="F3.USERPLAN.04 — set while a sponsorship invitation is outstanding (not yet accepted by the beneficiary): { sponsorId, sponsorEnrollmentId, tierId, beneficiaryEmail, invitedAt }. Cleared on accept (sponsor/plan/status become authoritative) or on a fresh re-invite.")
     sponsorship_stripe_item_id: Optional[StrictStr] = Field(default=None, description="F3.USERPLAN.04 — id of the Stripe subscription item added to the SPONSOR's existing subscription for this beneficiary (stripe.subscriptionItems). Required to remove exactly this line item on revoke without touching the sponsor's own base plan item or other beneficiaries' items.")
     __properties: ClassVar[List[str]] = ["user", "plan", "status", "started_at", "trial_ends_at", "expires_at", "sponsor", "stripe_customer_id", "stripe_subscription_id", "sponsorship_invitation_token", "pending_sponsorship", "sponsorship_stripe_item_id"]
 
@@ -99,6 +99,11 @@ class CreateUserSubscriptionEnrollmentRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of sponsor
         if self.sponsor:
             _dict['sponsor'] = self.sponsor.to_dict()
+        # set to None if pending_sponsorship (nullable) is None
+        # and model_fields_set contains the field
+        if self.pending_sponsorship is None and "pending_sponsorship" in self.model_fields_set:
+            _dict['pending_sponsorship'] = None
+
         return _dict
 
     @classmethod

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_identity_scan import CloudIdentityScan
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,20 @@ class FindCloudIdentityScan200ResponseDataInner(BaseModel):
     """
     FindCloudIdentityScan200ResponseDataInner
     """ # noqa: E501
+    organisation: CreateAccessReviewRequestDataReviewer
+    has_cloud_identity_premium: Optional[StrictBool] = None
+    context_aware_access_enabled: Optional[StrictBool] = None
+    advanced_protection_users: Optional[StrictInt] = None
+    scc_integration_enabled: Optional[StrictBool] = None
+    context_aware_policies_count: Optional[StrictInt] = None
+    findings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    last_scanned_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudIdentityScan] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "has_cloud_identity_premium", "context_aware_access_enabled", "advanced_protection_users", "scc_integration_enabled", "context_aware_policies_count", "findings", "last_scanned_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +84,14 @@ class FindCloudIdentityScan200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.findings is None and "findings" in self.model_fields_set:
+            _dict['findings'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +109,16 @@ class FindCloudIdentityScan200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "has_cloud_identity_premium": obj.get("has_cloud_identity_premium"),
+            "context_aware_access_enabled": obj.get("context_aware_access_enabled"),
+            "advanced_protection_users": obj.get("advanced_protection_users"),
+            "scc_integration_enabled": obj.get("scc_integration_enabled"),
+            "context_aware_policies_count": obj.get("context_aware_policies_count"),
+            "findings": obj.get("findings"),
+            "last_scanned_at": obj.get("last_scanned_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudIdentityScan.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

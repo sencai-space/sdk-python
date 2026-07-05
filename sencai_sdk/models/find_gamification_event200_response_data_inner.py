@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.gamification_event import GamificationEvent
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,25 @@ class FindGamificationEvent200ResponseDataInner(BaseModel):
     """
     FindGamificationEvent200ResponseDataInner
     """ # noqa: E501
+    user: CreateAccessReviewRequestDataReviewer
+    action_type: StrictStr = Field(description="Whitelist kept identical to the internal action-type map in gamification-consumer (F4.GAM.02). 'easter_egg_triggered' added by F4.GAM.02 for the stochastic easter-egg budget log (persisted so the consumer can compute each user's remaining per-year allowance).")
+    xp_granted: StrictInt
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    idempotency_key: StrictStr = Field(description="SHA-256 hash of the source RabbitMQ message — prevents duplicate XP grants on redelivery")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[GamificationEvent] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["user", "action_type", "xp_granted", "organisation", "metadata", "idempotency_key", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('action_type')
+    def action_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['provisioning_completed', 'runbook_success', 'incident_resolved', 'login_streak', 'automation_score_snapshot', 'badge_awarded', 'manual_admin_grant', 'easter_egg_triggered']):
+            raise ValueError("must be one of enum values ('provisioning_completed', 'runbook_success', 'incident_resolved', 'login_streak', 'automation_score_snapshot', 'badge_awarded', 'manual_admin_grant', 'easter_egg_triggered')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +89,17 @@ class FindGamificationEvent200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of user
+        if self.user:
+            _dict['user'] = self.user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +117,14 @@ class FindGamificationEvent200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "action_type": obj.get("action_type"),
+            "xp_granted": obj.get("xp_granted"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "metadata": obj.get("metadata"),
+            "idempotency_key": obj.get("idempotency_key"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": GamificationEvent.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.command_execution_result import CommandExecutionResult
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,34 @@ class FindCommandExecutionResult200ResponseDataInner(BaseModel):
     """
     FindCommandExecutionResult200ResponseDataInner
     """ # noqa: E501
+    agent_id: StrictStr = Field(description="Strapi documentId of the sencai-agent that executed the command.")
+    agent_name: Optional[StrictStr] = Field(default=None, description="Hostname or display name of the agent (denormalized for display).")
+    command_name: StrictStr = Field(description="Name of the remote-command template that was dispatched.")
+    command_rendered: Optional[StrictStr] = Field(default=None, description="Final command string after template argument substitution.")
+    exit_code: Optional[StrictInt] = Field(default=None, description="Process exit code returned by the agent. null if not yet completed.")
+    stdout: Optional[StrictStr] = Field(default=None, description="Standard output captured from the executed command.")
+    stderr: Optional[StrictStr] = Field(default=None, description="Standard error captured from the executed command.")
+    duration_ms: Optional[StrictInt] = Field(default=None, description="Wall-clock execution duration in milliseconds.")
+    status: Optional[StrictStr] = Field(default=None, description="Lifecycle status of the execution. blocked = command was rejected by agent whitelist.")
+    dispatched_at: Optional[datetime] = Field(default=None, description="Timestamp when the command was dispatched to the agent.")
+    completed_at: Optional[datetime] = Field(default=None, description="Timestamp when the agent reported the final result.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CommandExecutionResult] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["agent_id", "agent_name", "command_name", "command_rendered", "exit_code", "stdout", "stderr", "duration_ms", "status", "dispatched_at", "completed_at", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'running', 'completed', 'failed', 'blocked']):
+            raise ValueError("must be one of enum values ('pending', 'running', 'completed', 'failed', 'blocked')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +98,9 @@ class FindCommandExecutionResult200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +118,20 @@ class FindCommandExecutionResult200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "agent_id": obj.get("agent_id"),
+            "agent_name": obj.get("agent_name"),
+            "command_name": obj.get("command_name"),
+            "command_rendered": obj.get("command_rendered"),
+            "exit_code": obj.get("exit_code"),
+            "stdout": obj.get("stdout"),
+            "stderr": obj.get("stderr"),
+            "duration_ms": obj.get("duration_ms"),
+            "status": obj.get("status"),
+            "dispatched_at": obj.get("dispatched_at"),
+            "completed_at": obj.get("completed_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CommandExecutionResult.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

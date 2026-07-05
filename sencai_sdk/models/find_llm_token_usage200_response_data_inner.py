@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.llm_token_usage import LlmTokenUsage
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,30 @@ class FindLlmTokenUsage200ResponseDataInner(BaseModel):
     """
     FindLlmTokenUsage200ResponseDataInner
     """ # noqa: E501
+    model: StrictStr
+    provider: StrictStr
+    input_tokens: Optional[StrictInt] = None
+    output_tokens: Optional[StrictInt] = None
+    total_tokens: Optional[StrictInt] = None
+    cost_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    request_id: Optional[StrictStr] = None
+    feature: Optional[StrictStr] = None
+    budget_exceeded: Optional[StrictBool] = None
+    hallucination_risk: Optional[StrictBool] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[LlmTokenUsage] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["model", "provider", "input_tokens", "output_tokens", "total_tokens", "cost_usd", "request_id", "feature", "budget_exceeded", "hallucination_risk", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['anthropic', 'openai', 'azure_openai', 'local']):
+            raise ValueError("must be one of enum values ('anthropic', 'openai', 'azure_openai', 'local')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +94,9 @@ class FindLlmTokenUsage200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +114,19 @@ class FindLlmTokenUsage200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "model": obj.get("model"),
+            "provider": obj.get("provider"),
+            "input_tokens": obj.get("input_tokens"),
+            "output_tokens": obj.get("output_tokens"),
+            "total_tokens": obj.get("total_tokens"),
+            "cost_usd": obj.get("cost_usd"),
+            "request_id": obj.get("request_id"),
+            "feature": obj.get("feature"),
+            "budget_exceeded": obj.get("budget_exceeded"),
+            "hallucination_risk": obj.get("hallucination_risk"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": LlmTokenUsage.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

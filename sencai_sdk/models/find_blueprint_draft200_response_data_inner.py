@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.blueprint_draft import BlueprintDraft
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,57 @@ class FindBlueprintDraft200ResponseDataInner(BaseModel):
     """
     FindBlueprintDraft200ResponseDataInner
     """ # noqa: E501
+    organisation: CreateAccessReviewRequestDataReviewer
+    author: Optional[CreateAccessReviewRequestDataReviewer] = None
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    slug: Optional[StrictStr] = Field(default=None, description="URL-safe identifier derived from name.")
+    description: Optional[StrictStr] = None
+    category: Optional[StrictStr] = None
+    provider: Optional[StrictStr] = None
+    steps: Optional[Any] = Field(default=None, description="Array of {id, name, type: 'provision'|'configure'|'verify', resource_type, config JSON, depends_on: string[]}.")
+    variables: Optional[Any] = Field(default=None, description="JSON Schema for input variables, e.g. {\"region\": {\"type\": \"string\", \"default\": \"eu-west-1\"}}.")
+    resource_types: Optional[Any] = Field(default=None, description="Array of strings listing the cloud resource types used in this blueprint.")
+    estimated_cost_monthly: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Estimated monthly cost in USD.")
+    cost_notes: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    version: Optional[StrictStr] = None
+    tags: Optional[Any] = Field(default=None, description="Array of string tags.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BlueprintDraft] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "author", "name", "slug", "description", "category", "provider", "steps", "variables", "resource_types", "estimated_cost_monthly", "cost_notes", "status", "version", "tags", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('category')
+    def category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['infrastructure', 'networking', 'security', 'database', 'application', 'monitoring', 'custom']):
+            raise ValueError("must be one of enum values ('infrastructure', 'networking', 'security', 'database', 'application', 'monitoring', 'custom')")
+        return value
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'multi_cloud']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'multi_cloud')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'review', 'published', 'archived']):
+            raise ValueError("must be one of enum values ('draft', 'review', 'published', 'archived')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +122,32 @@ class FindBlueprintDraft200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of author
+        if self.author:
+            _dict['author'] = self.author.to_dict()
+        # set to None if steps (nullable) is None
+        # and model_fields_set contains the field
+        if self.steps is None and "steps" in self.model_fields_set:
+            _dict['steps'] = None
+
+        # set to None if variables (nullable) is None
+        # and model_fields_set contains the field
+        if self.variables is None and "variables" in self.model_fields_set:
+            _dict['variables'] = None
+
+        # set to None if resource_types (nullable) is None
+        # and model_fields_set contains the field
+        if self.resource_types is None and "resource_types" in self.model_fields_set:
+            _dict['resource_types'] = None
+
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +165,23 @@ class FindBlueprintDraft200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "author": CreateAccessReviewRequestDataReviewer.from_dict(obj["author"]) if obj.get("author") is not None else None,
+            "name": obj.get("name"),
+            "slug": obj.get("slug"),
+            "description": obj.get("description"),
+            "category": obj.get("category"),
+            "provider": obj.get("provider"),
+            "steps": obj.get("steps"),
+            "variables": obj.get("variables"),
+            "resource_types": obj.get("resource_types"),
+            "estimated_cost_monthly": obj.get("estimated_cost_monthly"),
+            "cost_notes": obj.get("cost_notes"),
+            "status": obj.get("status"),
+            "version": obj.get("version"),
+            "tags": obj.get("tags"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BlueprintDraft.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

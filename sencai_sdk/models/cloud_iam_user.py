@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,10 +35,10 @@ class CloudIamUser(BaseModel):
     email: Optional[StrictStr] = None
     arn_or_principal_id: Optional[StrictStr] = None
     user_type: Optional[StrictStr] = None
-    attached_policies: Optional[Dict[str, Any]] = None
+    attached_policies: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     last_used_at: Optional[datetime] = None
     external_id: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "provider", "email", "arn_or_principal_id", "user_type", "attached_policies", "last_used_at", "external_id", "metadata", "credential", "organisation"]
@@ -105,6 +105,16 @@ class CloudIamUser(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if attached_policies (nullable) is None
+        # and model_fields_set contains the field
+        if self.attached_policies is None and "attached_policies" in self.model_fields_set:
+            _dict['attached_policies'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

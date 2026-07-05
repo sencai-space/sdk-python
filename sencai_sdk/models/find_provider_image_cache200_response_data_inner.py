@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.provider_image_cache import ProviderImageCache
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,46 @@ class FindProviderImageCache200ResponseDataInner(BaseModel):
     """
     FindProviderImageCache200ResponseDataInner
     """ # noqa: E501
+    provider: StrictStr
+    image_id: StrictStr
+    name: StrictStr
+    os_family: StrictStr
+    os_version: StrictStr
+    architecture: StrictStr
+    is_active: StrictBool
+    is_lts: Optional[StrictBool] = None
+    disk_size_gb: Optional[StrictInt] = None
+    regions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    description: Optional[StrictStr] = None
+    provider_created_at: Optional[datetime] = None
+    cached_at: datetime
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ProviderImageCache] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["provider", "image_id", "name", "os_family", "os_version", "architecture", "is_active", "is_lts", "disk_size_gb", "regions", "description", "provider_created_at", "cached_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean']):
+            raise ValueError("must be one of enum values ('hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean')")
+        return value
+
+    @field_validator('os_family')
+    def os_family_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['ubuntu', 'debian', 'centos', 'almalinux', 'rocky', 'fedora', 'opensuse', 'windows', 'other']):
+            raise ValueError("must be one of enum values ('ubuntu', 'debian', 'centos', 'almalinux', 'rocky', 'fedora', 'opensuse', 'windows', 'other')")
+        return value
+
+    @field_validator('architecture')
+    def architecture_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['x86_64', 'arm64']):
+            raise ValueError("must be one of enum values ('x86_64', 'arm64')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +109,11 @@ class FindProviderImageCache200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if regions (nullable) is None
+        # and model_fields_set contains the field
+        if self.regions is None and "regions" in self.model_fields_set:
+            _dict['regions'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +131,21 @@ class FindProviderImageCache200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "provider": obj.get("provider"),
+            "image_id": obj.get("image_id"),
+            "name": obj.get("name"),
+            "os_family": obj.get("os_family"),
+            "os_version": obj.get("os_version"),
+            "architecture": obj.get("architecture"),
+            "is_active": obj.get("is_active"),
+            "is_lts": obj.get("is_lts"),
+            "disk_size_gb": obj.get("disk_size_gb"),
+            "regions": obj.get("regions"),
+            "description": obj.get("description"),
+            "provider_created_at": obj.get("provider_created_at"),
+            "cached_at": obj.get("cached_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ProviderImageCache.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

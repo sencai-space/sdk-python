@@ -36,7 +36,7 @@ class UpdateKnowledgeEdgeRequestData(BaseModel):
     weight: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Edge weight; higher = stronger or more recent relationship signal.")
     last_changed_at: Optional[datetime] = None
     change_source: Optional[StrictStr] = Field(default=None, description="platform-event correlation_id that triggered this edge, or 'manual'.")
-    properties: Optional[Dict[str, Any]] = Field(default=None, description="Arbitrary metadata for this edge.")
+    properties: Optional[Any] = Field(default=None, description="Arbitrary metadata for this edge.")
     is_active: Optional[StrictBool] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["source_node", "target_node", "relation_type", "weight", "last_changed_at", "change_source", "properties", "is_active", "organisation"]
@@ -96,6 +96,11 @@ class UpdateKnowledgeEdgeRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if properties (nullable) is None
+        # and model_fields_set contains the field
+        if self.properties is None and "properties" in self.model_fields_set:
+            _dict['properties'] = None
+
         return _dict
 
     @classmethod

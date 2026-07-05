@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.runbook_execution import RunbookExecution
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,38 @@ class FindRunbookExecution200ResponseDataInner(BaseModel):
     """
     FindRunbookExecution200ResponseDataInner
     """ # noqa: E501
+    runbook: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    triggered_by: StrictStr
+    status: StrictStr
+    result: Optional[Any] = Field(default=None, description="Execution result payload from agent. Array of {action, success, output, error}.")
+    dry_run: Optional[StrictBool] = None
+    approved_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = Field(default=None, description="Approval TTL — execution is auto-cancelled if not approved by this time (now+4h on create when confirmation_required).")
+    approval_token: Optional[StrictStr] = None
+    agent_target: Optional[StrictStr] = Field(default=None, description="agent_id (documentId) of the agent to execute the runbook on.")
+    error_message: Optional[StrictStr] = None
+    triggered_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[RunbookExecution] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["runbook", "organisation", "triggered_by", "status", "result", "dry_run", "approved_at", "expires_at", "approval_token", "agent_target", "error_message", "triggered_by_user", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('triggered_by')
+    def triggered_by_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['alert', 'manual']):
+            raise ValueError("must be one of enum values ('alert', 'manual')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'dry_run', 'running', 'completed', 'failed', 'cancelled']):
+            raise ValueError("must be one of enum values ('pending', 'dry_run', 'running', 'completed', 'failed', 'cancelled')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +102,20 @@ class FindRunbookExecution200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of runbook
+        if self.runbook:
+            _dict['runbook'] = self.runbook.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of triggered_by_user
+        if self.triggered_by_user:
+            _dict['triggered_by_user'] = self.triggered_by_user.to_dict()
+        # set to None if result (nullable) is None
+        # and model_fields_set contains the field
+        if self.result is None and "result" in self.model_fields_set:
+            _dict['result'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +133,20 @@ class FindRunbookExecution200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "runbook": CreateAccessReviewRequestDataReviewer.from_dict(obj["runbook"]) if obj.get("runbook") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "triggered_by": obj.get("triggered_by"),
+            "status": obj.get("status"),
+            "result": obj.get("result"),
+            "dry_run": obj.get("dry_run"),
+            "approved_at": obj.get("approved_at"),
+            "expires_at": obj.get("expires_at"),
+            "approval_token": obj.get("approval_token"),
+            "agent_target": obj.get("agent_target"),
+            "error_message": obj.get("error_message"),
+            "triggered_by_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["triggered_by_user"]) if obj.get("triggered_by_user") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": RunbookExecution.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

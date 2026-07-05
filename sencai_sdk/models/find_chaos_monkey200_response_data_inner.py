@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.chaos_monkey import ChaosMonkey
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,49 @@ class FindChaosMonkey200ResponseDataInner(BaseModel):
     """
     FindChaosMonkey200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    experiment_type: StrictStr
+    target_service: StrictStr
+    enabled: Optional[StrictBool] = None
+    schedule: Optional[StrictStr] = None
+    duration_seconds: Optional[StrictInt] = None
+    blast_radius: Optional[StrictStr] = None
+    last_run_at: Optional[datetime] = None
+    last_result: Optional[StrictStr] = None
+    notes: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ChaosMonkey] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "experiment_type", "target_service", "enabled", "schedule", "duration_seconds", "blast_radius", "last_run_at", "last_result", "notes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('experiment_type')
+    def experiment_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['latency_injection', 'error_rate_spike', 'resource_exhaustion', 'dependency_failure', 'network_partition']):
+            raise ValueError("must be one of enum values ('latency_injection', 'error_rate_spike', 'resource_exhaustion', 'dependency_failure', 'network_partition')")
+        return value
+
+    @field_validator('blast_radius')
+    def blast_radius_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['single', 'zone', 'region']):
+            raise ValueError("must be one of enum values ('single', 'zone', 'region')")
+        return value
+
+    @field_validator('last_result')
+    def last_result_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['success', 'aborted', 'failed']):
+            raise ValueError("must be one of enum values ('success', 'aborted', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +112,6 @@ class FindChaosMonkey200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +129,18 @@ class FindChaosMonkey200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "experiment_type": obj.get("experiment_type"),
+            "target_service": obj.get("target_service"),
+            "enabled": obj.get("enabled"),
+            "schedule": obj.get("schedule"),
+            "duration_seconds": obj.get("duration_seconds"),
+            "blast_radius": obj.get("blast_radius"),
+            "last_run_at": obj.get("last_run_at"),
+            "last_result": obj.get("last_result"),
+            "notes": obj.get("notes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ChaosMonkey.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

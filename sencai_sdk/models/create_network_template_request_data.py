@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,12 +32,12 @@ class CreateNetworkTemplateRequestData(BaseModel):
     name: StrictStr
     description: Optional[StrictStr] = None
     template_type: StrictStr
-    rules: Dict[str, Any]
-    provider_support: Optional[Dict[str, Any]] = None
+    rules: Optional[Any] = Field(description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    provider_support: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_builtin: Optional[StrictBool] = None
     is_public: Optional[StrictBool] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
-    tags: Optional[Dict[str, Any]] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["name", "description", "template_type", "rules", "provider_support", "is_builtin", "is_public", "organisation", "tags"]
 
     @field_validator('template_type')
@@ -89,6 +89,21 @@ class CreateNetworkTemplateRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if rules (nullable) is None
+        # and model_fields_set contains the field
+        if self.rules is None and "rules" in self.model_fields_set:
+            _dict['rules'] = None
+
+        # set to None if provider_support (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_support is None and "provider_support" in self.model_fields_set:
+            _dict['provider_support'] = None
+
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         return _dict
 
     @classmethod

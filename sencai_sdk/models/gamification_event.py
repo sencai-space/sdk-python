@@ -30,18 +30,18 @@ class GamificationEvent(BaseModel):
     GamificationEvent
     """ # noqa: E501
     user: CreateAccessReviewRequestDataReviewer
-    action_type: StrictStr = Field(description="Whitelist kept identical to EVENT_TYPE_PATTERN in gamification-consumer (F4.GAM.02)")
+    action_type: StrictStr = Field(description="Whitelist kept identical to the internal action-type map in gamification-consumer (F4.GAM.02). 'easter_egg_triggered' added by F4.GAM.02 for the stochastic easter-egg budget log (persisted so the consumer can compute each user's remaining per-year allowance).")
     xp_granted: StrictInt
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     idempotency_key: StrictStr = Field(description="SHA-256 hash of the source RabbitMQ message — prevents duplicate XP grants on redelivery")
     __properties: ClassVar[List[str]] = ["user", "action_type", "xp_granted", "organisation", "metadata", "idempotency_key"]
 
     @field_validator('action_type')
     def action_type_validate_enum(cls, value):
         """Validates the enum"""
-        if value not in set(['provisioning_completed', 'runbook_success', 'incident_resolved', 'login_streak', 'automation_score_snapshot', 'badge_awarded', 'manual_admin_grant']):
-            raise ValueError("must be one of enum values ('provisioning_completed', 'runbook_success', 'incident_resolved', 'login_streak', 'automation_score_snapshot', 'badge_awarded', 'manual_admin_grant')")
+        if value not in set(['provisioning_completed', 'runbook_success', 'incident_resolved', 'login_streak', 'automation_score_snapshot', 'badge_awarded', 'manual_admin_grant', 'easter_egg_triggered']):
+            raise ValueError("must be one of enum values ('provisioning_completed', 'runbook_success', 'incident_resolved', 'login_streak', 'automation_score_snapshot', 'badge_awarded', 'manual_admin_grant', 'easter_egg_triggered')")
         return value
 
     model_config = ConfigDict(
@@ -89,6 +89,11 @@ class GamificationEvent(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

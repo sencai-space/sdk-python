@@ -36,13 +36,13 @@ class AuditLog(BaseModel):
     elevation_grant_id: Optional[StrictStr] = None
     resource_type: StrictStr
     resource_id: Optional[StrictStr] = None
-    changes: Optional[Dict[str, Any]] = None
+    changes: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     correlation_id: Optional[StrictStr] = None
     risk_level: Optional[StrictStr] = None
     prev_hash: Optional[StrictStr] = None
     entry_hash: Optional[StrictStr] = None
     anchor_id: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     ip_address: Optional[StrictStr] = None
     user_agent: Optional[StrictStr] = None
     region: Optional[StrictStr] = Field(default=None, description="Data-residency region of the tenant at time of audit event (CELL invariant, F2.CELL.01)")
@@ -98,6 +98,16 @@ class AuditLog(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if changes (nullable) is None
+        # and model_fields_set contains the field
+        if self.changes is None and "changes" in self.model_fields_set:
+            _dict['changes'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

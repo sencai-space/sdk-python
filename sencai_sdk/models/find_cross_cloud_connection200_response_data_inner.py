@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cross_cloud_connection import CrossCloudConnection
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,64 @@ class FindCrossCloudConnection200ResponseDataInner(BaseModel):
     """
     FindCrossCloudConnection200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=200)] = Field(description="Human-readable name, e.g. 'prod-aws-eu-to-hetzner-de'")
+    source_provider: StrictStr
+    source_region: StrictStr = Field(description="Provider-specific region identifier, e.g. 'eu-west-1'")
+    target_provider: StrictStr
+    target_region: StrictStr = Field(description="Provider-specific region identifier for the target, e.g. 'hel1'")
+    connection_type: StrictStr
+    status: StrictStr
+    latency_ms: Optional[StrictInt] = Field(default=None, description="Last measured round-trip latency in milliseconds")
+    packet_loss_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Last measured packet loss percentage (0.0–100.0)")
+    last_checked_at: Optional[datetime] = None
+    bgp_session_status: Optional[StrictStr] = None
+    bgp_as_path: Optional[StrictStr] = Field(default=None, description="BGP AS path if applicable, e.g. '65001 65002 65003'")
+    notes: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CrossCloudConnection] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "source_provider", "source_region", "target_provider", "target_region", "connection_type", "status", "latency_ms", "packet_loss_pct", "last_checked_at", "bgp_session_status", "bgp_as_path", "notes", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('source_provider')
+    def source_provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'gcp', 'azure', 'hetzner', 'digitalocean', 'vultr', 'linode']):
+            raise ValueError("must be one of enum values ('aws', 'gcp', 'azure', 'hetzner', 'digitalocean', 'vultr', 'linode')")
+        return value
+
+    @field_validator('target_provider')
+    def target_provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'gcp', 'azure', 'hetzner', 'digitalocean', 'vultr', 'linode']):
+            raise ValueError("must be one of enum values ('aws', 'gcp', 'azure', 'hetzner', 'digitalocean', 'vultr', 'linode')")
+        return value
+
+    @field_validator('connection_type')
+    def connection_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['public_internet', 'vpn_tunnel', 'private_peering', 'direct_connect']):
+            raise ValueError("must be one of enum values ('public_internet', 'vpn_tunnel', 'private_peering', 'direct_connect')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['active', 'degraded', 'down', 'unknown']):
+            raise ValueError("must be one of enum values ('active', 'degraded', 'down', 'unknown')")
+        return value
+
+    @field_validator('bgp_session_status')
+    def bgp_session_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['established', 'idle', 'active', 'connect', 'opensent', 'openconfirm', 'unknown']):
+            raise ValueError("must be one of enum values ('established', 'idle', 'active', 'connect', 'opensent', 'openconfirm', 'unknown')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +129,9 @@ class FindCrossCloudConnection200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +149,22 @@ class FindCrossCloudConnection200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "source_provider": obj.get("source_provider"),
+            "source_region": obj.get("source_region"),
+            "target_provider": obj.get("target_provider"),
+            "target_region": obj.get("target_region"),
+            "connection_type": obj.get("connection_type"),
+            "status": obj.get("status"),
+            "latency_ms": obj.get("latency_ms"),
+            "packet_loss_pct": obj.get("packet_loss_pct"),
+            "last_checked_at": obj.get("last_checked_at"),
+            "bgp_session_status": obj.get("bgp_session_status"),
+            "bgp_as_path": obj.get("bgp_as_path"),
+            "notes": obj.get("notes"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CrossCloudConnection.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

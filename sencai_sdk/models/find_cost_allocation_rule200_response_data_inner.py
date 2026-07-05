@@ -18,10 +18,10 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cost_allocation_rule import CostAllocationRule
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,37 @@ class FindCostAllocationRule200ResponseDataInner(BaseModel):
     """
     FindCostAllocationRule200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr = Field(description="Human-friendly rule name (e.g. 'NAT Gateway allocation - EU West').")
+    provider: StrictStr = Field(description="Cloud provider this rule applies to. 'all' matches any provider.")
+    resource_type: Optional[StrictStr] = Field(default=None, description="Matches cost-record service field (e.g. 'NatGateway', 'LoadBalancer', 'all'). Empty or 'all' = matches any.")
+    algorithm: StrictStr = Field(description="Split algorithm. 'even' = equal split; 'custom' = use weights JSON; 'usage-weighted' = usage metric split (v1: treated as even).")
+    weights: Optional[Any] = Field(default=None, description="For custom algorithm: { \"team-a\": 40, \"team-b\": 35, \"team-c\": 25 } — percentages summing to 100.")
+    allocation_tag_key: Optional[StrictStr] = Field(default=None, description="Which tag key to group cost recipients by (default: 'cost-center').")
+    effective_from: date = Field(description="Date from which this rule is effective.")
+    is_active: Optional[StrictBool] = Field(default=None, description="When false the rule is soft-disabled without deleting it.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    home_region: Optional[StrictStr] = Field(default=None, description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01).")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01).")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CostAllocationRule] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "provider", "resource_type", "algorithm", "weights", "allocation_tag_key", "effective_from", "is_active", "organisation", "home_region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'azure', 'gcp', 'hetzner', 'ovhcloud', 'scaleway', 'upcloud', 'digitalocean', 'all']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'hetzner', 'ovhcloud', 'scaleway', 'upcloud', 'digitalocean', 'all')")
+        return value
+
+    @field_validator('algorithm')
+    def algorithm_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['even', 'usage-weighted', 'custom']):
+            raise ValueError("must be one of enum values ('even', 'usage-weighted', 'custom')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +101,14 @@ class FindCostAllocationRule200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if weights (nullable) is None
+        # and model_fields_set contains the field
+        if self.weights is None and "weights" in self.model_fields_set:
+            _dict['weights'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +126,19 @@ class FindCostAllocationRule200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "provider": obj.get("provider"),
+            "resource_type": obj.get("resource_type"),
+            "algorithm": obj.get("algorithm"),
+            "weights": obj.get("weights"),
+            "allocation_tag_key": obj.get("allocation_tag_key"),
+            "effective_from": obj.get("effective_from"),
+            "is_active": obj.get("is_active"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CostAllocationRule.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

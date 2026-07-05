@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_iam_binding import CloudIamBinding
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,42 @@ class FindCloudIamBinding200ResponseDataInner(BaseModel):
     """
     FindCloudIamBinding200ResponseDataInner
     """ # noqa: E501
+    principal_id: StrictStr
+    principal_type: Optional[StrictStr] = None
+    role_name: Optional[StrictStr] = None
+    scope: Optional[StrictStr] = None
+    condition: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    provider: Optional[StrictStr] = None
+    external_id: Optional[StrictStr] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    credential: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudIamBinding] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["principal_id", "principal_type", "role_name", "scope", "condition", "provider", "external_id", "metadata", "credential", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('principal_type')
+    def principal_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['user', 'group', 'service-account', 'managed-identity']):
+            raise ValueError("must be one of enum values ('user', 'group', 'service-account', 'managed-identity')")
+        return value
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws', 'azure', 'gcp']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,22 @@ class FindCloudIamBinding200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of credential
+        if self.credential:
+            _dict['credential'] = self.credential.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if condition (nullable) is None
+        # and model_fields_set contains the field
+        if self.condition is None and "condition" in self.model_fields_set:
+            _dict['condition'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +139,18 @@ class FindCloudIamBinding200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "principal_id": obj.get("principal_id"),
+            "principal_type": obj.get("principal_type"),
+            "role_name": obj.get("role_name"),
+            "scope": obj.get("scope"),
+            "condition": obj.get("condition"),
+            "provider": obj.get("provider"),
+            "external_id": obj.get("external_id"),
+            "metadata": obj.get("metadata"),
+            "credential": CreateAccessReviewRequestDataReviewer.from_dict(obj["credential"]) if obj.get("credential") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudIamBinding.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

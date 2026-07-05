@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
@@ -33,7 +33,7 @@ class ComplianceControl(BaseModel):
     framework: StrictStr
     title: StrictStr
     description: Optional[StrictStr] = None
-    audit_actions: Optional[Dict[str, Any]] = None
+    audit_actions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     coverage_score: Optional[Union[StrictFloat, StrictInt]] = None
     last_evidence_at: Optional[datetime] = None
     notes: Optional[StrictStr] = None
@@ -85,6 +85,11 @@ class ComplianceControl(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if audit_actions (nullable) is None
+        # and model_fields_set contains the field
+        if self.audit_actions is None and "audit_actions" in self.model_fields_set:
+            _dict['audit_actions'] = None
+
         return _dict
 
     @classmethod

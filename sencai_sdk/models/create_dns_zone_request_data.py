@@ -37,7 +37,7 @@ class CreateDnsZoneRequestData(BaseModel):
     status: Optional[StrictStr] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
-    provider_metadata: Optional[Dict[str, Any]] = Field(default=None, description="Provider-specific metadata (name servers, comments, etc.).")
+    provider_metadata: Optional[Any] = Field(default=None, description="Provider-specific metadata (name servers, comments, etc.).")
     __properties: ClassVar[List[str]] = ["provider", "name", "type", "provider_zone_id", "records_count", "status", "organisation", "credential", "provider_metadata"]
 
     @field_validator('provider')
@@ -112,6 +112,11 @@ class CreateDnsZoneRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of credential
         if self.credential:
             _dict['credential'] = self.credential.to_dict()
+        # set to None if provider_metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_metadata is None and "provider_metadata" in self.model_fields_set:
+            _dict['provider_metadata'] = None
+
         return _dict
 
     @classmethod

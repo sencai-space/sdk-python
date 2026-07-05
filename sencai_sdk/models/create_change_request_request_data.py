@@ -37,7 +37,7 @@ class CreateChangeRequestRequestData(BaseModel):
     planned_at: Optional[datetime] = None
     rollback_plan: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
-    approvers: Optional[Dict[str, Any]] = Field(default=None, description="Array of { email, approved_at } objects")
+    approvers: Optional[Any] = Field(default=None, description="Array of { email, approved_at } objects")
     approved_at: Optional[datetime] = None
     rejected_at: Optional[datetime] = None
     implemented_at: Optional[datetime] = None
@@ -115,6 +115,11 @@ class CreateChangeRequestRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if approvers (nullable) is None
+        # and model_fields_set contains the field
+        if self.approvers is None and "approvers" in self.model_fields_set:
+            _dict['approvers'] = None
+
         return _dict
 
     @classmethod

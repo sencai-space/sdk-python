@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.synthetic_result import SyntheticResult
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,31 @@ class FindSyntheticResult200ResponseDataInner(BaseModel):
     """
     FindSyntheticResult200ResponseDataInner
     """ # noqa: E501
+    check_name: Optional[StrictStr] = None
+    url: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    response_time_ms: Optional[StrictInt] = None
+    status_code: Optional[StrictInt] = None
+    error_message: Optional[StrictStr] = None
+    checked_at: Optional[datetime] = None
+    synthetic_check: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SyntheticResult] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["check_name", "url", "status", "response_time_ms", "status_code", "error_message", "checked_at", "synthetic_check", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['passing', 'failing']):
+            raise ValueError("must be one of enum values ('passing', 'failing')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +95,12 @@ class FindSyntheticResult200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of synthetic_check
+        if self.synthetic_check:
+            _dict['synthetic_check'] = self.synthetic_check.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +118,17 @@ class FindSyntheticResult200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "check_name": obj.get("check_name"),
+            "url": obj.get("url"),
+            "status": obj.get("status"),
+            "response_time_ms": obj.get("response_time_ms"),
+            "status_code": obj.get("status_code"),
+            "error_message": obj.get("error_message"),
+            "checked_at": obj.get("checked_at"),
+            "synthetic_check": CreateAccessReviewRequestDataReviewer.from_dict(obj["synthetic_check"]) if obj.get("synthetic_check") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SyntheticResult.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

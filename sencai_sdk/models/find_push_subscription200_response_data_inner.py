@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.push_subscription import PushSubscription
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,24 @@ class FindPushSubscription200ResponseDataInner(BaseModel):
     """
     FindPushSubscription200ResponseDataInner
     """ # noqa: E501
+    endpoint: StrictStr = Field(description="Push service endpoint URL (unique per browser subscription, not a secret, but treated as sensitive since it identifies the device).")
+    p256dh_key: Optional[StrictStr] = Field(default=None, description="DEPRECATED plaintext field — retained read-only for pre-encryption legacy rows. New writes always go to encrypted_p256dh_key. NEVER returned by the API.")
+    auth_key: Optional[StrictStr] = Field(default=None, description="DEPRECATED plaintext field — retained read-only for pre-encryption legacy rows. New writes always go to encrypted_auth_key. NEVER returned by the API.")
+    encrypted_p256dh_key: Optional[StrictStr] = Field(default=None, description="AES-256-GCM encrypted PushSubscription.keys.p256dh (F3.PWA.01) — same iv:authTag:ciphertext:salt format as BYOC cloud-credential (src/utils/credential-crypto.ts). NEVER returned by the API; decrypted only server-side by push-notifier for dispatch.")
+    encrypted_auth_key: Optional[StrictStr] = Field(default=None, description="AES-256-GCM encrypted PushSubscription.keys.auth (F3.PWA.01). NEVER returned by the API.")
+    event_filters: Optional[Any] = Field(default=None, description="Array of subscribed event-type strings. Canonical catalog (F3.CHATOPS.01/F3.PWA.01): 'billing.payment_failed', 'billing.trial_ending', 'cloud-instance.provision_failed', 'alert.fired'. Empty/null = all events.")
+    enabled: Optional[StrictBool] = None
+    user_agent: Optional[StrictStr] = Field(default=None, description="Browser User-Agent at subscribe time — helps the user identify which device/browser a subscription belongs to in settings.")
+    last_sent_at: Optional[datetime] = None
+    failure_count: Optional[StrictInt] = None
+    user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[PushSubscription] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["endpoint", "p256dh_key", "auth_key", "encrypted_p256dh_key", "encrypted_auth_key", "event_filters", "enabled", "user_agent", "last_sent_at", "failure_count", "user", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +88,17 @@ class FindPushSubscription200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of user
+        if self.user:
+            _dict['user'] = self.user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if event_filters (nullable) is None
+        # and model_fields_set contains the field
+        if self.event_filters is None and "event_filters" in self.model_fields_set:
+            _dict['event_filters'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +116,20 @@ class FindPushSubscription200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "endpoint": obj.get("endpoint"),
+            "p256dh_key": obj.get("p256dh_key"),
+            "auth_key": obj.get("auth_key"),
+            "encrypted_p256dh_key": obj.get("encrypted_p256dh_key"),
+            "encrypted_auth_key": obj.get("encrypted_auth_key"),
+            "event_filters": obj.get("event_filters"),
+            "enabled": obj.get("enabled"),
+            "user_agent": obj.get("user_agent"),
+            "last_sent_at": obj.get("last_sent_at"),
+            "failure_count": obj.get("failure_count"),
+            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": PushSubscription.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

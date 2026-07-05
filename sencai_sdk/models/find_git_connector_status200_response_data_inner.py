@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.git_connector_status import GitConnectorStatus
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,55 @@ class FindGitConnectorStatus200ResponseDataInner(BaseModel):
     """
     FindGitConnectorStatus200ResponseDataInner
     """ # noqa: E501
+    instance_id: StrictStr = Field(alias="instanceId")
+    gitstatus: Optional[StrictStr] = None
+    last_heartbeat: Optional[datetime] = Field(default=None, alias="lastHeartbeat")
+    uptime: Optional[StrictInt] = None
+    version: Optional[StrictStr] = None
+    toolbox_status: Optional[StrictStr] = Field(default=None, alias="toolboxStatus")
+    apps_status: Optional[StrictStr] = Field(default=None, alias="appsStatus")
+    total_repositories: Optional[StrictInt] = Field(default=None, alias="totalRepositories")
+    toolbox_repositories: Optional[StrictInt] = Field(default=None, alias="toolboxRepositories")
+    apps_repositories: Optional[StrictInt] = Field(default=None, alias="appsRepositories")
+    last_sync_date: Optional[datetime] = Field(default=None, alias="lastSyncDate")
+    last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[GitConnectorStatus] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["instanceId", "gitstatus", "lastHeartbeat", "uptime", "version", "toolboxStatus", "appsStatus", "totalRepositories", "toolboxRepositories", "appsRepositories", "lastSyncDate", "lastError", "metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('gitstatus')
+    def gitstatus_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'unhealthy', 'turned-off']):
+            raise ValueError("must be one of enum values ('healthy', 'unhealthy', 'turned-off')")
+        return value
+
+    @field_validator('toolbox_status')
+    def toolbox_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['connected', 'disconnected', 'error']):
+            raise ValueError("must be one of enum values ('connected', 'disconnected', 'error')")
+        return value
+
+    @field_validator('apps_status')
+    def apps_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['connected', 'disconnected', 'error']):
+            raise ValueError("must be one of enum values ('connected', 'disconnected', 'error')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +118,11 @@ class FindGitConnectorStatus200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +140,21 @@ class FindGitConnectorStatus200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "instanceId": obj.get("instanceId"),
+            "gitstatus": obj.get("gitstatus"),
+            "lastHeartbeat": obj.get("lastHeartbeat"),
+            "uptime": obj.get("uptime"),
+            "version": obj.get("version"),
+            "toolboxStatus": obj.get("toolboxStatus"),
+            "appsStatus": obj.get("appsStatus"),
+            "totalRepositories": obj.get("totalRepositories"),
+            "toolboxRepositories": obj.get("toolboxRepositories"),
+            "appsRepositories": obj.get("appsRepositories"),
+            "lastSyncDate": obj.get("lastSyncDate"),
+            "lastError": obj.get("lastError"),
+            "metadata": obj.get("metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": GitConnectorStatus.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

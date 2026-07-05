@@ -18,10 +18,10 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.nis2_gap import Nis2Gap
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,39 @@ class FindNis2Gap200ResponseDataInner(BaseModel):
     """
     FindNis2Gap200ResponseDataInner
     """ # noqa: E501
+    requirement: StrictStr
+    article: Optional[StrictStr] = None
+    annex: StrictStr
+    gap_description: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    target_date: Optional[date] = None
+    owner: Optional[StrictStr] = None
+    evidence_links: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    audit_action_evidence: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Nis2Gap] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["requirement", "article", "annex", "gap_description", "status", "target_date", "owner", "evidence_links", "audit_action_evidence", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('annex')
+    def annex_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['annex_i', 'annex_ii', 'annex_iii']):
+            raise ValueError("must be one of enum values ('annex_i', 'annex_ii', 'annex_iii')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['open', 'in_progress', 'closed', 'risk_accepted']):
+            raise ValueError("must be one of enum values ('open', 'in_progress', 'closed', 'risk_accepted')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +103,19 @@ class FindNis2Gap200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if evidence_links (nullable) is None
+        # and model_fields_set contains the field
+        if self.evidence_links is None and "evidence_links" in self.model_fields_set:
+            _dict['evidence_links'] = None
+
+        # set to None if audit_action_evidence (nullable) is None
+        # and model_fields_set contains the field
+        if self.audit_action_evidence is None and "audit_action_evidence" in self.model_fields_set:
+            _dict['audit_action_evidence'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +133,18 @@ class FindNis2Gap200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "requirement": obj.get("requirement"),
+            "article": obj.get("article"),
+            "annex": obj.get("annex"),
+            "gap_description": obj.get("gap_description"),
+            "status": obj.get("status"),
+            "target_date": obj.get("target_date"),
+            "owner": obj.get("owner"),
+            "evidence_links": obj.get("evidence_links"),
+            "audit_action_evidence": obj.get("audit_action_evidence"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Nis2Gap.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

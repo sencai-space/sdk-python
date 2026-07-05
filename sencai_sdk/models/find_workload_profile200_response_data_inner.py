@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.workload_profile import WorkloadProfile
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,45 @@ class FindWorkloadProfile200ResponseDataInner(BaseModel):
     """
     FindWorkloadProfile200ResponseDataInner
     """ # noqa: E501
+    instance_id: Optional[StrictStr] = Field(default=None, description="documentId of the source cloud-instance record")
+    instance_name: Optional[StrictStr] = None
+    profile_type: StrictStr
+    peak_hours: Optional[Any] = Field(default=None, description="Array of hour integers (0-23) when CPU/memory is high")
+    idle_hours: Optional[Any] = Field(default=None, description="Array of hour integers (0-23) when instance is underutilised")
+    avg_cpu_pct: Optional[Union[StrictFloat, StrictInt]] = None
+    avg_memory_pct: Optional[Union[StrictFloat, StrictInt]] = None
+    current_instance_type: Optional[StrictStr] = Field(default=None, description="Current instance type e.g. m5.2xlarge")
+    migration_target: Optional[StrictStr] = Field(default=None, description="Recommended target instance type e.g. m5.xlarge")
+    estimated_monthly_savings_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    confidence: Optional[Union[StrictFloat, StrictInt]] = None
+    analysis_model: Optional[StrictStr] = None
+    recommendation_summary: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    profiled_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WorkloadProfile] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["instance_id", "instance_name", "profile_type", "peak_hours", "idle_hours", "avg_cpu_pct", "avg_memory_pct", "current_instance_type", "migration_target", "estimated_monthly_savings_usd", "confidence", "analysis_model", "recommendation_summary", "status", "organisation", "profiled_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('profile_type')
+    def profile_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['cpu_bound', 'memory_bound', 'io_bound', 'idle', 'mixed']):
+            raise ValueError("must be one of enum values ('cpu_bound', 'memory_bound', 'io_bound', 'idle', 'mixed')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending_review', 'accepted', 'implemented', 'dismissed']):
+            raise ValueError("must be one of enum values ('pending_review', 'accepted', 'implemented', 'dismissed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +109,19 @@ class FindWorkloadProfile200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if peak_hours (nullable) is None
+        # and model_fields_set contains the field
+        if self.peak_hours is None and "peak_hours" in self.model_fields_set:
+            _dict['peak_hours'] = None
+
+        # set to None if idle_hours (nullable) is None
+        # and model_fields_set contains the field
+        if self.idle_hours is None and "idle_hours" in self.model_fields_set:
+            _dict['idle_hours'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +139,24 @@ class FindWorkloadProfile200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "instance_id": obj.get("instance_id"),
+            "instance_name": obj.get("instance_name"),
+            "profile_type": obj.get("profile_type"),
+            "peak_hours": obj.get("peak_hours"),
+            "idle_hours": obj.get("idle_hours"),
+            "avg_cpu_pct": obj.get("avg_cpu_pct"),
+            "avg_memory_pct": obj.get("avg_memory_pct"),
+            "current_instance_type": obj.get("current_instance_type"),
+            "migration_target": obj.get("migration_target"),
+            "estimated_monthly_savings_usd": obj.get("estimated_monthly_savings_usd"),
+            "confidence": obj.get("confidence"),
+            "analysis_model": obj.get("analysis_model"),
+            "recommendation_summary": obj.get("recommendation_summary"),
+            "status": obj.get("status"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "profiled_at": obj.get("profiled_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WorkloadProfile.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

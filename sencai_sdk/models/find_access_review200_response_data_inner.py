@@ -18,10 +18,10 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.access_review import AccessReview
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,29 @@ class FindAccessReview200ResponseDataInner(BaseModel):
     """
     FindAccessReview200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    description: Optional[StrictStr] = None
+    status: StrictStr
+    reviewer: Optional[CreateAccessReviewRequestDataReviewer] = None
+    target_organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    due_date: date
+    completed_at: Optional[datetime] = None
+    total_items: Optional[StrictInt] = None
+    reviewed_items: Optional[StrictInt] = None
+    findings: Optional[Any] = Field(default=None, description="Summary of decisions: { keep: number, revoke: number, downgrade: number }")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AccessReview] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "status", "reviewer", "target_organisation", "due_date", "completed_at", "total_items", "reviewed_items", "findings", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'in_progress', 'completed', 'cancelled']):
+            raise ValueError("must be one of enum values ('pending', 'in_progress', 'completed', 'cancelled')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,17 @@ class FindAccessReview200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of reviewer
+        if self.reviewer:
+            _dict['reviewer'] = self.reviewer.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of target_organisation
+        if self.target_organisation:
+            _dict['target_organisation'] = self.target_organisation.to_dict()
+        # set to None if findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.findings is None and "findings" in self.model_fields_set:
+            _dict['findings'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +121,18 @@ class FindAccessReview200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "status": obj.get("status"),
+            "reviewer": CreateAccessReviewRequestDataReviewer.from_dict(obj["reviewer"]) if obj.get("reviewer") is not None else None,
+            "target_organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["target_organisation"]) if obj.get("target_organisation") is not None else None,
+            "due_date": obj.get("due_date"),
+            "completed_at": obj.get("completed_at"),
+            "total_items": obj.get("total_items"),
+            "reviewed_items": obj.get("reviewed_items"),
+            "findings": obj.get("findings"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AccessReview.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.deployment import Deployment
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,57 @@ class FindDeployment200ResponseDataInner(BaseModel):
     """
     FindDeployment200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    environment: StrictStr
+    service_name: StrictStr
+    version: Optional[StrictStr] = None
+    strategy: Optional[StrictStr] = None
+    traffic_split_pct: Optional[StrictInt] = None
+    rollback_on_error: Optional[StrictBool] = None
+    status: Optional[StrictStr] = None
+    deployed_by: Optional[StrictStr] = None
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    duration_seconds: Optional[StrictInt] = None
+    change_request_id: Optional[StrictStr] = None
+    deployment_url: Optional[StrictStr] = None
+    error_log: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cloud_instance: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Deployment] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "environment", "service_name", "version", "strategy", "traffic_split_pct", "rollback_on_error", "status", "deployed_by", "started_at", "finished_at", "completed_at", "duration_seconds", "change_request_id", "deployment_url", "error_log", "organisation", "cloud_instance", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('environment')
+    def environment_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['development', 'staging', 'production', 'preview']):
+            raise ValueError("must be one of enum values ('development', 'staging', 'production', 'preview')")
+        return value
+
+    @field_validator('strategy')
+    def strategy_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['blue_green', 'rolling', 'canary']):
+            raise ValueError("must be one of enum values ('blue_green', 'rolling', 'canary')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'in_progress', 'running', 'success', 'completed', 'failed', 'rolled_back', 'cancelled']):
+            raise ValueError("must be one of enum values ('pending', 'in_progress', 'running', 'success', 'completed', 'failed', 'rolled_back', 'cancelled')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +121,12 @@ class FindDeployment200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_instance
+        if self.cloud_instance:
+            _dict['cloud_instance'] = self.cloud_instance.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +144,26 @@ class FindDeployment200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "environment": obj.get("environment"),
+            "service_name": obj.get("service_name"),
+            "version": obj.get("version"),
+            "strategy": obj.get("strategy"),
+            "traffic_split_pct": obj.get("traffic_split_pct"),
+            "rollback_on_error": obj.get("rollback_on_error"),
+            "status": obj.get("status"),
+            "deployed_by": obj.get("deployed_by"),
+            "started_at": obj.get("started_at"),
+            "finished_at": obj.get("finished_at"),
+            "completed_at": obj.get("completed_at"),
+            "duration_seconds": obj.get("duration_seconds"),
+            "change_request_id": obj.get("change_request_id"),
+            "deployment_url": obj.get("deployment_url"),
+            "error_log": obj.get("error_log"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "cloud_instance": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_instance"]) if obj.get("cloud_instance") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Deployment.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

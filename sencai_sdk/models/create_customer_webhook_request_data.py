@@ -34,12 +34,12 @@ class CreateCustomerWebhookRequestData(BaseModel):
     name: Annotated[str, Field(strict=True, max_length=100)]
     url: StrictStr
     secret: Optional[StrictStr] = None
-    events: Optional[Dict[str, Any]] = None
+    events: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_active: Optional[StrictBool] = None
     last_delivery_at: Optional[datetime] = None
     failure_count: Optional[StrictInt] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["name", "url", "secret", "events", "is_active", "last_delivery_at", "failure_count", "organisation", "metadata"]
 
     model_config = ConfigDict(
@@ -84,6 +84,16 @@ class CreateCustomerWebhookRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if events (nullable) is None
+        # and model_fields_set contains the field
+        if self.events is None and "events" in self.model_fields_set:
+            _dict['events'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

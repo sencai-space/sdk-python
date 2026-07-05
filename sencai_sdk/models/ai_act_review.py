@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import date
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,7 +35,7 @@ class AiActReview(BaseModel):
     risk_category: StrictStr
     use_case: Optional[StrictStr] = None
     review_status: Optional[StrictStr] = None
-    transparency_measures: Optional[Dict[str, Any]] = None
+    transparency_measures: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     human_oversight_mechanism: Optional[StrictStr] = None
     data_governance_notes: Optional[StrictStr] = None
     conformity_assessment: Optional[StrictStr] = None
@@ -43,7 +43,7 @@ class AiActReview(BaseModel):
     review_date: Optional[date] = None
     next_review_date: Optional[date] = None
     reviewer: Optional[StrictStr] = None
-    findings: Optional[Dict[str, Any]] = None
+    findings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     remediation_plan: Optional[StrictStr] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["org_doc_id", "system_name", "risk_category", "use_case", "review_status", "transparency_measures", "human_oversight_mechanism", "data_governance_notes", "conformity_assessment", "registration_required", "review_date", "next_review_date", "reviewer", "findings", "remediation_plan", "organisation"]
@@ -117,6 +117,16 @@ class AiActReview(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if transparency_measures (nullable) is None
+        # and model_fields_set contains the field
+        if self.transparency_measures is None and "transparency_measures" in self.model_fields_set:
+            _dict['transparency_measures'] = None
+
+        # set to None if findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.findings is None and "findings" in self.model_fields_set:
+            _dict['findings'] = None
+
         return _dict
 
     @classmethod

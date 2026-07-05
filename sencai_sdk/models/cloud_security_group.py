@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -31,10 +31,10 @@ class CloudSecurityGroup(BaseModel):
     """ # noqa: E501
     name: StrictStr
     description: Optional[StrictStr] = None
-    rules: Optional[Dict[str, Any]] = None
+    rules: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     external_id: Optional[StrictStr] = None
     state: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     network: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "description", "rules", "external_id", "state", "metadata", "network", "organisation"]
@@ -94,6 +94,16 @@ class CloudSecurityGroup(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if rules (nullable) is None
+        # and model_fields_set contains the field
+        if self.rules is None and "rules" in self.model_fields_set:
+            _dict['rules'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

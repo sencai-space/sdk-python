@@ -33,9 +33,9 @@ class CreateBulkOperationRequestData(BaseModel):
     name: StrictStr = Field(description="Human-readable operation name, e.g. 'Apply security patches to web tier'")
     operation_type: StrictStr
     target_resource_type: Optional[StrictStr] = Field(default=None, description="e.g. cloud-instance, fleet-agent")
-    target_filters: Optional[Dict[str, Any]] = Field(default=None, description="Filter criteria for targeting resources, e.g. {tags: ['web-tier'], providers: ['hetzner']}")
-    dry_run_result: Optional[Dict[str, Any]] = Field(default=None, description="Preview result: {affected_count, affected_tenants: [{org_name, resource_count}], skipped_tenants: [{org_name, reason}]}")
-    execution_result: Optional[Dict[str, Any]] = Field(default=None, description="Per-tenant results after execution")
+    target_filters: Optional[Any] = Field(default=None, description="Filter criteria for targeting resources, e.g. {tags: ['web-tier'], providers: ['hetzner']}")
+    dry_run_result: Optional[Any] = Field(default=None, description="Preview result: {affected_count, affected_tenants: [{org_name, resource_count}], skipped_tenants: [{org_name, reason}]}")
+    execution_result: Optional[Any] = Field(default=None, description="Per-tenant results after execution")
     status: StrictStr
     tenant_count: Optional[StrictInt] = Field(default=None, description="Number of targeted managed tenants")
     resource_count: Optional[StrictInt] = Field(default=None, description="Total resources targeted")
@@ -43,7 +43,7 @@ class CreateBulkOperationRequestData(BaseModel):
     operator_org: Optional[CreateAccessReviewRequestDataReviewer] = None
     executed_by: Optional[CreateAccessReviewRequestDataReviewer] = None
     executed_at: Optional[datetime] = None
-    payload: Optional[Dict[str, Any]] = Field(default=None, description="Operation-specific parameters (patch version, tag key/value, etc.)")
+    payload: Optional[Any] = Field(default=None, description="Operation-specific parameters (patch version, tag key/value, etc.)")
     __properties: ClassVar[List[str]] = ["name", "operation_type", "target_resource_type", "target_filters", "dry_run_result", "execution_result", "status", "tenant_count", "resource_count", "skipped_count", "operator_org", "executed_by", "executed_at", "payload"]
 
     @field_validator('operation_type')
@@ -105,6 +105,26 @@ class CreateBulkOperationRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of executed_by
         if self.executed_by:
             _dict['executed_by'] = self.executed_by.to_dict()
+        # set to None if target_filters (nullable) is None
+        # and model_fields_set contains the field
+        if self.target_filters is None and "target_filters" in self.model_fields_set:
+            _dict['target_filters'] = None
+
+        # set to None if dry_run_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.dry_run_result is None and "dry_run_result" in self.model_fields_set:
+            _dict['dry_run_result'] = None
+
+        # set to None if execution_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.execution_result is None and "execution_result" in self.model_fields_set:
+            _dict['execution_result'] = None
+
+        # set to None if payload (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload is None and "payload" in self.model_fields_set:
+            _dict['payload'] = None
+
         return _dict
 
     @classmethod

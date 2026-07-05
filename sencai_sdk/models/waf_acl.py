@@ -33,7 +33,7 @@ class WafAcl(BaseModel):
     name: StrictStr = Field(description="Human-readable ACL name.")
     scope: Optional[StrictStr] = Field(default=None, description="WAF scope: CLOUDFRONT (AWS global), REGIONAL (AWS/Azure), GLOBAL (Cloudflare).")
     default_action: Optional[StrictStr] = Field(default=None, description="Default action for requests that do not match any rule.")
-    rules: Optional[Dict[str, Any]] = Field(default=None, description="WAF rules array (WafRule[]) — synced from provider.")
+    rules: Optional[Any] = Field(default=None, description="WAF rules array (WafRule[]) — synced from provider.")
     capacity: Optional[StrictInt] = Field(default=None, description="WCU capacity consumed by this ACL (AWS-specific).")
     status: Optional[StrictStr] = None
     provider_acl_id: StrictStr = Field(description="Provider-side ACL identifier (AWS WebACL ID, Azure ARM resource path, Cloudflare zone ID).")
@@ -123,6 +123,11 @@ class WafAcl(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of credential
         if self.credential:
             _dict['credential'] = self.credential.to_dict()
+        # set to None if rules (nullable) is None
+        # and model_fields_set contains the field
+        if self.rules is None and "rules" in self.model_fields_set:
+            _dict['rules'] = None
+
         return _dict
 
     @classmethod

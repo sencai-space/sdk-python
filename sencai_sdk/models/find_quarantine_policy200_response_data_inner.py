@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.quarantine_policy import QuarantinePolicy
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,25 @@ class FindQuarantinePolicy200ResponseDataInner(BaseModel):
     """
     FindQuarantinePolicy200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    trigger_type: StrictStr
+    conditions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    auto_release_hours: Optional[StrictInt] = None
+    notify_on_trigger: Optional[StrictBool] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[QuarantinePolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "trigger_type", "conditions", "auto_release_hours", "notify_on_trigger", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('trigger_type')
+    def trigger_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['manual', 'incident_critical', 'vuln_score_critical', 'suspicious_exec']):
+            raise ValueError("must be one of enum values ('manual', 'incident_critical', 'vuln_score_critical', 'suspicious_exec')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +89,14 @@ class FindQuarantinePolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if conditions (nullable) is None
+        # and model_fields_set contains the field
+        if self.conditions is None and "conditions" in self.model_fields_set:
+            _dict['conditions'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +114,14 @@ class FindQuarantinePolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "trigger_type": obj.get("trigger_type"),
+            "conditions": obj.get("conditions"),
+            "auto_release_hours": obj.get("auto_release_hours"),
+            "notify_on_trigger": obj.get("notify_on_trigger"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": QuarantinePolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

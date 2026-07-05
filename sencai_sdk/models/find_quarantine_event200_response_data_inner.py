@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.quarantine_event import QuarantineEvent
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,41 @@ class FindQuarantineEvent200ResponseDataInner(BaseModel):
     """
     FindQuarantineEvent200ResponseDataInner
     """ # noqa: E501
+    agent_id: StrictStr
+    agent_name: Optional[StrictStr] = None
+    trigger_type: Optional[StrictStr] = None
+    policy_id: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    quarantined_at: datetime
+    released_at: Optional[datetime] = None
+    release_reason: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[QuarantineEvent] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["agent_id", "agent_name", "trigger_type", "policy_id", "status", "quarantined_at", "released_at", "release_reason", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('trigger_type')
+    def trigger_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['manual', 'incident_critical', 'vuln_score_critical', 'suspicious_exec']):
+            raise ValueError("must be one of enum values ('manual', 'incident_critical', 'vuln_score_critical', 'suspicious_exec')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'released', 'expired']):
+            raise ValueError("must be one of enum values ('active', 'released', 'expired')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +105,9 @@ class FindQuarantineEvent200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +125,17 @@ class FindQuarantineEvent200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "agent_id": obj.get("agent_id"),
+            "agent_name": obj.get("agent_name"),
+            "trigger_type": obj.get("trigger_type"),
+            "policy_id": obj.get("policy_id"),
+            "status": obj.get("status"),
+            "quarantined_at": obj.get("quarantined_at"),
+            "released_at": obj.get("released_at"),
+            "release_reason": obj.get("release_reason"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": QuarantineEvent.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

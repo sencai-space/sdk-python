@@ -34,7 +34,7 @@ class NotificationChannel(BaseModel):
     channel_type: Optional[StrictStr] = None
     webhook_url: Optional[StrictStr] = Field(default=None, description="DEPRECATED plaintext field — retained read-only for pre-encryption legacy rows. New writes always go to encrypted_webhook_url. NEVER returned by the API.")
     encrypted_webhook_url: Optional[StrictStr] = Field(default=None, description="AES-256-GCM encrypted webhook_url (F3.CHATOPS.01) — same iv:authTag:ciphertext:salt format as BYOC cloud-credential (src/utils/credential-crypto.ts). NEVER returned by the API; decrypted only server-side by webhook-notifier for dispatch.")
-    events_filter: Optional[Dict[str, Any]] = Field(default=None, description="Array of subscribed event-type strings. Canonical catalog (F3.CHATOPS.01): 'billing.payment_failed', 'billing.trial_ending', 'cloud-instance.provision_failed', 'alert.fired'. Empty/null = all events.")
+    events_filter: Optional[Any] = Field(default=None, description="Array of subscribed event-type strings. Canonical catalog (F3.CHATOPS.01): 'billing.payment_failed', 'billing.trial_ending', 'cloud-instance.provision_failed', 'alert.fired'. Empty/null = all events.")
     enabled: Optional[StrictBool] = None
     last_sent_at: Optional[datetime] = None
     failure_count: Optional[StrictInt] = None
@@ -93,6 +93,11 @@ class NotificationChannel(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if events_filter (nullable) is None
+        # and model_fields_set contains the field
+        if self.events_filter is None and "events_filter" in self.model_fields_set:
+            _dict['events_filter'] = None
+
         return _dict
 
     @classmethod

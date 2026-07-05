@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.ropa_entry import RopaEntry
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,30 @@ class FindRopaEntry200ResponseDataInner(BaseModel):
     """
     FindRopaEntry200ResponseDataInner
     """ # noqa: E501
+    data_category: StrictStr
+    legal_basis: StrictStr
+    purpose: StrictStr
+    processor: Optional[StrictStr] = None
+    retention_days: Optional[StrictInt] = None
+    cross_border: Optional[StrictBool] = None
+    recipient_countries: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    safeguards: Optional[StrictStr] = None
+    notes: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    x_sencai_classification: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[RopaEntry] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["data_category", "legal_basis", "purpose", "processor", "retention_days", "cross_border", "recipient_countries", "safeguards", "notes", "organisation", "x_sencai_classification", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('legal_basis')
+    def legal_basis_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['consent', 'contract', 'legal_obligation', 'vital_interests', 'public_task', 'legitimate_interests']):
+            raise ValueError("must be one of enum values ('consent', 'contract', 'legal_obligation', 'vital_interests', 'public_task', 'legitimate_interests')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +94,14 @@ class FindRopaEntry200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if recipient_countries (nullable) is None
+        # and model_fields_set contains the field
+        if self.recipient_countries is None and "recipient_countries" in self.model_fields_set:
+            _dict['recipient_countries'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +119,19 @@ class FindRopaEntry200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "data_category": obj.get("data_category"),
+            "legal_basis": obj.get("legal_basis"),
+            "purpose": obj.get("purpose"),
+            "processor": obj.get("processor"),
+            "retention_days": obj.get("retention_days"),
+            "cross_border": obj.get("cross_border"),
+            "recipient_countries": obj.get("recipient_countries"),
+            "safeguards": obj.get("safeguards"),
+            "notes": obj.get("notes"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "x_sencai_classification": obj.get("x_sencai_classification"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": RopaEntry.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

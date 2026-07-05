@@ -18,10 +18,10 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.uat_session import UatSession
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,34 @@ class FindUatSession200ResponseDataInner(BaseModel):
     """
     FindUatSession200ResponseDataInner
     """ # noqa: E501
+    tester_email: StrictStr
+    tester_name: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    feature_area: Optional[StrictStr] = None
+    session_date: date
+    rating: Optional[StrictInt] = None
+    usability_score: Optional[StrictInt] = None
+    performance_score: Optional[StrictInt] = None
+    notes: Optional[StrictStr] = None
+    bugs_found: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    suggestions: Optional[StrictStr] = None
+    would_recommend: Optional[StrictBool] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[UatSession] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["tester_email", "tester_name", "organisation", "feature_area", "session_date", "rating", "usability_score", "performance_score", "notes", "bugs_found", "suggestions", "would_recommend", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('feature_area')
+    def feature_area_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['cloud_provisioning', 'identity_sso', 'inventory', 'billing', 'fleet_agent', 'workspace', 'blueprint', 'audit', 'networking', 'other']):
+            raise ValueError("must be one of enum values ('cloud_provisioning', 'identity_sso', 'inventory', 'billing', 'fleet_agent', 'workspace', 'blueprint', 'audit', 'networking', 'other')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +98,14 @@ class FindUatSession200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if bugs_found (nullable) is None
+        # and model_fields_set contains the field
+        if self.bugs_found is None and "bugs_found" in self.model_fields_set:
+            _dict['bugs_found'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +123,20 @@ class FindUatSession200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "tester_email": obj.get("tester_email"),
+            "tester_name": obj.get("tester_name"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "feature_area": obj.get("feature_area"),
+            "session_date": obj.get("session_date"),
+            "rating": obj.get("rating"),
+            "usability_score": obj.get("usability_score"),
+            "performance_score": obj.get("performance_score"),
+            "notes": obj.get("notes"),
+            "bugs_found": obj.get("bugs_found"),
+            "suggestions": obj.get("suggestions"),
+            "would_recommend": obj.get("would_recommend"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": UatSession.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

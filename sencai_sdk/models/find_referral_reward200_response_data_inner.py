@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.referral_reward import ReferralReward
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,30 @@ class FindReferralReward200ResponseDataInner(BaseModel):
     """
     FindReferralReward200ResponseDataInner
     """ # noqa: E501
+    referral_code: Optional[StrictStr] = None
+    referrer_org_id: Optional[StrictStr] = None
+    referee_email: Optional[StrictStr] = None
+    reward_type: Optional[StrictStr] = None
+    reward_value: Optional[Union[StrictFloat, StrictInt]] = None
+    status: Optional[StrictStr] = None
+    applied_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ReferralReward] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["referral_code", "referrer_org_id", "referee_email", "reward_type", "reward_value", "status", "applied_at", "expires_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'applied', 'expired']):
+            raise ValueError("must be one of enum values ('pending', 'applied', 'expired')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,6 @@ class FindReferralReward200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +110,16 @@ class FindReferralReward200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "referral_code": obj.get("referral_code"),
+            "referrer_org_id": obj.get("referrer_org_id"),
+            "referee_email": obj.get("referee_email"),
+            "reward_type": obj.get("reward_type"),
+            "reward_value": obj.get("reward_value"),
+            "status": obj.get("status"),
+            "applied_at": obj.get("applied_at"),
+            "expires_at": obj.get("expires_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ReferralReward.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

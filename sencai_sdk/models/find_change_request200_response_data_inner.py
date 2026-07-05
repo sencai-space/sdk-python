@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.change_request import ChangeRequest
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,53 @@ class FindChangeRequest200ResponseDataInner(BaseModel):
     """
     FindChangeRequest200ResponseDataInner
     """ # noqa: E501
+    title: StrictStr
+    description: Optional[StrictStr] = None
+    type: StrictStr
+    risk_level: Optional[StrictStr] = None
+    planned_at: Optional[datetime] = None
+    rollback_plan: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    approvers: Optional[Any] = Field(default=None, description="Array of { email, approved_at } objects")
+    approved_at: Optional[datetime] = None
+    rejected_at: Optional[datetime] = None
+    implemented_at: Optional[datetime] = None
+    evidence_url: Optional[StrictStr] = None
+    incident_link: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ChangeRequest] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["title", "description", "type", "risk_level", "planned_at", "rollback_plan", "status", "approvers", "approved_at", "rejected_at", "implemented_at", "evidence_url", "incident_link", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['infra', 'config', 'code', 'network', 'database', 'security']):
+            raise ValueError("must be one of enum values ('infra', 'config', 'code', 'network', 'database', 'security')")
+        return value
+
+    @field_validator('risk_level')
+    def risk_level_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['low', 'medium', 'high', 'critical']):
+            raise ValueError("must be one of enum values ('low', 'medium', 'high', 'critical')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'review', 'approved', 'rejected', 'implemented', 'rolled_back']):
+            raise ValueError("must be one of enum values ('draft', 'review', 'approved', 'rejected', 'implemented', 'rolled_back')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +117,14 @@ class FindChangeRequest200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if approvers (nullable) is None
+        # and model_fields_set contains the field
+        if self.approvers is None and "approvers" in self.model_fields_set:
+            _dict['approvers'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +142,22 @@ class FindChangeRequest200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "title": obj.get("title"),
+            "description": obj.get("description"),
+            "type": obj.get("type"),
+            "risk_level": obj.get("risk_level"),
+            "planned_at": obj.get("planned_at"),
+            "rollback_plan": obj.get("rollback_plan"),
+            "status": obj.get("status"),
+            "approvers": obj.get("approvers"),
+            "approved_at": obj.get("approved_at"),
+            "rejected_at": obj.get("rejected_at"),
+            "implemented_at": obj.get("implemented_at"),
+            "evidence_url": obj.get("evidence_url"),
+            "incident_link": obj.get("incident_link"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ChangeRequest.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

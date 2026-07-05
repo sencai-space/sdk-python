@@ -38,8 +38,8 @@ class CreateCloudAssetRequestData(BaseModel):
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     region: Optional[StrictStr] = Field(default=None, description="Provider region/location where the asset lives.")
     name: Optional[StrictStr] = Field(default=None, description="Human-readable name/label of the resource (provider Name tag, display name, ...).")
-    tags: Optional[Dict[str, Any]] = Field(default=None, description="Provider tags as a {k:v} map.")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Raw resource descriptor (instance type, IPs, SG ids, ...). LONGTEXT — do not store binary blobs.")
+    tags: Optional[Any] = Field(default=None, description="Provider tags as a {k:v} map.")
+    metadata: Optional[Any] = Field(default=None, description="Raw resource descriptor (instance type, IPs, SG ids, ...). LONGTEXT — do not store binary blobs.")
     ownership: Optional[StrictStr] = Field(default=None, description="Adoption state of the asset relative to Sencai management.")
     is_managed_by_sencai: Optional[StrictBool] = Field(default=None, description="True once Sencai actively manages this asset (adopted-for-management).")
     managed_as: Optional[StrictStr] = Field(default=None, description="documentId of the cloud-resource/cloud-instance this asset is adopted as, if Sencai actively manages it (nullable).")
@@ -124,6 +124,16 @@ class CreateCloudAssetRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

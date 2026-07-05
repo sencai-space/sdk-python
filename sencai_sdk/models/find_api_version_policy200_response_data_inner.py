@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.api_version_policy import ApiVersionPolicy
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,19 @@ class FindApiVersionPolicy200ResponseDataInner(BaseModel):
     """
     FindApiVersionPolicy200ResponseDataInner
     """ # noqa: E501
+    version: StrictStr
+    description: Optional[StrictStr] = None
+    deprecated_at: Optional[datetime] = None
+    sunset_at: Optional[datetime] = None
+    breaking_changes: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    is_current: Optional[StrictBool] = None
+    migration_guide_url: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ApiVersionPolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["version", "description", "deprecated_at", "sunset_at", "breaking_changes", "is_current", "migration_guide_url", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +82,11 @@ class FindApiVersionPolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if breaking_changes (nullable) is None
+        # and model_fields_set contains the field
+        if self.breaking_changes is None and "breaking_changes" in self.model_fields_set:
+            _dict['breaking_changes'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +104,15 @@ class FindApiVersionPolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "version": obj.get("version"),
+            "description": obj.get("description"),
+            "deprecated_at": obj.get("deprecated_at"),
+            "sunset_at": obj.get("sunset_at"),
+            "breaking_changes": obj.get("breaking_changes"),
+            "is_current": obj.get("is_current"),
+            "migration_guide_url": obj.get("migration_guide_url"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ApiVersionPolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

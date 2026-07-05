@@ -32,8 +32,8 @@ class CreateFeatureFlagRequestData(BaseModel):
     key: StrictStr = Field(description="Unique identifier used in code, e.g. 'new-billing-ui' or 'graphql-enabled'.")
     description: Optional[StrictStr] = None
     rollout_pct: Optional[StrictInt] = Field(default=None, description="Percentage of organisations that see this flag (0–100). Assigned deterministically via DJB2 hash of org documentId.")
-    enabled_plans: Optional[Dict[str, Any]] = Field(default=None, description="Array of plan names that always see this flag, e.g. [\"enterprise\", \"pro\"].")
-    enabled_orgs: Optional[Dict[str, Any]] = Field(default=None, description="Array of organisation documentIds that are explicitly whitelisted.")
+    enabled_plans: Optional[Any] = Field(default=None, description="Array of plan names that always see this flag, e.g. [\"enterprise\", \"pro\"].")
+    enabled_orgs: Optional[Any] = Field(default=None, description="Array of organisation documentIds that are explicitly whitelisted.")
     is_enabled: Optional[StrictBool] = Field(default=None, description="Master switch. When false the flag evaluates to false for all orgs regardless of other settings.")
     expires_at: Optional[datetime] = Field(default=None, description="Optional expiry. After this timestamp the flag evaluates to false automatically.")
     __properties: ClassVar[List[str]] = ["key", "description", "rollout_pct", "enabled_plans", "enabled_orgs", "is_enabled", "expires_at"]
@@ -77,6 +77,16 @@ class CreateFeatureFlagRequestData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if enabled_plans (nullable) is None
+        # and model_fields_set contains the field
+        if self.enabled_plans is None and "enabled_plans" in self.model_fields_set:
+            _dict['enabled_plans'] = None
+
+        # set to None if enabled_orgs (nullable) is None
+        # and model_fields_set contains the field
+        if self.enabled_orgs is None and "enabled_orgs" in self.model_fields_set:
+            _dict['enabled_orgs'] = None
+
         return _dict
 
     @classmethod

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.backup_policy import BackupPolicy
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,43 @@ class FindBackupPolicy200ResponseDataInner(BaseModel):
     """
     FindBackupPolicy200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    provider: Optional[StrictStr] = None
+    schedule: StrictStr
+    retention_days: Optional[StrictInt] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    is_active: Optional[StrictBool] = None
+    attached_instances: Optional[CreateAccessReviewRequestDataReviewer] = None
+    last_applied_at: Optional[datetime] = None
+    provider_policy_ids: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    status: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BackupPolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "organisation", "provider", "schedule", "retention_days", "tags", "is_active", "attached_instances", "last_applied_at", "provider_policy_ids", "status", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws', 'azure', 'gcp', 'all']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'all')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'inactive', 'error', 'pending']):
+            raise ValueError("must be one of enum values ('active', 'inactive', 'error', 'pending')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +107,22 @@ class FindBackupPolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of attached_instances
+        if self.attached_instances:
+            _dict['attached_instances'] = self.attached_instances.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if provider_policy_ids (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_policy_ids is None and "provider_policy_ids" in self.model_fields_set:
+            _dict['provider_policy_ids'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +140,19 @@ class FindBackupPolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "provider": obj.get("provider"),
+            "schedule": obj.get("schedule"),
+            "retention_days": obj.get("retention_days"),
+            "tags": obj.get("tags"),
+            "is_active": obj.get("is_active"),
+            "attached_instances": CreateAccessReviewRequestDataReviewer.from_dict(obj["attached_instances"]) if obj.get("attached_instances") is not None else None,
+            "last_applied_at": obj.get("last_applied_at"),
+            "provider_policy_ids": obj.get("provider_policy_ids"),
+            "status": obj.get("status"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BackupPolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

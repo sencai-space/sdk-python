@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.agent_update_policy import AgentUpdatePolicy
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,44 @@ class FindAgentUpdatePolicy200ResponseDataInner(BaseModel):
     """
     FindAgentUpdatePolicy200ResponseDataInner
     """ # noqa: E501
+    version: StrictStr
+    binary_url: Optional[StrictStr] = None
+    binary_sha256: Optional[StrictStr] = None
+    cosign_signature: Optional[StrictStr] = None
+    sbom_url: Optional[StrictStr] = None
+    staged_rollout: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    current_ring: Optional[StrictStr] = None
+    healthcheck_failures: Optional[StrictInt] = None
+    auto_pause_threshold: Optional[StrictInt] = None
+    status: Optional[StrictStr] = None
+    release_notes: Optional[StrictStr] = None
+    is_security_patch: Optional[StrictBool] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AgentUpdatePolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["version", "binary_url", "binary_sha256", "cosign_signature", "sbom_url", "staged_rollout", "current_ring", "healthcheck_failures", "auto_pause_threshold", "status", "release_notes", "is_security_patch", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('current_ring')
+    def current_ring_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['ring1', 'ring2', 'ring3', 'paused']):
+            raise ValueError("must be one of enum values ('ring1', 'ring2', 'ring3', 'paused')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['staged', 'active', 'paused', 'rolled_back']):
+            raise ValueError("must be one of enum values ('staged', 'active', 'paused', 'rolled_back')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +107,11 @@ class FindAgentUpdatePolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if staged_rollout (nullable) is None
+        # and model_fields_set contains the field
+        if self.staged_rollout is None and "staged_rollout" in self.model_fields_set:
+            _dict['staged_rollout'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +129,20 @@ class FindAgentUpdatePolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "version": obj.get("version"),
+            "binary_url": obj.get("binary_url"),
+            "binary_sha256": obj.get("binary_sha256"),
+            "cosign_signature": obj.get("cosign_signature"),
+            "sbom_url": obj.get("sbom_url"),
+            "staged_rollout": obj.get("staged_rollout"),
+            "current_ring": obj.get("current_ring"),
+            "healthcheck_failures": obj.get("healthcheck_failures"),
+            "auto_pause_threshold": obj.get("auto_pause_threshold"),
+            "status": obj.get("status"),
+            "release_notes": obj.get("release_notes"),
+            "is_security_patch": obj.get("is_security_patch"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AgentUpdatePolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

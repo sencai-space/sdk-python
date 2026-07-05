@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -37,7 +37,7 @@ class CustomerHealth(BaseModel):
     feature_score: Optional[Union[StrictFloat, StrictInt]] = None
     support_score: Optional[Union[StrictFloat, StrictInt]] = None
     churn_risk: Optional[StrictStr] = None
-    churn_signals: Optional[Dict[str, Any]] = None
+    churn_signals: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     last_login_at: Optional[datetime] = None
     days_since_login: Optional[StrictInt] = None
     active_instances: Optional[StrictInt] = None
@@ -99,6 +99,11 @@ class CustomerHealth(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if churn_signals (nullable) is None
+        # and model_fields_set contains the field
+        if self.churn_signals is None and "churn_signals" in self.model_fields_set:
+            _dict['churn_signals'] = None
+
         return _dict
 
     @classmethod

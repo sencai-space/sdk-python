@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,7 +35,7 @@ class WorkspaceSecurityPosture(BaseModel):
     users_without_2sv: Optional[StrictInt] = None
     users_with_weak_password: Optional[StrictInt] = None
     unreviewed_oauth_apps: Optional[StrictInt] = None
-    oauth_apps: Optional[Dict[str, Any]] = None
+    oauth_apps: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     suspicious_logins_24h: Optional[StrictInt] = None
     admin_accounts_without_2sv: Optional[StrictInt] = None
     last_assessed_at: datetime
@@ -84,6 +84,11 @@ class WorkspaceSecurityPosture(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if oauth_apps (nullable) is None
+        # and model_fields_set contains the field
+        if self.oauth_apps is None and "oauth_apps" in self.model_fields_set:
+            _dict['oauth_apps'] = None
+
         return _dict
 
     @classmethod

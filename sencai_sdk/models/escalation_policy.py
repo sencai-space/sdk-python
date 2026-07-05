@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -33,7 +33,7 @@ class EscalationPolicy(BaseModel):
     provider: Optional[StrictStr] = None
     routing_key: Optional[StrictStr] = None
     api_key_encrypted: Optional[StrictStr] = None
-    severity_map: Optional[Dict[str, Any]] = None
+    severity_map: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     enabled: Optional[StrictBool] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "provider", "routing_key", "api_key_encrypted", "severity_map", "enabled", "organisation"]
@@ -90,6 +90,11 @@ class EscalationPolicy(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if severity_map (nullable) is None
+        # and model_fields_set contains the field
+        if self.severity_map is None and "severity_map" in self.model_fields_set:
+            _dict['severity_map'] = None
+
         return _dict
 
     @classmethod

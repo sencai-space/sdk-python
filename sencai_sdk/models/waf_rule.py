@@ -33,7 +33,7 @@ class WafRule(BaseModel):
     name: StrictStr
     description: Optional[StrictStr] = None
     rule_type: Optional[StrictStr] = None
-    rule_config: Dict[str, Any] = Field(description="Provider-agnostic rule configuration. Shape depends on rule_type: rate_limit={requests_per_minute,action}, ip_block={ip_addresses[]}, geo_block={countries[],action}, header_check={header,required,pattern}.")
+    rule_config: Optional[Any] = Field(description="Provider-agnostic rule configuration. Shape depends on rule_type: rate_limit={requests_per_minute,action}, ip_block={ip_addresses[]}, geo_block={countries[],action}, header_check={header,required,pattern}.")
     provider: Optional[StrictStr] = None
     provider_rule_id: Optional[StrictStr] = Field(default=None, description="Provider-side rule/resource identifier returned after sync.")
     enabled: Optional[StrictBool] = None
@@ -115,6 +115,11 @@ class WafRule(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if rule_config (nullable) is None
+        # and model_fields_set contains the field
+        if self.rule_config is None and "rule_config" in self.model_fields_set:
+            _dict['rule_config'] = None
+
         return _dict
 
     @classmethod

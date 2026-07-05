@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.licence_assignment import LicenceAssignment
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,29 @@ class FindLicenceAssignment200ResponseDataInner(BaseModel):
     """
     FindLicenceAssignment200ResponseDataInner
     """ # noqa: E501
+    user_email: StrictStr
+    user_name: Optional[StrictStr] = None
+    licence_sku: StrictStr
+    product_id: Optional[StrictStr] = None
+    status: StrictStr
+    assigned_at: Optional[datetime] = None
+    revoked_at: Optional[datetime] = None
+    assigned_by: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: CreateAccessReviewRequestDataReviewer
+    workspace_customer_id: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[LicenceAssignment] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["user_email", "user_name", "licence_sku", "product_id", "status", "assigned_at", "revoked_at", "assigned_by", "organisation", "workspace_customer_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['active', 'revoked', 'pending']):
+            raise ValueError("must be one of enum values ('active', 'revoked', 'pending')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,12 @@ class FindLicenceAssignment200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of assigned_by
+        if self.assigned_by:
+            _dict['assigned_by'] = self.assigned_by.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +116,18 @@ class FindLicenceAssignment200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "user_email": obj.get("user_email"),
+            "user_name": obj.get("user_name"),
+            "licence_sku": obj.get("licence_sku"),
+            "product_id": obj.get("product_id"),
+            "status": obj.get("status"),
+            "assigned_at": obj.get("assigned_at"),
+            "revoked_at": obj.get("revoked_at"),
+            "assigned_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["assigned_by"]) if obj.get("assigned_by") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "workspace_customer_id": obj.get("workspace_customer_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": LicenceAssignment.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

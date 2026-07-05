@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_pricing import CloudPricing
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,45 @@ class FindCloudPricing200ResponseDataInner(BaseModel):
     """
     FindCloudPricing200ResponseDataInner
     """ # noqa: E501
+    provider: StrictStr
+    region: StrictStr
+    resource_type: StrictStr
+    sku: StrictStr
+    sku_name: Optional[StrictStr] = None
+    vcpu: Optional[StrictInt] = None
+    ram_gb: Optional[Union[StrictFloat, StrictInt]] = None
+    unit_price: Union[StrictFloat, StrictInt]
+    unit: StrictStr
+    currency: Optional[StrictStr] = None
+    valid_from: Optional[datetime] = None
+    attributes: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudPricing] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["provider", "region", "resource_type", "sku", "sku_name", "vcpu", "ram_gb", "unit_price", "unit", "currency", "valid_from", "attributes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'vultr', 'linode']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'hetzner', 'digitalocean', 'vultr', 'linode')")
+        return value
+
+    @field_validator('resource_type')
+    def resource_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['instance', 'storage', 'data_transfer', 'managed_db', 'load_balancer']):
+            raise ValueError("must be one of enum values ('instance', 'storage', 'data_transfer', 'managed_db', 'load_balancer')")
+        return value
+
+    @field_validator('unit')
+    def unit_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['hour', 'gb_month', 'gb', 'request']):
+            raise ValueError("must be one of enum values ('hour', 'gb_month', 'gb', 'request')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +108,11 @@ class FindCloudPricing200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if attributes (nullable) is None
+        # and model_fields_set contains the field
+        if self.attributes is None and "attributes" in self.model_fields_set:
+            _dict['attributes'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +130,20 @@ class FindCloudPricing200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "provider": obj.get("provider"),
+            "region": obj.get("region"),
+            "resource_type": obj.get("resource_type"),
+            "sku": obj.get("sku"),
+            "sku_name": obj.get("sku_name"),
+            "vcpu": obj.get("vcpu"),
+            "ram_gb": obj.get("ram_gb"),
+            "unit_price": obj.get("unit_price"),
+            "unit": obj.get("unit"),
+            "currency": obj.get("currency"),
+            "valid_from": obj.get("valid_from"),
+            "attributes": obj.get("attributes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudPricing.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

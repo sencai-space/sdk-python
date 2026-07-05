@@ -21,7 +21,7 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cis_scan import CisScan
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,21 @@ class FindCisScan200ResponseDataInner(BaseModel):
     """
     FindCisScan200ResponseDataInner
     """ # noqa: E501
+    sencai_agent: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    hardening_score: Optional[StrictInt] = None
+    total_tests: Optional[StrictInt] = None
+    warning_count: Optional[StrictInt] = None
+    suggestion_count: Optional[StrictInt] = None
+    warnings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    suggestions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    scanned_at: datetime
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CisScan] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["sencai_agent", "organisation", "hardening_score", "total_tests", "warning_count", "suggestion_count", "warnings", "suggestions", "scanned_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +85,22 @@ class FindCisScan200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of sencai_agent
+        if self.sencai_agent:
+            _dict['sencai_agent'] = self.sencai_agent.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if warnings (nullable) is None
+        # and model_fields_set contains the field
+        if self.warnings is None and "warnings" in self.model_fields_set:
+            _dict['warnings'] = None
+
+        # set to None if suggestions (nullable) is None
+        # and model_fields_set contains the field
+        if self.suggestions is None and "suggestions" in self.model_fields_set:
+            _dict['suggestions'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +118,17 @@ class FindCisScan200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "sencai_agent": CreateAccessReviewRequestDataReviewer.from_dict(obj["sencai_agent"]) if obj.get("sencai_agent") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "hardening_score": obj.get("hardening_score"),
+            "total_tests": obj.get("total_tests"),
+            "warning_count": obj.get("warning_count"),
+            "suggestion_count": obj.get("suggestion_count"),
+            "warnings": obj.get("warnings"),
+            "suggestions": obj.get("suggestions"),
+            "scanned_at": obj.get("scanned_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CisScan.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

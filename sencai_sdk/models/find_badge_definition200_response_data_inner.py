@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.badge_definition import BadgeDefinition
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,27 @@ class FindBadgeDefinition200ResponseDataInner(BaseModel):
     """
     FindBadgeDefinition200ResponseDataInner
     """ # noqa: E501
+    code: StrictStr = Field(description="Stable machine-readable identifier referenced by user-rank.badges[].badge_code and gamification-consumer trigger evaluation")
+    title: StrictStr
+    description: Optional[StrictStr] = None
+    icon: Optional[StrictStr] = Field(default=None, description="Icon name or emoji — no file upload, rendered client-side")
+    xp_reward: StrictInt
+    trigger_type: StrictStr
+    trigger_threshold: Optional[StrictInt] = None
+    active: StrictBool
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BadgeDefinition] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["code", "title", "description", "icon", "xp_reward", "trigger_type", "trigger_threshold", "active", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('trigger_type')
+    def trigger_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['provisioning_count', 'runbook_success', 'incident_resolved', 'streak_days', 'automation_score_threshold', 'manual_admin_grant']):
+            raise ValueError("must be one of enum values ('provisioning_count', 'runbook_success', 'incident_resolved', 'streak_days', 'automation_score_threshold', 'manual_admin_grant')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +90,6 @@ class FindBadgeDefinition200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +107,16 @@ class FindBadgeDefinition200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "code": obj.get("code"),
+            "title": obj.get("title"),
+            "description": obj.get("description"),
+            "icon": obj.get("icon"),
+            "xp_reward": obj.get("xp_reward"),
+            "trigger_type": obj.get("trigger_type"),
+            "trigger_threshold": obj.get("trigger_threshold"),
+            "active": obj.get("active"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BadgeDefinition.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
@@ -36,7 +36,7 @@ class CreateSubscriptionTierRequestData(BaseModel):
     max_cloud_instances: Optional[StrictInt] = None
     price_monthly_usd: Optional[Union[StrictFloat, StrictInt]] = None
     price_yearly_usd: Optional[Union[StrictFloat, StrictInt]] = None
-    features: Optional[Dict[str, Any]] = None
+    features: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_free_tier: Optional[StrictBool] = None
     is_active: Optional[StrictBool] = None
     trial_days: Optional[StrictInt] = None
@@ -95,6 +95,11 @@ class CreateSubscriptionTierRequestData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if features (nullable) is None
+        # and model_fields_set contains the field
+        if self.features is None and "features" in self.model_fields_set:
+            _dict['features'] = None
+
         return _dict
 
     @classmethod

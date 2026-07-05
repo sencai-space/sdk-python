@@ -35,7 +35,7 @@ class CreateCostRecommendationRequestData(BaseModel):
     estimated_saving_monthly: Optional[Union[StrictFloat, StrictInt]] = None
     confidence: StrictStr
     status: StrictStr
-    detail: Optional[Dict[str, Any]] = Field(default=None, description="Provider-specific metadata: current/recommended resource specs, utilization data, break-even calc.")
+    detail: Optional[Any] = Field(default=None, description="Provider-specific metadata: current/recommended resource specs, utilization data, break-even calc.")
     detected_at: datetime
     snoozed_until: Optional[datetime] = Field(default=None, description="Set when status=snoozed. Recommendation surfaced again after this date.")
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -121,6 +121,11 @@ class CreateCostRecommendationRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if detail (nullable) is None
+        # and model_fields_set contains the field
+        if self.detail is None and "detail" in self.model_fields_set:
+            _dict['detail'] = None
+
         return _dict
 
     @classmethod

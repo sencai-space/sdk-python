@@ -52,20 +52,20 @@ class CreateCloudConnectorStatusRequestData(BaseModel):
     digitalocean_health: Optional[StrictStr] = Field(default=None, alias="digitaloceanHealth")
     queue_status: Optional[StrictStr] = Field(default=None, alias="queueStatus")
     backend_integration: Optional[StrictBool] = Field(default=None, alias="backendIntegration")
-    available_regions: Optional[Dict[str, Any]] = Field(default=None, alias="availableRegions")
-    active_regions: Optional[Dict[str, Any]] = Field(default=None, alias="activeRegions")
-    supported_providers: Optional[Dict[str, Any]] = Field(default=None, alias="supportedProviders")
-    deployment_capabilities: Optional[Dict[str, Any]] = Field(default=None, alias="deploymentCapabilities")
+    available_regions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="availableRegions")
+    active_regions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="activeRegions")
+    supported_providers: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="supportedProviders")
+    deployment_capabilities: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="deploymentCapabilities")
     avg_response_time_ms: Optional[StrictInt] = Field(default=None, alias="avgResponseTimeMs")
     success_rate: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="successRate")
     throughput_jobs_per_hour: Optional[StrictInt] = Field(default=None, alias="throughputJobsPerHour")
     error_rate: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="errorRate")
     memory_usage_mb: Optional[StrictInt] = Field(default=None, alias="memoryUsageMB")
     cpu_usage_percent: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, alias="cpuUsagePercent")
-    connector_info: Optional[Dict[str, Any]] = Field(default=None, alias="connectorInfo")
+    connector_info: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="connectorInfo")
     last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
-    diagnostic_info: Optional[Dict[str, Any]] = Field(default=None, alias="diagnosticInfo")
-    metadata: Optional[Dict[str, Any]] = None
+    diagnostic_info: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)", alias="diagnosticInfo")
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["instanceId", "region", "provider", "deploymentRegion", "ccstatus", "lastHeartbeat", "uptimeMinutes", "version", "totalJobs", "pendingJobs", "runningJobs", "successJobs", "failedJobs", "awsHealth", "gcpHealth", "azureHealth", "scalewayHealth", "ovhcloudHealth", "hetznerHealth", "upcloudHealth", "digitaloceanHealth", "queueStatus", "backendIntegration", "availableRegions", "activeRegions", "supportedProviders", "deploymentCapabilities", "avgResponseTimeMs", "successRate", "throughputJobsPerHour", "errorRate", "memoryUsageMB", "cpuUsagePercent", "connectorInfo", "lastError", "diagnosticInfo", "metadata"]
 
     @field_validator('aws_health')
@@ -197,6 +197,41 @@ class CreateCloudConnectorStatusRequestData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if available_regions (nullable) is None
+        # and model_fields_set contains the field
+        if self.available_regions is None and "available_regions" in self.model_fields_set:
+            _dict['availableRegions'] = None
+
+        # set to None if active_regions (nullable) is None
+        # and model_fields_set contains the field
+        if self.active_regions is None and "active_regions" in self.model_fields_set:
+            _dict['activeRegions'] = None
+
+        # set to None if supported_providers (nullable) is None
+        # and model_fields_set contains the field
+        if self.supported_providers is None and "supported_providers" in self.model_fields_set:
+            _dict['supportedProviders'] = None
+
+        # set to None if deployment_capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.deployment_capabilities is None and "deployment_capabilities" in self.model_fields_set:
+            _dict['deploymentCapabilities'] = None
+
+        # set to None if connector_info (nullable) is None
+        # and model_fields_set contains the field
+        if self.connector_info is None and "connector_info" in self.model_fields_set:
+            _dict['connectorInfo'] = None
+
+        # set to None if diagnostic_info (nullable) is None
+        # and model_fields_set contains the field
+        if self.diagnostic_info is None and "diagnostic_info" in self.model_fields_set:
+            _dict['diagnosticInfo'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

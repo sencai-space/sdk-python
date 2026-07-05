@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
@@ -40,7 +40,7 @@ class CloudPricing(BaseModel):
     unit: StrictStr
     currency: Optional[StrictStr] = None
     valid_from: Optional[datetime] = None
-    attributes: Optional[Dict[str, Any]] = None
+    attributes: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["provider", "region", "resource_type", "sku", "sku_name", "vcpu", "ram_gb", "unit_price", "unit", "currency", "valid_from", "attributes"]
 
     @field_validator('provider')
@@ -103,6 +103,11 @@ class CloudPricing(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if attributes (nullable) is None
+        # and model_fields_set contains the field
+        if self.attributes is None and "attributes" in self.model_fields_set:
+            _dict['attributes'] = None
+
         return _dict
 
     @classmethod

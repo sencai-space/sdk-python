@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.agent_metric_snapshot import AgentMetricSnapshot
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,22 @@ class FindAgentMetricSnapshot200ResponseDataInner(BaseModel):
     """
     FindAgentMetricSnapshot200ResponseDataInner
     """ # noqa: E501
+    agent_id: StrictStr
+    agent_name: Optional[StrictStr] = None
+    cpu_pct: Optional[Union[StrictFloat, StrictInt]] = None
+    mem_mb: Optional[Union[StrictFloat, StrictInt]] = None
+    disk_pct: Optional[Union[StrictFloat, StrictInt]] = None
+    net_bytes_in: Optional[StrictInt] = None
+    net_bytes_out: Optional[StrictInt] = None
+    uptime_seconds: Optional[StrictInt] = None
+    recorded_at: Optional[datetime] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AgentMetricSnapshot] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["agent_id", "agent_name", "cpu_pct", "mem_mb", "disk_pct", "net_bytes_in", "net_bytes_out", "uptime_seconds", "recorded_at", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +86,9 @@ class FindAgentMetricSnapshot200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +106,18 @@ class FindAgentMetricSnapshot200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "agent_id": obj.get("agent_id"),
+            "agent_name": obj.get("agent_name"),
+            "cpu_pct": obj.get("cpu_pct"),
+            "mem_mb": obj.get("mem_mb"),
+            "disk_pct": obj.get("disk_pct"),
+            "net_bytes_in": obj.get("net_bytes_in"),
+            "net_bytes_out": obj.get("net_bytes_out"),
+            "uptime_seconds": obj.get("uptime_seconds"),
+            "recorded_at": obj.get("recorded_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AgentMetricSnapshot.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

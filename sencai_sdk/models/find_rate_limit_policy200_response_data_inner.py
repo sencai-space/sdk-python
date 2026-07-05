@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.rate_limit_policy import RateLimitPolicy
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,32 @@ class FindRateLimitPolicy200ResponseDataInner(BaseModel):
     """
     FindRateLimitPolicy200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    tier: Optional[StrictStr] = None
+    endpoint_pattern: Optional[StrictStr] = None
+    requests_per_minute: Optional[StrictInt] = None
+    burst_allowance: Optional[StrictInt] = None
+    enabled: Optional[StrictBool] = None
+    ai_tokens_per_minute: Optional[StrictInt] = None
+    ai_tokens_per_day: Optional[StrictInt] = None
+    ai_hallucination_threshold: Optional[Union[StrictFloat, StrictInt]] = None
+    ai_rate_limit_enabled: Optional[StrictBool] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[RateLimitPolicy] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "tier", "endpoint_pattern", "requests_per_minute", "burst_allowance", "enabled", "ai_tokens_per_minute", "ai_tokens_per_day", "ai_hallucination_threshold", "ai_rate_limit_enabled", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('tier')
+    def tier_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['free', 'starter', 'professional', 'enterprise']):
+            raise ValueError("must be one of enum values ('free', 'starter', 'professional', 'enterprise')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +95,6 @@ class FindRateLimitPolicy200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +112,18 @@ class FindRateLimitPolicy200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "tier": obj.get("tier"),
+            "endpoint_pattern": obj.get("endpoint_pattern"),
+            "requests_per_minute": obj.get("requests_per_minute"),
+            "burst_allowance": obj.get("burst_allowance"),
+            "enabled": obj.get("enabled"),
+            "ai_tokens_per_minute": obj.get("ai_tokens_per_minute"),
+            "ai_tokens_per_day": obj.get("ai_tokens_per_day"),
+            "ai_hallucination_threshold": obj.get("ai_hallucination_threshold"),
+            "ai_rate_limit_enabled": obj.get("ai_rate_limit_enabled"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": RateLimitPolicy.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.feature_flag import FeatureFlag
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,19 @@ class FindFeatureFlag200ResponseDataInner(BaseModel):
     """
     FindFeatureFlag200ResponseDataInner
     """ # noqa: E501
+    key: StrictStr = Field(description="Unique identifier used in code, e.g. 'new-billing-ui' or 'graphql-enabled'.")
+    description: Optional[StrictStr] = None
+    rollout_pct: Optional[StrictInt] = Field(default=None, description="Percentage of organisations that see this flag (0–100). Assigned deterministically via DJB2 hash of org documentId.")
+    enabled_plans: Optional[Any] = Field(default=None, description="Array of plan names that always see this flag, e.g. [\"enterprise\", \"pro\"].")
+    enabled_orgs: Optional[Any] = Field(default=None, description="Array of organisation documentIds that are explicitly whitelisted.")
+    is_enabled: Optional[StrictBool] = Field(default=None, description="Master switch. When false the flag evaluates to false for all orgs regardless of other settings.")
+    expires_at: Optional[datetime] = Field(default=None, description="Optional expiry. After this timestamp the flag evaluates to false automatically.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[FeatureFlag] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["key", "description", "rollout_pct", "enabled_plans", "enabled_orgs", "is_enabled", "expires_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +82,16 @@ class FindFeatureFlag200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if enabled_plans (nullable) is None
+        # and model_fields_set contains the field
+        if self.enabled_plans is None and "enabled_plans" in self.model_fields_set:
+            _dict['enabled_plans'] = None
+
+        # set to None if enabled_orgs (nullable) is None
+        # and model_fields_set contains the field
+        if self.enabled_orgs is None and "enabled_orgs" in self.model_fields_set:
+            _dict['enabled_orgs'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +109,15 @@ class FindFeatureFlag200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "key": obj.get("key"),
+            "description": obj.get("description"),
+            "rollout_pct": obj.get("rollout_pct"),
+            "enabled_plans": obj.get("enabled_plans"),
+            "enabled_orgs": obj.get("enabled_orgs"),
+            "is_enabled": obj.get("is_enabled"),
+            "expires_at": obj.get("expires_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": FeatureFlag.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

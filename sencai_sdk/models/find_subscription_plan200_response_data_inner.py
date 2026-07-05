@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.subscription_plan import SubscriptionPlan
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,30 @@ class FindSubscriptionPlan200ResponseDataInner(BaseModel):
     """
     FindSubscriptionPlan200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    account_tier: StrictStr
+    price_eur_per_host: Optional[Union[StrictFloat, StrictInt]] = None
+    price_eur_base: Optional[Union[StrictFloat, StrictInt]] = None
+    max_instances: Optional[StrictInt] = None
+    max_members: Optional[StrictInt] = None
+    max_monthly_budget: Optional[Union[StrictFloat, StrictInt]] = None
+    max_agents: Optional[StrictInt] = None
+    features: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    is_public: Optional[StrictBool] = None
+    stripe_price_id: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SubscriptionPlan] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "account_tier", "price_eur_per_host", "price_eur_base", "max_instances", "max_members", "max_monthly_budget", "max_agents", "features", "is_public", "stripe_price_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('account_tier')
+    def account_tier_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['free', 'starter', 'professional', 'enterprise']):
+            raise ValueError("must be one of enum values ('free', 'starter', 'professional', 'enterprise')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,11 @@ class FindSubscriptionPlan200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if features (nullable) is None
+        # and model_fields_set contains the field
+        if self.features is None and "features" in self.model_fields_set:
+            _dict['features'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +115,19 @@ class FindSubscriptionPlan200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "account_tier": obj.get("account_tier"),
+            "price_eur_per_host": obj.get("price_eur_per_host"),
+            "price_eur_base": obj.get("price_eur_base"),
+            "max_instances": obj.get("max_instances"),
+            "max_members": obj.get("max_members"),
+            "max_monthly_budget": obj.get("max_monthly_budget"),
+            "max_agents": obj.get("max_agents"),
+            "features": obj.get("features"),
+            "is_public": obj.get("is_public"),
+            "stripe_price_id": obj.get("stripe_price_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SubscriptionPlan.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

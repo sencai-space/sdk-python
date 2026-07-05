@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.agency_billing_summary import AgencyBillingSummary
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,31 @@ class FindAgencyBillingSummary200ResponseDataInner(BaseModel):
     """
     FindAgencyBillingSummary200ResponseDataInner
     """ # noqa: E501
+    period: StrictStr = Field(description="Billing period in YYYY-MM format (e.g. '2026-06')")
+    operator_org: CreateAccessReviewRequestDataReviewer
+    line_items: Optional[Any] = Field(description="Array of {managed_org_id, org_name, billing_model, resource_count, mrr_usd, tier_name}")
+    total_mrr_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    managed_tenant_count: Optional[StrictInt] = None
+    agency_billed_count: Optional[StrictInt] = None
+    managed_billed_count: Optional[StrictInt] = None
+    generated_at: Optional[datetime] = None
+    status: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AgencyBillingSummary] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["period", "operator_org", "line_items", "total_mrr_usd", "managed_tenant_count", "agency_billed_count", "managed_billed_count", "generated_at", "status", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'finalized']):
+            raise ValueError("must be one of enum values ('draft', 'finalized')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +95,14 @@ class FindAgencyBillingSummary200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of operator_org
+        if self.operator_org:
+            _dict['operator_org'] = self.operator_org.to_dict()
+        # set to None if line_items (nullable) is None
+        # and model_fields_set contains the field
+        if self.line_items is None and "line_items" in self.model_fields_set:
+            _dict['line_items'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +120,17 @@ class FindAgencyBillingSummary200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "period": obj.get("period"),
+            "operator_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["operator_org"]) if obj.get("operator_org") is not None else None,
+            "line_items": obj.get("line_items"),
+            "total_mrr_usd": obj.get("total_mrr_usd"),
+            "managed_tenant_count": obj.get("managed_tenant_count"),
+            "agency_billed_count": obj.get("agency_billed_count"),
+            "managed_billed_count": obj.get("managed_billed_count"),
+            "generated_at": obj.get("generated_at"),
+            "status": obj.get("status"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AgencyBillingSummary.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

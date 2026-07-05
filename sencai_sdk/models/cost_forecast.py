@@ -36,7 +36,7 @@ class CostForecast(BaseModel):
     model_version: Optional[StrictStr] = Field(default=None, description="Identifikátor verze algoritmu (např. rule-based-v1).")
     ai_reasoning: Optional[StrictStr] = Field(default=None, description="Lidsky čitelné vysvětlení forecastu vygenerované algoritmem.")
     trend: Optional[StrictStr] = Field(default=None, description="Směr trendu výdajů detekovaný z historických dat.")
-    breakdown: Optional[Dict[str, Any]] = Field(default=None, description="Volitelný breakdown forecastu per provider/kategorie.")
+    breakdown: Optional[Any] = Field(default=None, description="Volitelný breakdown forecastu per provider/kategorie.")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["forecast_month", "predicted_usd", "actual_usd", "confidence", "model_version", "ai_reasoning", "trend", "breakdown", "organisation"]
 
@@ -102,6 +102,11 @@ class CostForecast(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if breakdown (nullable) is None
+        # and model_fields_set contains the field
+        if self.breakdown is None and "breakdown" in self.model_fields_set:
+            _dict['breakdown'] = None
+
         return _dict
 
     @classmethod

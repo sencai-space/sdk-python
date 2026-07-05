@@ -37,11 +37,11 @@ class CreateCloudInstanceRequestData(BaseModel):
     instance_type: StrictStr
     os_image: Optional[StrictStr] = Field(default=None, description="Provider OS image / snapshot identifier requested at create time (mapped to cloudConfig.imageId in the provision message).")
     root_disk_gb: Optional[StrictInt] = Field(default=None, description="Requested root/boot disk size in GB (mapped to cloudConfig.rootDiskGb).")
-    additional_disks: Optional[Dict[str, Any]] = Field(default=None, description="Optional extra data volumes requested at create time: array of { sizeGb, type?, label? } (mapped to cloudConfig.additionalDisks).")
+    additional_disks: Optional[Any] = Field(default=None, description="Optional extra data volumes requested at create time: array of { sizeGb, type?, label? } (mapped to cloudConfig.additionalDisks).")
     status: StrictStr
     ip_address: Optional[StrictStr] = None
     ipv6_address: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     error_message: Optional[StrictStr] = None
     monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
     currency: StrictStr
@@ -159,6 +159,16 @@ class CreateCloudInstanceRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of agents
         if self.agents:
             _dict['agents'] = self.agents.to_dict()
+        # set to None if additional_disks (nullable) is None
+        # and model_fields_set contains the field
+        if self.additional_disks is None and "additional_disks" in self.model_fields_set:
+            _dict['additional_disks'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

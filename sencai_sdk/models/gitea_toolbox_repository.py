@@ -44,7 +44,7 @@ class GiteaToolboxRepository(BaseModel):
     total_tags: Optional[StrictInt] = Field(default=None, alias="totalTags")
     total_commits: Optional[StrictInt] = Field(default=None, alias="totalCommits")
     last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     purchased_services: Optional[CreateAccessReviewRequestDataReviewer] = None
     cart_items: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["instanceId", "repositoryName", "repositoryOwner", "defaultBranch", "lastCommitHash", "lastCommitMessage", "lastCommitAuthor", "lastCommitDate", "gitstatus", "lastSyncDate", "totalBranches", "totalTags", "totalCommits", "lastError", "metadata", "purchased_services", "cart_items"]
@@ -104,6 +104,11 @@ class GiteaToolboxRepository(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of cart_items
         if self.cart_items:
             _dict['cart_items'] = self.cart_items.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

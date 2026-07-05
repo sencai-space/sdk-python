@@ -41,7 +41,7 @@ class CostRecord(BaseModel):
     billing_period_end: Optional[datetime] = Field(default=None, description="FOCUS BillingPeriodEnd — konec fakturačního období (UTC).")
     region: Optional[StrictStr] = Field(default=None, description="Cloud region/zóna kde byl resource provozován.")
     account_id: Optional[StrictStr] = Field(default=None, description="Cloud account/subscription/project ID — FOCUS BillingAccountId.")
-    tags: Optional[Dict[str, Any]] = Field(default=None, description="Resource tagy v původní podobě z providera (key-value mapa).")
+    tags: Optional[Any] = Field(default=None, description="Resource tagy v původní podobě z providera (key-value mapa).")
     focus_schema_version: Optional[StrictStr] = Field(default=None, description="Verze FOCUS schématu, podle které byl záznam vygenerován.")
     category: Optional[StrictStr] = Field(default=None, description="Sencai kategorie nákladů — vstup pro COGS breakdown a margin kalkulaci.")
     source: Optional[StrictStr] = Field(default=None, description="Zdroj dat: aws_cur (Cost & Usage Report), azure_cost_export, gcp_billing_export, manual.")
@@ -127,6 +127,11 @@ class CostRecord(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         return _dict
 
     @classmethod

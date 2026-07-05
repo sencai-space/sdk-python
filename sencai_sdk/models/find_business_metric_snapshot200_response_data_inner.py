@@ -18,10 +18,9 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.business_metric_snapshot import BusinessMetricSnapshot
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,31 @@ class FindBusinessMetricSnapshot200ResponseDataInner(BaseModel):
     """
     FindBusinessMetricSnapshot200ResponseDataInner
     """ # noqa: E501
+    snapshot_date: date = Field(description="Calendar day (UTC) this snapshot represents — one row per day, upserted idempotently by the cron.")
+    computed_at: datetime
+    mrr_usd: Union[StrictFloat, StrictInt] = Field(description="Monthly Recurring Revenue — sum of active subscription-enrollment tier prices (yearly normalized /12).")
+    mrr_growth_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="MRR percentage growth vs the previous snapshot (day-over-day here; dashboard aggregates for month-over-month).")
+    arr_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Annual Recurring Revenue — mrr_usd * 12.")
+    logo_churn_rate_monthly: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Fraction (0..1) of active accounts at start of trailing 30d window that cancelled/expired by end of window.")
+    revenue_churn_rate_monthly: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Fraction (0..1) of MRR at start of trailing 30d window lost to cancellations/downgrades (gross, pre-expansion).")
+    net_revenue_retention_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="NRR — (starting MRR + expansion - contraction - churned MRR) / starting MRR * 100, trailing 30d cohort.")
+    dau: Optional[StrictInt] = Field(default=None, description="Distinct active users (platform-event actor_user_id) in the trailing 24h window.")
+    mau: Optional[StrictInt] = Field(default=None, description="Distinct active users (platform-event actor_user_id) in the trailing 30d window.")
+    stickiness_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="DAU / MAU * 100 — engagement stickiness ratio.")
+    funnel: Optional[Any] = Field(default=None, description="Activation funnel snapshot — reuses computeActivationFunnel() (F3.ONBOARDING.03), stored verbatim ({ steps, ttv, ... }).")
+    mttp_hours: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Mean time to paid — average hours between signup (onboarding.signup platform-event) and first billing-event for the same organisation.")
+    ttv_median_hours: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Median time-to-value hours, taken from the activation-funnel ttv computation (signup -> first value event).")
+    arpa_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Average Revenue Per Account — mrr_usd / active_paid_accounts.")
+    trial_conversion_rate_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="% of trials started (trailing 90d) that converted to a paid subscription-enrollment.")
+    active_paid_accounts: Optional[StrictInt] = None
+    total_accounts: Optional[StrictInt] = None
+    raw: Optional[Any] = Field(default=None, description="Full computation result object (BusinessMetricsResult) — superset of the flattened columns above, kept for forward-compatible dashboard consumption without a migration.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BusinessMetricSnapshot] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["snapshot_date", "computed_at", "mrr_usd", "mrr_growth_pct", "arr_usd", "logo_churn_rate_monthly", "revenue_churn_rate_monthly", "net_revenue_retention_pct", "dau", "mau", "stickiness_pct", "funnel", "mttp_hours", "ttv_median_hours", "arpa_usd", "trial_conversion_rate_pct", "active_paid_accounts", "total_accounts", "raw", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +94,16 @@ class FindBusinessMetricSnapshot200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if funnel (nullable) is None
+        # and model_fields_set contains the field
+        if self.funnel is None and "funnel" in self.model_fields_set:
+            _dict['funnel'] = None
+
+        # set to None if raw (nullable) is None
+        # and model_fields_set contains the field
+        if self.raw is None and "raw" in self.model_fields_set:
+            _dict['raw'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +121,27 @@ class FindBusinessMetricSnapshot200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "snapshot_date": obj.get("snapshot_date"),
+            "computed_at": obj.get("computed_at"),
+            "mrr_usd": obj.get("mrr_usd"),
+            "mrr_growth_pct": obj.get("mrr_growth_pct"),
+            "arr_usd": obj.get("arr_usd"),
+            "logo_churn_rate_monthly": obj.get("logo_churn_rate_monthly"),
+            "revenue_churn_rate_monthly": obj.get("revenue_churn_rate_monthly"),
+            "net_revenue_retention_pct": obj.get("net_revenue_retention_pct"),
+            "dau": obj.get("dau"),
+            "mau": obj.get("mau"),
+            "stickiness_pct": obj.get("stickiness_pct"),
+            "funnel": obj.get("funnel"),
+            "mttp_hours": obj.get("mttp_hours"),
+            "ttv_median_hours": obj.get("ttv_median_hours"),
+            "arpa_usd": obj.get("arpa_usd"),
+            "trial_conversion_rate_pct": obj.get("trial_conversion_rate_pct"),
+            "active_paid_accounts": obj.get("active_paid_accounts"),
+            "total_accounts": obj.get("total_accounts"),
+            "raw": obj.get("raw"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BusinessMetricSnapshot.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

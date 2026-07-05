@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_credential import CloudCredential
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,61 @@ class FindCloudCredential200ResponseDataInner(BaseModel):
     """
     FindCloudCredential200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    provider: StrictStr
+    is_active: StrictBool
+    credential_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    encrypted_payload: Optional[StrictStr] = Field(default=None, description="AES-256-GCM šifrovaný JSON s credentials (F2.C.03). NIKDY se nevrací v API. Dešifruje cloud-connector sdíleným BYOC_ENCRYPTION_KEY.")
+    validation_status: StrictStr = Field(description="Stav ověření credentials reálným API voláním (F2.C.03).")
+    last_validated_at: Optional[datetime] = None
+    scopes: Optional[Any] = Field(default=None, description="Detekovaná oprávnění z validace (např. ['ec2:read','rds:write']).")
+    last_used_at: Optional[datetime] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    created_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
+    environment: Optional[StrictStr] = None
+    is_default: Optional[StrictBool] = None
+    account_id: Optional[StrictStr] = None
+    account_name: Optional[StrictStr] = None
+    cost_center: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudCredential] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "provider", "is_active", "credential_data", "encrypted_payload", "validation_status", "last_validated_at", "scopes", "last_used_at", "organisation", "created_by_user", "home_region", "cell_id", "environment", "is_default", "account_id", "account_name", "cost_center", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean']):
+            raise ValueError("must be one of enum values ('hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean')")
+        return value
+
+    @field_validator('validation_status')
+    def validation_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'valid', 'invalid']):
+            raise ValueError("must be one of enum values ('pending', 'valid', 'invalid')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
+
+    @field_validator('environment')
+    def environment_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['dev', 'staging', 'prod', 'sandbox']):
+            raise ValueError("must be one of enum values ('dev', 'staging', 'prod', 'sandbox')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +126,22 @@ class FindCloudCredential200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of created_by_user
+        if self.created_by_user:
+            _dict['created_by_user'] = self.created_by_user.to_dict()
+        # set to None if credential_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.credential_data is None and "credential_data" in self.model_fields_set:
+            _dict['credential_data'] = None
+
+        # set to None if scopes (nullable) is None
+        # and model_fields_set contains the field
+        if self.scopes is None and "scopes" in self.model_fields_set:
+            _dict['scopes'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +159,26 @@ class FindCloudCredential200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "provider": obj.get("provider"),
+            "is_active": obj.get("is_active"),
+            "credential_data": obj.get("credential_data"),
+            "encrypted_payload": obj.get("encrypted_payload"),
+            "validation_status": obj.get("validation_status"),
+            "last_validated_at": obj.get("last_validated_at"),
+            "scopes": obj.get("scopes"),
+            "last_used_at": obj.get("last_used_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "created_by_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["created_by_user"]) if obj.get("created_by_user") is not None else None,
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
+            "environment": obj.get("environment"),
+            "is_default": obj.get("is_default"),
+            "account_id": obj.get("account_id"),
+            "account_name": obj.get("account_name"),
+            "cost_center": obj.get("cost_center"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudCredential.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

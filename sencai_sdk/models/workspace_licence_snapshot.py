@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -31,7 +31,7 @@ class WorkspaceLicenceSnapshot(BaseModel):
     WorkspaceLicenceSnapshot
     """ # noqa: E501
     fetched_at: datetime
-    licences: Optional[Dict[str, Any]] = None
+    licences: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     workspace_tenant: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["fetched_at", "licences", "workspace_tenant", "organisation"]
@@ -81,6 +81,11 @@ class WorkspaceLicenceSnapshot(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if licences (nullable) is None
+        # and model_fields_set contains the field
+        if self.licences is None and "licences" in self.model_fields_set:
+            _dict['licences'] = None
+
         return _dict
 
     @classmethod

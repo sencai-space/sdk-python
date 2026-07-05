@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.operator_time_entry import OperatorTimeEntry
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,23 @@ class FindOperatorTimeEntry200ResponseDataInner(BaseModel):
     """
     FindOperatorTimeEntry200ResponseDataInner
     """ # noqa: E501
+    operator_org: CreateAccessReviewRequestDataReviewer
+    managed_org: CreateAccessReviewRequestDataReviewer
+    period: StrictStr = Field(description="Billing period in YYYY-MM format (e.g. 2026-06)")
+    manual_minutes: Optional[StrictInt] = Field(default=None, description="Manually logged time in minutes")
+    action_count: Optional[StrictInt] = Field(default=None, description="Number of audit-log actions performed by operator users in the managed org for the period")
+    computed_minutes: Optional[StrictInt] = Field(default=None, description="Automatically derived minutes: action_count * 2")
+    total_minutes: Optional[StrictInt] = Field(default=None, description="Total effort: manual_minutes + computed_minutes")
+    notes: Optional[StrictStr] = Field(default=None, description="Optional operator notes for the customer report")
+    logged_by: Optional[CreateAccessReviewRequestDataReviewer] = None
+    generated_at: Optional[datetime] = None
+    is_sent_to_customer: Optional[StrictBool] = Field(default=None, description="Whether this report has been shared with the managed org")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[OperatorTimeEntry] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["operator_org", "managed_org", "period", "manual_minutes", "action_count", "computed_minutes", "total_minutes", "notes", "logged_by", "generated_at", "is_sent_to_customer", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +87,15 @@ class FindOperatorTimeEntry200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of operator_org
+        if self.operator_org:
+            _dict['operator_org'] = self.operator_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of managed_org
+        if self.managed_org:
+            _dict['managed_org'] = self.managed_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of logged_by
+        if self.logged_by:
+            _dict['logged_by'] = self.logged_by.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +113,19 @@ class FindOperatorTimeEntry200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "operator_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["operator_org"]) if obj.get("operator_org") is not None else None,
+            "managed_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["managed_org"]) if obj.get("managed_org") is not None else None,
+            "period": obj.get("period"),
+            "manual_minutes": obj.get("manual_minutes"),
+            "action_count": obj.get("action_count"),
+            "computed_minutes": obj.get("computed_minutes"),
+            "total_minutes": obj.get("total_minutes"),
+            "notes": obj.get("notes"),
+            "logged_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["logged_by"]) if obj.get("logged_by") is not None else None,
+            "generated_at": obj.get("generated_at"),
+            "is_sent_to_customer": obj.get("is_sent_to_customer"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": OperatorTimeEntry.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

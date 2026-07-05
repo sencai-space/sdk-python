@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cost_forecast import CostForecast
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,41 @@ class FindCostForecast200ResponseDataInner(BaseModel):
     """
     FindCostForecast200ResponseDataInner
     """ # noqa: E501
+    forecast_month: StrictStr = Field(description="ISO year-month string (YYYY-MM) pro který je forecast platný.")
+    predicted_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Predikovaný měsíční výdaj v USD.")
+    actual_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Skutečný výdaj v USD (vyplní se retrospektivně po uzavření měsíce).")
+    confidence: Optional[StrictStr] = Field(default=None, description="Spolehlivost forecastu — low < 4 měsíce dat, medium 4–6, high 6+ měsíců.")
+    model_version: Optional[StrictStr] = Field(default=None, description="Identifikátor verze algoritmu (např. rule-based-v1).")
+    ai_reasoning: Optional[StrictStr] = Field(default=None, description="Lidsky čitelné vysvětlení forecastu vygenerované algoritmem.")
+    trend: Optional[StrictStr] = Field(default=None, description="Směr trendu výdajů detekovaný z historických dat.")
+    breakdown: Optional[Any] = Field(default=None, description="Volitelný breakdown forecastu per provider/kategorie.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CostForecast] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["forecast_month", "predicted_usd", "actual_usd", "confidence", "model_version", "ai_reasoning", "trend", "breakdown", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('confidence')
+    def confidence_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['high', 'medium', 'low']):
+            raise ValueError("must be one of enum values ('high', 'medium', 'low')")
+        return value
+
+    @field_validator('trend')
+    def trend_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['increasing', 'stable', 'decreasing']):
+            raise ValueError("must be one of enum values ('increasing', 'stable', 'decreasing')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +105,14 @@ class FindCostForecast200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if breakdown (nullable) is None
+        # and model_fields_set contains the field
+        if self.breakdown is None and "breakdown" in self.model_fields_set:
+            _dict['breakdown'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +130,17 @@ class FindCostForecast200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "forecast_month": obj.get("forecast_month"),
+            "predicted_usd": obj.get("predicted_usd"),
+            "actual_usd": obj.get("actual_usd"),
+            "confidence": obj.get("confidence"),
+            "model_version": obj.get("model_version"),
+            "ai_reasoning": obj.get("ai_reasoning"),
+            "trend": obj.get("trend"),
+            "breakdown": obj.get("breakdown"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CostForecast.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

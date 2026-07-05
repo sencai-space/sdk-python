@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,7 +32,7 @@ class CustomerHealthScore(BaseModel):
     """ # noqa: E501
     adoption_score: Optional[StrictInt] = None
     risk_level: Optional[StrictStr] = None
-    active_features: Optional[Dict[str, Any]] = None
+    active_features: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     last_login_days: Optional[StrictInt] = None
     cloud_instances_count: Optional[StrictInt] = None
     audit_events_30d: Optional[StrictInt] = None
@@ -105,6 +105,11 @@ class CustomerHealthScore(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if active_features (nullable) is None
+        # and model_fields_set contains the field
+        if self.active_features is None and "active_features" in self.model_fields_set:
+            _dict['active_features'] = None
+
         return _dict
 
     @classmethod

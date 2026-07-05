@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,11 +35,11 @@ class BackupPolicy(BaseModel):
     provider: Optional[StrictStr] = None
     schedule: StrictStr
     retention_days: Optional[StrictInt] = None
-    tags: Optional[Dict[str, Any]] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_active: Optional[StrictBool] = None
     attached_instances: Optional[CreateAccessReviewRequestDataReviewer] = None
     last_applied_at: Optional[datetime] = None
-    provider_policy_ids: Optional[Dict[str, Any]] = None
+    provider_policy_ids: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     status: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["name", "organisation", "provider", "schedule", "retention_days", "tags", "is_active", "attached_instances", "last_applied_at", "provider_policy_ids", "status"]
 
@@ -108,6 +108,16 @@ class BackupPolicy(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of attached_instances
         if self.attached_instances:
             _dict['attached_instances'] = self.attached_instances.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if provider_policy_ids (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_policy_ids is None and "provider_policy_ids" in self.model_fields_set:
+            _dict['provider_policy_ids'] = None
+
         return _dict
 
     @classmethod

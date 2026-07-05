@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.synthetic_check import SyntheticCheck
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,43 @@ class FindSyntheticCheck200ResponseDataInner(BaseModel):
     """
     FindSyntheticCheck200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    url: StrictStr
+    method: Optional[StrictStr] = None
+    interval_seconds: Optional[StrictInt] = None
+    timeout_ms: Optional[StrictInt] = None
+    expected_status: Optional[StrictInt] = None
+    expected_body_contains: Optional[StrictStr] = None
+    enabled: Optional[StrictBool] = None
+    last_check_at: Optional[datetime] = None
+    last_status: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SyntheticCheck] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "url", "method", "interval_seconds", "timeout_ms", "expected_status", "expected_body_contains", "enabled", "last_check_at", "last_status", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('method')
+    def method_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['GET', 'POST', 'HEAD']):
+            raise ValueError("must be one of enum values ('GET', 'POST', 'HEAD')")
+        return value
+
+    @field_validator('last_status')
+    def last_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['passing', 'failing', 'unknown']):
+            raise ValueError("must be one of enum values ('passing', 'failing', 'unknown')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +107,9 @@ class FindSyntheticCheck200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +127,19 @@ class FindSyntheticCheck200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "url": obj.get("url"),
+            "method": obj.get("method"),
+            "interval_seconds": obj.get("interval_seconds"),
+            "timeout_ms": obj.get("timeout_ms"),
+            "expected_status": obj.get("expected_status"),
+            "expected_body_contains": obj.get("expected_body_contains"),
+            "enabled": obj.get("enabled"),
+            "last_check_at": obj.get("last_check_at"),
+            "last_status": obj.get("last_status"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SyntheticCheck.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

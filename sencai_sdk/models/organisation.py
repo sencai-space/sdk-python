@@ -53,7 +53,7 @@ class Organisation(BaseModel):
     deleted_at: Optional[datetime] = None
     budget_monthly: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Měsíční cloud budget limit organizace (F2.C.09). 0/null = bez limitu.")
     budget_currency: Optional[StrictStr] = None
-    budget_notifications: Optional[Dict[str, Any]] = Field(default=None, description="Seznam emailů pro budget alerty (F2.C.09).")
+    budget_notifications: Optional[Any] = Field(default=None, description="Seznam emailů pro budget alerty (F2.C.09).")
     budget_state: StrictStr = Field(description="Aktuální stav vůči budgetu: ok / soft (>=70%) / hard (>=100%, blokuje provisioning) — počítá FinOps watchdog (F2.C.09).")
     budget_period_spend: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Cache aktuální útraty za sledované období (aktualizuje budget watchdog).")
     budget_override: Optional[StrictBool] = Field(default=None, description="Owner/admin override hard-limit blokace ('Continue anyway' s audit logem).")
@@ -77,8 +77,10 @@ class Organisation(BaseModel):
     is_business: Optional[StrictBool] = Field(default=None, description="Whether this organisation is a business (B2B) customer vs a private individual (B2C) for VAT purposes (F3.LEGAL.03).")
     vat_validated: Optional[StrictBool] = Field(default=None, description="Whether vat_id was last confirmed valid against the EU VIES registry (F3.LEGAL.03). False also covers 'VIES was unreachable' — treat as 'not confirmed', never blocks checkout.")
     vat_validated_at: Optional[datetime] = Field(default=None, description="Timestamp of the last VIES validation attempt for vat_id (F3.LEGAL.03). Used as the 24h cache TTL anchor in POST /api/billing/validate-vat.")
-    ip_allowlist: Optional[Dict[str, Any]] = Field(default=None, description="F4.ENTERPRISE.03 — JSON array of CIDR ranges (IPv4/IPv6, e.g. [\"203.0.113.0/24\", \"2001:db8::/32\"]) restricting platform access for members of this organisation. Nullable/empty = no restriction (backward-compatible default). Enforced server-side by global::ip-allowlist-guard against the resolved client IP (X-Forwarded-For aware, see middleware doc comment).")
-    __properties: ClassVar[List[str]] = ["name", "slug", "description", "logo", "street_number", "vat_id", "company_id", "zip_code", "state", "num_of_users", "org_disabled", "creator", "users", "members", "cloud_credentials", "sencai_agents", "account_type", "gitea_org_name", "gitea_org_id", "gitea_registry_url", "deleted_at", "budget_monthly", "budget_currency", "budget_notifications", "budget_state", "budget_period_spend", "budget_override", "home_region", "cell_id", "workspace_domain", "sso_enforced", "plan_type", "agent_limit", "account_tier", "max_instances", "max_members", "max_monthly_budget", "plan_valid_until", "cookie_consents", "ropa_entries", "platform_events", "org_status", "org_status_changed_at", "billing_country", "is_business", "vat_validated", "vat_validated_at", "ip_allowlist"]
+    ip_allowlist: Optional[Any] = Field(default=None, description="F4.ENTERPRISE.03 — JSON array of CIDR ranges (IPv4/IPv6, e.g. [\"203.0.113.0/24\", \"2001:db8::/32\"]) restricting platform access for members of this organisation. Nullable/empty = no restriction (backward-compatible default). Enforced server-side by global::ip-allowlist-guard against the resolved client IP (X-Forwarded-For aware, see middleware doc comment).")
+    lemmy_community_id: Optional[StrictInt] = Field(default=None, description="F4.FORUM.05 — numeric Lemmy community id auto-provisioned for this organisation by forum-connector. Null until the async organisation.forum-community-requested event has been processed (best-effort, never blocks org creation).")
+    lemmy_community_name: Optional[StrictStr] = Field(default=None, description="F4.FORUM.05 — sanitized Lemmy community `name` (URL-safe slug) matching lemmy_community_id, kept alongside it so the frontend can link straight to forum.sencai.space/c/<name> without an extra Lemmy lookup.")
+    __properties: ClassVar[List[str]] = ["name", "slug", "description", "logo", "street_number", "vat_id", "company_id", "zip_code", "state", "num_of_users", "org_disabled", "creator", "users", "members", "cloud_credentials", "sencai_agents", "account_type", "gitea_org_name", "gitea_org_id", "gitea_registry_url", "deleted_at", "budget_monthly", "budget_currency", "budget_notifications", "budget_state", "budget_period_spend", "budget_override", "home_region", "cell_id", "workspace_domain", "sso_enforced", "plan_type", "agent_limit", "account_tier", "max_instances", "max_members", "max_monthly_budget", "plan_valid_until", "cookie_consents", "ropa_entries", "platform_events", "org_status", "org_status_changed_at", "billing_country", "is_business", "vat_validated", "vat_validated_at", "ip_allowlist", "lemmy_community_id", "lemmy_community_name"]
 
     @field_validator('budget_currency')
     def budget_currency_validate_enum(cls, value):
@@ -197,6 +199,16 @@ class Organisation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of platform_events
         if self.platform_events:
             _dict['platform_events'] = self.platform_events.to_dict()
+        # set to None if budget_notifications (nullable) is None
+        # and model_fields_set contains the field
+        if self.budget_notifications is None and "budget_notifications" in self.model_fields_set:
+            _dict['budget_notifications'] = None
+
+        # set to None if ip_allowlist (nullable) is None
+        # and model_fields_set contains the field
+        if self.ip_allowlist is None and "ip_allowlist" in self.model_fields_set:
+            _dict['ip_allowlist'] = None
+
         return _dict
 
     @classmethod
@@ -256,7 +268,9 @@ class Organisation(BaseModel):
             "is_business": obj.get("is_business"),
             "vat_validated": obj.get("vat_validated"),
             "vat_validated_at": obj.get("vat_validated_at"),
-            "ip_allowlist": obj.get("ip_allowlist")
+            "ip_allowlist": obj.get("ip_allowlist"),
+            "lemmy_community_id": obj.get("lemmy_community_id"),
+            "lemmy_community_name": obj.get("lemmy_community_name")
         })
         return _obj
 

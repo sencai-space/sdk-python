@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.integration_channel import IntegrationChannel
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,47 @@ class FindIntegrationChannel200ResponseDataInner(BaseModel):
     """
     FindIntegrationChannel200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    description: Optional[StrictStr] = None
+    type: StrictStr
+    endpoint_url: StrictStr
+    trigger_events: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    payload_template: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    auth_header_name: Optional[StrictStr] = None
+    auth_header_value: Optional[StrictStr] = None
+    is_enabled: Optional[StrictBool] = None
+    last_triggered_at: Optional[datetime] = None
+    success_count: Optional[StrictInt] = None
+    error_count: Optional[StrictInt] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    health_check_url: Optional[StrictStr] = None
+    last_health_check: Optional[datetime] = None
+    consecutive_failures: Optional[StrictInt] = None
+    circuit_breaker_open: Optional[StrictBool] = None
+    health_status: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[IntegrationChannel] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "type", "endpoint_url", "trigger_events", "payload_template", "auth_header_name", "auth_header_value", "is_enabled", "last_triggered_at", "success_count", "error_count", "organisation", "health_check_url", "last_health_check", "consecutive_failures", "circuit_breaker_open", "health_status", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['zapier', 'make', 'n8n', 'generic_webhook', 'slack', 'teams', 'discord']):
+            raise ValueError("must be one of enum values ('zapier', 'make', 'n8n', 'generic_webhook', 'slack', 'teams', 'discord')")
+        return value
+
+    @field_validator('health_status')
+    def health_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['healthy', 'degraded', 'unhealthy', 'unknown']):
+            raise ValueError("must be one of enum values ('healthy', 'degraded', 'unhealthy', 'unknown')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +111,19 @@ class FindIntegrationChannel200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if trigger_events (nullable) is None
+        # and model_fields_set contains the field
+        if self.trigger_events is None and "trigger_events" in self.model_fields_set:
+            _dict['trigger_events'] = None
+
+        # set to None if payload_template (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload_template is None and "payload_template" in self.model_fields_set:
+            _dict['payload_template'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +141,26 @@ class FindIntegrationChannel200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "type": obj.get("type"),
+            "endpoint_url": obj.get("endpoint_url"),
+            "trigger_events": obj.get("trigger_events"),
+            "payload_template": obj.get("payload_template"),
+            "auth_header_name": obj.get("auth_header_name"),
+            "auth_header_value": obj.get("auth_header_value"),
+            "is_enabled": obj.get("is_enabled"),
+            "last_triggered_at": obj.get("last_triggered_at"),
+            "success_count": obj.get("success_count"),
+            "error_count": obj.get("error_count"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "health_check_url": obj.get("health_check_url"),
+            "last_health_check": obj.get("last_health_check"),
+            "consecutive_failures": obj.get("consecutive_failures"),
+            "circuit_breaker_open": obj.get("circuit_breaker_open"),
+            "health_status": obj.get("health_status"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": IntegrationChannel.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

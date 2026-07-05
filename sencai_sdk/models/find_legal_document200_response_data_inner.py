@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.legal_document import LegalDocument
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,30 @@ class FindLegalDocument200ResponseDataInner(BaseModel):
     """
     FindLegalDocument200ResponseDataInner
     """ # noqa: E501
+    document_type: StrictStr
+    version: StrictStr
+    title: StrictStr
+    effective_from: datetime
+    summary_text: Optional[StrictStr] = None
+    full_text_url: Optional[StrictStr] = None
+    is_current: Optional[StrictBool] = None
+    change_summary: Optional[StrictStr] = None
+    requires_reacceptance: Optional[StrictBool] = None
+    body: Optional[StrictStr] = Field(default=None, description="Full document body (Markdown). F3.LEGAL.01: seeded with a PLACEHOLDER pending lawyer review — see src/bootstrap.ts ensureLegalDocumentPlaceholders().")
+    locale_code: Optional[StrictStr] = Field(default=None, description="F3.LEGAL.01: document language (cs/en). NOT the Strapi i18n plugin locale field (i18n is not enabled on this CT) — a plain string so cs/en variants of the same document_type+version can coexist as separate rows.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[LegalDocument] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["document_type", "version", "title", "effective_from", "summary_text", "full_text_url", "is_current", "change_summary", "requires_reacceptance", "body", "locale_code", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('document_type')
+    def document_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['terms_of_service', 'privacy_policy', 'dpa', 'acceptable_use', 'msa', 'subprocessors']):
+            raise ValueError("must be one of enum values ('terms_of_service', 'privacy_policy', 'dpa', 'acceptable_use', 'msa', 'subprocessors')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,6 @@ class FindLegalDocument200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +110,19 @@ class FindLegalDocument200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "document_type": obj.get("document_type"),
+            "version": obj.get("version"),
+            "title": obj.get("title"),
+            "effective_from": obj.get("effective_from"),
+            "summary_text": obj.get("summary_text"),
+            "full_text_url": obj.get("full_text_url"),
+            "is_current": obj.get("is_current"),
+            "change_summary": obj.get("change_summary"),
+            "requires_reacceptance": obj.get("requires_reacceptance"),
+            "body": obj.get("body"),
+            "locale_code": obj.get("locale_code"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": LegalDocument.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

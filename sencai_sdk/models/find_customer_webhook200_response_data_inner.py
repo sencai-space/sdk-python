@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.customer_webhook import CustomerWebhook
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,21 @@ class FindCustomerWebhook200ResponseDataInner(BaseModel):
     """
     FindCustomerWebhook200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(strict=True, max_length=100)]
+    url: StrictStr
+    secret: Optional[StrictStr] = None
+    events: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    is_active: Optional[StrictBool] = None
+    last_delivery_at: Optional[datetime] = None
+    failure_count: Optional[StrictInt] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CustomerWebhook] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "url", "secret", "events", "is_active", "last_delivery_at", "failure_count", "organisation", "metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +86,19 @@ class FindCustomerWebhook200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if events (nullable) is None
+        # and model_fields_set contains the field
+        if self.events is None and "events" in self.model_fields_set:
+            _dict['events'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +116,17 @@ class FindCustomerWebhook200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "url": obj.get("url"),
+            "secret": obj.get("secret"),
+            "events": obj.get("events"),
+            "is_active": obj.get("is_active"),
+            "last_delivery_at": obj.get("last_delivery_at"),
+            "failure_count": obj.get("failure_count"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "metadata": obj.get("metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CustomerWebhook.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

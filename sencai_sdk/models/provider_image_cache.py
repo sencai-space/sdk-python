@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -38,7 +38,7 @@ class ProviderImageCache(BaseModel):
     is_active: StrictBool
     is_lts: Optional[StrictBool] = None
     disk_size_gb: Optional[StrictInt] = None
-    regions: Optional[Dict[str, Any]] = None
+    regions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     description: Optional[StrictStr] = None
     provider_created_at: Optional[datetime] = None
     cached_at: datetime
@@ -104,6 +104,11 @@ class ProviderImageCache(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if regions (nullable) is None
+        # and model_fields_set contains the field
+        if self.regions is None and "regions" in self.model_fields_set:
+            _dict['regions'] = None
+
         return _dict
 
     @classmethod

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cluster import Cluster
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,39 @@ class FindCluster200ResponseDataInner(BaseModel):
     """
     FindCluster200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    description: Optional[StrictStr] = None
+    users_permissions_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    state: StrictStr
+    cluster_type: Optional[StrictStr] = None
+    region: Optional[StrictStr] = None
+    max_services: Optional[StrictInt] = None
+    current_services_count: Optional[StrictInt] = None
+    monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Cluster] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "users_permissions_user", "state", "cluster_type", "region", "max_services", "current_services_count", "monthly_cost", "metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('state')
+    def state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['active', 'inactive', 'pending', 'suspended']):
+            raise ValueError("must be one of enum values ('active', 'inactive', 'pending', 'suspended')")
+        return value
+
+    @field_validator('cluster_type')
+    def cluster_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['development', 'staging', 'production', 'testing', 'qa', 'integration', 'uat', 'preview', 'sandbox', 'demo', 'hotfix', 'canary', 'pre-production', 'prod-like']):
+            raise ValueError("must be one of enum values ('development', 'staging', 'production', 'testing', 'qa', 'integration', 'uat', 'preview', 'sandbox', 'demo', 'hotfix', 'canary', 'pre-production', 'prod-like')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +103,14 @@ class FindCluster200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of users_permissions_user
+        if self.users_permissions_user:
+            _dict['users_permissions_user'] = self.users_permissions_user.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +128,18 @@ class FindCluster200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "users_permissions_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["users_permissions_user"]) if obj.get("users_permissions_user") is not None else None,
+            "state": obj.get("state"),
+            "cluster_type": obj.get("cluster_type"),
+            "region": obj.get("region"),
+            "max_services": obj.get("max_services"),
+            "current_services_count": obj.get("current_services_count"),
+            "monthly_cost": obj.get("monthly_cost"),
+            "metadata": obj.get("metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Cluster.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

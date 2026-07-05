@@ -39,7 +39,7 @@ class AccessReview(BaseModel):
     completed_at: Optional[datetime] = None
     total_items: Optional[StrictInt] = None
     reviewed_items: Optional[StrictInt] = None
-    findings: Optional[Dict[str, Any]] = Field(default=None, description="Summary of decisions: { keep: number, revoke: number, downgrade: number }")
+    findings: Optional[Any] = Field(default=None, description="Summary of decisions: { keep: number, revoke: number, downgrade: number }")
     __properties: ClassVar[List[str]] = ["name", "description", "status", "reviewer", "target_organisation", "due_date", "completed_at", "total_items", "reviewed_items", "findings"]
 
     @field_validator('status')
@@ -94,6 +94,11 @@ class AccessReview(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of target_organisation
         if self.target_organisation:
             _dict['target_organisation'] = self.target_organisation.to_dict()
+        # set to None if findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.findings is None and "findings" in self.model_fields_set:
+            _dict['findings'] = None
+
         return _dict
 
     @classmethod

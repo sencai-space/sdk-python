@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -31,13 +31,13 @@ class CreatePatchRunRequestData(BaseModel):
     """ # noqa: E501
     sencai_agent: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
-    scan_result: Optional[Dict[str, Any]] = None
+    scan_result: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     status: Optional[StrictStr] = None
     packages_available: Optional[StrictInt] = None
     packages_applied: Optional[StrictInt] = None
     package_mgr: Optional[StrictStr] = None
     error: Optional[StrictStr] = None
-    maintenance_windows: Optional[Dict[str, Any]] = None
+    maintenance_windows: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["sencai_agent", "organisation", "scan_result", "status", "packages_available", "packages_applied", "package_mgr", "error", "maintenance_windows"]
 
     @field_validator('status')
@@ -95,6 +95,16 @@ class CreatePatchRunRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if scan_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.scan_result is None and "scan_result" in self.model_fields_set:
+            _dict['scan_result'] = None
+
+        # set to None if maintenance_windows (nullable) is None
+        # and model_fields_set contains the field
+        if self.maintenance_windows is None and "maintenance_windows" in self.model_fields_set:
+            _dict['maintenance_windows'] = None
+
         return _dict
 
     @classmethod

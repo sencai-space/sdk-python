@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.customer_health_score import CustomerHealthScore
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,43 @@ class FindCustomerHealthScore200ResponseDataInner(BaseModel):
     """
     FindCustomerHealthScore200ResponseDataInner
     """ # noqa: E501
+    adoption_score: Optional[StrictInt] = None
+    risk_level: Optional[StrictStr] = None
+    active_features: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    last_login_days: Optional[StrictInt] = None
+    cloud_instances_count: Optional[StrictInt] = None
+    audit_events_30d: Optional[StrictInt] = None
+    open_incidents_count: Optional[StrictInt] = None
+    trend: Optional[StrictStr] = None
+    notes: Optional[StrictStr] = None
+    calculated_at: Optional[datetime] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CustomerHealthScore] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["adoption_score", "risk_level", "active_features", "last_login_days", "cloud_instances_count", "audit_events_30d", "open_incidents_count", "trend", "notes", "calculated_at", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('risk_level')
+    def risk_level_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['low', 'medium', 'high', 'churned']):
+            raise ValueError("must be one of enum values ('low', 'medium', 'high', 'churned')")
+        return value
+
+    @field_validator('trend')
+    def trend_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['improving', 'stable', 'declining']):
+            raise ValueError("must be one of enum values ('improving', 'stable', 'declining')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +107,14 @@ class FindCustomerHealthScore200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if active_features (nullable) is None
+        # and model_fields_set contains the field
+        if self.active_features is None and "active_features" in self.model_fields_set:
+            _dict['active_features'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +132,19 @@ class FindCustomerHealthScore200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "adoption_score": obj.get("adoption_score"),
+            "risk_level": obj.get("risk_level"),
+            "active_features": obj.get("active_features"),
+            "last_login_days": obj.get("last_login_days"),
+            "cloud_instances_count": obj.get("cloud_instances_count"),
+            "audit_events_30d": obj.get("audit_events_30d"),
+            "open_incidents_count": obj.get("open_incidents_count"),
+            "trend": obj.get("trend"),
+            "notes": obj.get("notes"),
+            "calculated_at": obj.get("calculated_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CustomerHealthScore.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

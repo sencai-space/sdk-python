@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.user_rank import UserRank
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,27 @@ class FindUserRank200ResponseDataInner(BaseModel):
     """
     FindUserRank200ResponseDataInner
     """ # noqa: E501
+    user: CreateAccessReviewRequestDataReviewer
+    xp_total: StrictInt
+    rank_level: StrictStr
+    badges: Optional[Any] = Field(default=None, description="Array of { badge_code, awarded_at } — badge_code references badge-definition.code")
+    automation_score: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Latest automation-score snapshot; historical values live in gamification-event, not here")
+    current_streak_days: StrictInt
+    longest_streak_days: StrictInt
+    last_activity_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[UserRank] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["user", "xp_total", "rank_level", "badges", "automation_score", "current_streak_days", "longest_streak_days", "last_activity_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('rank_level')
+    def rank_level_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['bronze', 'silver', 'gold', 'platinum', 'diamond', 'sencai_master']):
+            raise ValueError("must be one of enum values ('bronze', 'silver', 'gold', 'platinum', 'diamond', 'sencai_master')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +91,14 @@ class FindUserRank200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of user
+        if self.user:
+            _dict['user'] = self.user.to_dict()
+        # set to None if badges (nullable) is None
+        # and model_fields_set contains the field
+        if self.badges is None and "badges" in self.model_fields_set:
+            _dict['badges'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +116,16 @@ class FindUserRank200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "xp_total": obj.get("xp_total"),
+            "rank_level": obj.get("rank_level"),
+            "badges": obj.get("badges"),
+            "automation_score": obj.get("automation_score"),
+            "current_streak_days": obj.get("current_streak_days"),
+            "longest_streak_days": obj.get("longest_streak_days"),
+            "last_activity_at": obj.get("last_activity_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": UserRank.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

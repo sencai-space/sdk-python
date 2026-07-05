@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.workspace_watchdog_event import WorkspaceWatchdogEvent
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,48 @@ class FindWorkspaceWatchdogEvent200ResponseDataInner(BaseModel):
     """
     FindWorkspaceWatchdogEvent200ResponseDataInner
     """ # noqa: E501
+    organisation: CreateAccessReviewRequestDataReviewer
+    workspace_tenant: Optional[CreateAccessReviewRequestDataReviewer] = None
+    event_type: StrictStr
+    severity: StrictStr
+    actor_email: Optional[StrictStr] = None
+    target_email: Optional[StrictStr] = None
+    resource: Optional[StrictStr] = None
+    ip_address: Optional[StrictStr] = None
+    user_agent: Optional[StrictStr] = None
+    raw_event: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    event_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    status: StrictStr
+    notes: Optional[StrictStr] = None
+    occurred_at: datetime
+    notification_created: Optional[StrictBool] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WorkspaceWatchdogEvent] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "workspace_tenant", "event_type", "severity", "actor_email", "target_email", "resource", "ip_address", "user_agent", "raw_event", "event_data", "status", "notes", "occurred_at", "notification_created", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('event_type')
+    def event_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['login_anomaly', 'bulk_download', 'external_share', 'admin_privilege_granted', 'mfa_disabled', 'account_suspended', 'password_reset', 'app_authorized', 'new_admin', 'oauth_app_added', 'user_suspended', 'login_from_new_country', 'bulk_delete']):
+            raise ValueError("must be one of enum values ('login_anomaly', 'bulk_download', 'external_share', 'admin_privilege_granted', 'mfa_disabled', 'account_suspended', 'password_reset', 'app_authorized', 'new_admin', 'oauth_app_added', 'user_suspended', 'login_from_new_country', 'bulk_delete')")
+        return value
+
+    @field_validator('severity')
+    def severity_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['critical', 'high', 'medium', 'low', 'info']):
+            raise ValueError("must be one of enum values ('critical', 'high', 'medium', 'low', 'info')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['new', 'investigating', 'resolved', 'false_positive']):
+            raise ValueError("must be one of enum values ('new', 'investigating', 'resolved', 'false_positive')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +112,22 @@ class FindWorkspaceWatchdogEvent200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of workspace_tenant
+        if self.workspace_tenant:
+            _dict['workspace_tenant'] = self.workspace_tenant.to_dict()
+        # set to None if raw_event (nullable) is None
+        # and model_fields_set contains the field
+        if self.raw_event is None and "raw_event" in self.model_fields_set:
+            _dict['raw_event'] = None
+
+        # set to None if event_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.event_data is None and "event_data" in self.model_fields_set:
+            _dict['event_data'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +145,23 @@ class FindWorkspaceWatchdogEvent200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "workspace_tenant": CreateAccessReviewRequestDataReviewer.from_dict(obj["workspace_tenant"]) if obj.get("workspace_tenant") is not None else None,
+            "event_type": obj.get("event_type"),
+            "severity": obj.get("severity"),
+            "actor_email": obj.get("actor_email"),
+            "target_email": obj.get("target_email"),
+            "resource": obj.get("resource"),
+            "ip_address": obj.get("ip_address"),
+            "user_agent": obj.get("user_agent"),
+            "raw_event": obj.get("raw_event"),
+            "event_data": obj.get("event_data"),
+            "status": obj.get("status"),
+            "notes": obj.get("notes"),
+            "occurred_at": obj.get("occurred_at"),
+            "notification_created": obj.get("notification_created"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WorkspaceWatchdogEvent.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

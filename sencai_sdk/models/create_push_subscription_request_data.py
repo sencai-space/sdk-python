@@ -35,7 +35,7 @@ class CreatePushSubscriptionRequestData(BaseModel):
     auth_key: Optional[StrictStr] = Field(default=None, description="DEPRECATED plaintext field — retained read-only for pre-encryption legacy rows. New writes always go to encrypted_auth_key. NEVER returned by the API.")
     encrypted_p256dh_key: Optional[StrictStr] = Field(default=None, description="AES-256-GCM encrypted PushSubscription.keys.p256dh (F3.PWA.01) — same iv:authTag:ciphertext:salt format as BYOC cloud-credential (src/utils/credential-crypto.ts). NEVER returned by the API; decrypted only server-side by push-notifier for dispatch.")
     encrypted_auth_key: Optional[StrictStr] = Field(default=None, description="AES-256-GCM encrypted PushSubscription.keys.auth (F3.PWA.01). NEVER returned by the API.")
-    event_filters: Optional[Dict[str, Any]] = Field(default=None, description="Array of subscribed event-type strings. Canonical catalog (F3.CHATOPS.01/F3.PWA.01): 'billing.payment_failed', 'billing.trial_ending', 'cloud-instance.provision_failed', 'alert.fired'. Empty/null = all events.")
+    event_filters: Optional[Any] = Field(default=None, description="Array of subscribed event-type strings. Canonical catalog (F3.CHATOPS.01/F3.PWA.01): 'billing.payment_failed', 'billing.trial_ending', 'cloud-instance.provision_failed', 'alert.fired'. Empty/null = all events.")
     enabled: Optional[StrictBool] = None
     user_agent: Optional[StrictStr] = Field(default=None, description="Browser User-Agent at subscribe time — helps the user identify which device/browser a subscription belongs to in settings.")
     last_sent_at: Optional[datetime] = None
@@ -89,6 +89,11 @@ class CreatePushSubscriptionRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if event_filters (nullable) is None
+        # and model_fields_set contains the field
+        if self.event_filters is None and "event_filters" in self.model_fields_set:
+            _dict['event_filters'] = None
+
         return _dict
 
     @classmethod

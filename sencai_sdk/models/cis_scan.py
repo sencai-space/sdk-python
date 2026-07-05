@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -36,8 +36,8 @@ class CisScan(BaseModel):
     total_tests: Optional[StrictInt] = None
     warning_count: Optional[StrictInt] = None
     suggestion_count: Optional[StrictInt] = None
-    warnings: Optional[Dict[str, Any]] = None
-    suggestions: Optional[Dict[str, Any]] = None
+    warnings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    suggestions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     scanned_at: datetime
     __properties: ClassVar[List[str]] = ["sencai_agent", "organisation", "hardening_score", "total_tests", "warning_count", "suggestion_count", "warnings", "suggestions", "scanned_at"]
 
@@ -86,6 +86,16 @@ class CisScan(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if warnings (nullable) is None
+        # and model_fields_set contains the field
+        if self.warnings is None and "warnings" in self.model_fields_set:
+            _dict['warnings'] = None
+
+        # set to None if suggestions (nullable) is None
+        # and model_fields_set contains the field
+        if self.suggestions is None and "suggestions" in self.model_fields_set:
+            _dict['suggestions'] = None
+
         return _dict
 
     @classmethod

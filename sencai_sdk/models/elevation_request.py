@@ -33,7 +33,7 @@ class ElevationRequest(BaseModel):
     requesting_user: Optional[CreateAccessReviewRequestDataReviewer] = None
     requesting_org: Optional[CreateAccessReviewRequestDataReviewer] = None
     target_org: Optional[CreateAccessReviewRequestDataReviewer] = None
-    requested_capabilities: Dict[str, Any] = Field(description="List of capability names being requested")
+    requested_capabilities: Optional[Any] = Field(description="List of capability names being requested")
     justification: StrictStr
     duration_minutes: StrictInt
     status: StrictStr
@@ -116,6 +116,11 @@ class ElevationRequest(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of relationship
         if self.relationship:
             _dict['relationship'] = self.relationship.to_dict()
+        # set to None if requested_capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.requested_capabilities is None and "requested_capabilities" in self.model_fields_set:
+            _dict['requested_capabilities'] = None
+
         return _dict
 
     @classmethod

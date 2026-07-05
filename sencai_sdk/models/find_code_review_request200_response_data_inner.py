@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.code_review_request import CodeReviewRequest
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,29 @@ class FindCodeReviewRequest200ResponseDataInner(BaseModel):
     """
     FindCodeReviewRequest200ResponseDataInner
     """ # noqa: E501
+    repo_url: StrictStr
+    pr_number: StrictInt
+    pr_title: Optional[StrictStr] = None
+    diff_patch: Optional[StrictStr] = None
+    status: StrictStr
+    review_summary: Optional[StrictStr] = None
+    issues: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    score: Optional[StrictInt] = None
+    model_used: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CodeReviewRequest] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["repo_url", "pr_number", "pr_title", "diff_patch", "status", "review_summary", "issues", "score", "model_used", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'analyzing', 'completed', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'analyzing', 'completed', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,14 @@ class FindCodeReviewRequest200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if issues (nullable) is None
+        # and model_fields_set contains the field
+        if self.issues is None and "issues" in self.model_fields_set:
+            _dict['issues'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +118,18 @@ class FindCodeReviewRequest200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "repo_url": obj.get("repo_url"),
+            "pr_number": obj.get("pr_number"),
+            "pr_title": obj.get("pr_title"),
+            "diff_patch": obj.get("diff_patch"),
+            "status": obj.get("status"),
+            "review_summary": obj.get("review_summary"),
+            "issues": obj.get("issues"),
+            "score": obj.get("score"),
+            "model_used": obj.get("model_used"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CodeReviewRequest.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

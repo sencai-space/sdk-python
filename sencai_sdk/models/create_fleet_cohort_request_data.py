@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -37,7 +37,7 @@ class CreateFleetCohortRequestData(BaseModel):
     fleetdm_policy_id: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
     host_count: Optional[StrictInt] = None
-    last_result: Optional[Dict[str, Any]] = None
+    last_result: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "org_doc_id", "platform_filter", "query", "schedule_interval_seconds", "fleetdm_policy_id", "status", "host_count", "last_result", "organisation"]
 
@@ -103,6 +103,11 @@ class CreateFleetCohortRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if last_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.last_result is None and "last_result" in self.model_fields_set:
+            _dict['last_result'] = None
+
         return _dict
 
     @classmethod

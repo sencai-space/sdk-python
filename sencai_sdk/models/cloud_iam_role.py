@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,11 +32,11 @@ class CloudIamRole(BaseModel):
     name: StrictStr
     provider: StrictStr
     arn_or_role_id: Optional[StrictStr] = None
-    trust_relationship: Optional[Dict[str, Any]] = None
-    attached_policies: Optional[Dict[str, Any]] = None
+    trust_relationship: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    attached_policies: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_managed: Optional[StrictBool] = None
     external_id: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "provider", "arn_or_role_id", "trust_relationship", "attached_policies", "is_managed", "external_id", "metadata", "credential", "organisation"]
@@ -93,6 +93,21 @@ class CloudIamRole(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if trust_relationship (nullable) is None
+        # and model_fields_set contains the field
+        if self.trust_relationship is None and "trust_relationship" in self.model_fields_set:
+            _dict['trust_relationship'] = None
+
+        # set to None if attached_policies (nullable) is None
+        # and model_fields_set contains the field
+        if self.attached_policies is None and "attached_policies" in self.model_fields_set:
+            _dict['attached_policies'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

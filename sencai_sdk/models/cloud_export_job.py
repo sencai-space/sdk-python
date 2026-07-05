@@ -36,9 +36,9 @@ class CloudExportJob(BaseModel):
     resource_count: Optional[StrictInt] = Field(default=None, description="Number of records (instances + networks) successfully serialized into the generated .tf output.")
     skipped_count: Optional[StrictInt] = Field(default=None, description="Number of records skipped because their provider has no v0 export mapping (e.g. digitalocean, vultr) — see UnsupportedProviderError in tf-exporter.ts.")
     failed_count: Optional[StrictInt] = Field(default=None, description="Number of records that failed to serialize for reasons other than unsupported provider (malformed record, worker-side error).")
-    error_message: Optional[StrictStr] = Field(default=None, description="Set when status='failed' at the job level (e.g. worker crash, no instance_ids resolved).")
+    error_message: Optional[StrictStr] = Field(default=None, description="Set when status='failed' at the job level (e.g. worker crash, no instance_ids resolved). Also set on a 'completed' job when skipped_count > 0, carrying the skipped record name/id/reason (F4.IAC.03 worker) so a partial export is never indistinguishable from a full one.")
     output: Optional[StrictStr] = Field(default=None, description="Generated .tf HCL text, stored directly on the record (MVP — no media/upload plugin, job records are short-lived and .tf output is typically well under a media-worthy size). TTL/retention cleanup of old jobs is a follow-up, out of v0 scope.")
-    providers_included: Optional[Dict[str, Any]] = Field(default=None, description="Informative array of provider names (aws/gcp/azure/hetzner) that appeared in this export's resource selection.")
+    providers_included: Optional[Any] = Field(default=None, description="Informative array of provider names (aws/gcp/azure/hetzner) that appeared in this export's resource selection.")
     __properties: ClassVar[List[str]] = ["job_id", "status", "organisation", "created_by_user", "resource_count", "skipped_count", "failed_count", "error_message", "output", "providers_included"]
 
     @field_validator('status')
@@ -93,6 +93,11 @@ class CloudExportJob(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of created_by_user
         if self.created_by_user:
             _dict['created_by_user'] = self.created_by_user.to_dict()
+        # set to None if providers_included (nullable) is None
+        # and model_fields_set contains the field
+        if self.providers_included is None and "providers_included" in self.model_fields_set:
+            _dict['providers_included'] = None
+
         return _dict
 
     @classmethod

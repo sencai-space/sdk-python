@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -40,7 +40,7 @@ class SlaReport(BaseModel):
     total_incidents: Optional[StrictInt] = None
     p1_incidents: Optional[StrictInt] = None
     sla_breached: Optional[StrictBool] = None
-    breach_details: Optional[Dict[str, Any]] = None
+    breach_details: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     credit_percentage: Optional[Union[StrictFloat, StrictInt]] = None
     pdf_url: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
@@ -98,6 +98,11 @@ class SlaReport(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if breach_details (nullable) is None
+        # and model_fields_set contains the field
+        if self.breach_details is None and "breach_details" in self.model_fields_set:
+            _dict['breach_details'] = None
+
         return _dict
 
     @classmethod

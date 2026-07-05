@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -37,7 +37,7 @@ class CreateChaosExperimentRequestData(BaseModel):
     target_instance_name: Optional[StrictStr] = None
     duration_minutes: StrictInt
     blast_radius: Optional[StrictStr] = None
-    success_criteria: Optional[Dict[str, Any]] = None
+    success_criteria: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     rollback_plan: StrictStr
     status: Optional[StrictStr] = None
     result_summary: Optional[StrictStr] = None
@@ -117,6 +117,11 @@ class CreateChaosExperimentRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if success_criteria (nullable) is None
+        # and model_fields_set contains the field
+        if self.success_criteria is None and "success_criteria" in self.model_fields_set:
+            _dict['success_criteria'] = None
+
         return _dict
 
     @classmethod

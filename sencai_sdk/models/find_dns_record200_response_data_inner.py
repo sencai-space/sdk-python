@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.dns_record import DnsRecord
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,29 @@ class FindDnsRecord200ResponseDataInner(BaseModel):
     """
     FindDnsRecord200ResponseDataInner
     """ # noqa: E501
+    zone: Optional[CreateAccessReviewRequestDataReviewer] = None
+    type: StrictStr
+    name: StrictStr = Field(description="Relative record name (@, www, mail, ...). @ denotes the zone apex.")
+    value: StrictStr = Field(description="Record target value (IP address, domain, TXT content, etc.).")
+    ttl: Optional[StrictInt] = None
+    weight: Optional[StrictInt] = None
+    priority: Optional[StrictInt] = Field(default=None, description="Priority for MX and SRV records.")
+    geo_location: Optional[StrictStr] = None
+    provider_record_id: Optional[StrictStr] = Field(default=None, description="Provider-side record identifier (for update/delete operations).")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[DnsRecord] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["zone", "type", "name", "value", "ttl", "weight", "priority", "geo_location", "provider_record_id", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SRV', 'CAA', 'NS', 'PTR']):
+            raise ValueError("must be one of enum values ('A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SRV', 'CAA', 'NS', 'PTR')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +93,12 @@ class FindDnsRecord200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of zone
+        if self.zone:
+            _dict['zone'] = self.zone.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +116,18 @@ class FindDnsRecord200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "zone": CreateAccessReviewRequestDataReviewer.from_dict(obj["zone"]) if obj.get("zone") is not None else None,
+            "type": obj.get("type"),
+            "name": obj.get("name"),
+            "value": obj.get("value"),
+            "ttl": obj.get("ttl"),
+            "weight": obj.get("weight"),
+            "priority": obj.get("priority"),
+            "geo_location": obj.get("geo_location"),
+            "provider_record_id": obj.get("provider_record_id"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": DnsRecord.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

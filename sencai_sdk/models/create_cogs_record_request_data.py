@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -44,7 +44,7 @@ class CreateCogsRecordRequestData(BaseModel):
     llm_tokens_total: Optional[StrictInt] = None
     cloud_compute_cost_usd: Optional[Union[StrictFloat, StrictInt]] = None
     focus_version: Optional[StrictStr] = None
-    tags: Optional[Dict[str, Any]] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     idempotency_key: Optional[StrictStr] = None
     organisation: CreateAccessReviewRequestDataReviewer
     __properties: ClassVar[List[str]] = ["org_doc_id", "period_start", "period_end", "period_type", "provider_id", "service_category", "billed_cost", "effective_cost", "currency", "managed_hosts", "llm_token_cost_usd", "llm_tokens_total", "cloud_compute_cost_usd", "focus_version", "tags", "idempotency_key", "organisation"]
@@ -111,6 +111,11 @@ class CreateCogsRecordRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         return _dict
 
     @classmethod

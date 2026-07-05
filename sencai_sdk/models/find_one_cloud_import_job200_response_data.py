@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_import_job import CloudImportJob
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,27 @@ class FindOneCloudImportJob200ResponseData(BaseModel):
     """
     FindOneCloudImportJob200ResponseData
     """ # noqa: E501
+    job_id: StrictStr = Field(description="RabbitMQ job correlation id (UUID) — links this record to the cloud.events message and worker logs.")
+    status: StrictStr
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    created_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    created_count: Optional[StrictInt] = Field(default=None, description="Number of new cloud-instance records created by this import run.")
+    skipped_count: Optional[StrictInt] = Field(default=None, description="Number of resources skipped because a cloud-instance with the same external_id already existed (idempotent re-import).")
+    failed_count: Optional[StrictInt] = Field(default=None, description="Number of resources that failed to map/create (missing required fields, DB error, ...).")
+    error_message: Optional[StrictStr] = Field(default=None, description="Set when status='failed' at the job level (e.g. corrupt tfstate, unreachable tfstate_url).")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudImportJob] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["job_id", "status", "organisation", "created_by_user", "created_count", "skipped_count", "failed_count", "error_message", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'running', 'completed', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'running', 'completed', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +91,12 @@ class FindOneCloudImportJob200ResponseData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of created_by_user
+        if self.created_by_user:
+            _dict['created_by_user'] = self.created_by_user.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +114,16 @@ class FindOneCloudImportJob200ResponseData(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "job_id": obj.get("job_id"),
+            "status": obj.get("status"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "created_by_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["created_by_user"]) if obj.get("created_by_user") is not None else None,
+            "created_count": obj.get("created_count"),
+            "skipped_count": obj.get("skipped_count"),
+            "failed_count": obj.get("failed_count"),
+            "error_message": obj.get("error_message"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudImportJob.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

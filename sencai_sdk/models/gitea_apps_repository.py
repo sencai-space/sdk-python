@@ -43,7 +43,7 @@ class GiteaAppsRepository(BaseModel):
     total_tags: Optional[StrictInt] = Field(default=None, alias="totalTags")
     total_commits: Optional[StrictInt] = Field(default=None, alias="totalCommits")
     last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     deleted_at: Optional[datetime] = None
     restore_before: Optional[datetime] = None
     __properties: ClassVar[List[str]] = ["instanceId", "repositoryName", "repositoryOwner", "defaultBranch", "lastCommitHash", "lastCommitMessage", "lastCommitAuthor", "lastCommitDate", "gitstatus", "lastSyncDate", "totalBranches", "totalTags", "totalCommits", "lastError", "metadata", "deleted_at", "restore_before"]
@@ -97,6 +97,11 @@ class GiteaAppsRepository(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

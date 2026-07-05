@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.sla_tier import SlaTier
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,25 @@ class FindSlaTier200ResponseDataInner(BaseModel):
     """
     FindSlaTier200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    first_response_minutes: Optional[StrictInt] = None
+    resolution_minutes: Optional[StrictInt] = None
+    uptime_slo: Optional[Union[StrictFloat, StrictInt]] = None
+    subscription_plan: StrictStr
+    escalation_contacts: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SlaTier] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "first_response_minutes", "resolution_minutes", "uptime_slo", "subscription_plan", "escalation_contacts", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('subscription_plan')
+    def subscription_plan_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['free', 'starter', 'professional', 'enterprise']):
+            raise ValueError("must be one of enum values ('free', 'starter', 'professional', 'enterprise')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +88,11 @@ class FindSlaTier200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if escalation_contacts (nullable) is None
+        # and model_fields_set contains the field
+        if self.escalation_contacts is None and "escalation_contacts" in self.model_fields_set:
+            _dict['escalation_contacts'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +110,14 @@ class FindSlaTier200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "first_response_minutes": obj.get("first_response_minutes"),
+            "resolution_minutes": obj.get("resolution_minutes"),
+            "uptime_slo": obj.get("uptime_slo"),
+            "subscription_plan": obj.get("subscription_plan"),
+            "escalation_contacts": obj.get("escalation_contacts"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SlaTier.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

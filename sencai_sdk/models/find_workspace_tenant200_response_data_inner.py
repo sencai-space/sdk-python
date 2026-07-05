@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.workspace_tenant import WorkspaceTenant
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,30 @@ class FindWorkspaceTenant200ResponseDataInner(BaseModel):
     """
     FindWorkspaceTenant200ResponseDataInner
     """ # noqa: E501
+    domain: StrictStr
+    customer_id: Optional[StrictStr] = None
+    service_account_email: Optional[StrictStr] = None
+    service_account_key_encrypted: Optional[StrictStr] = None
+    admin_email: Optional[StrictStr] = None
+    last_synced_at: Optional[datetime] = None
+    sync_status: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WorkspaceTenant] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["domain", "customer_id", "service_account_email", "service_account_key_encrypted", "admin_email", "last_synced_at", "sync_status", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('sync_status')
+    def sync_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['idle', 'syncing', 'error', 'ok']):
+            raise ValueError("must be one of enum values ('idle', 'syncing', 'error', 'ok')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +94,9 @@ class FindWorkspaceTenant200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +114,16 @@ class FindWorkspaceTenant200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "domain": obj.get("domain"),
+            "customer_id": obj.get("customer_id"),
+            "service_account_email": obj.get("service_account_email"),
+            "service_account_key_encrypted": obj.get("service_account_key_encrypted"),
+            "admin_email": obj.get("admin_email"),
+            "last_synced_at": obj.get("last_synced_at"),
+            "sync_status": obj.get("sync_status"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WorkspaceTenant.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

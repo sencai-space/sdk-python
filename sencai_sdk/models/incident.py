@@ -37,8 +37,8 @@ class Incident(BaseModel):
     source: Optional[StrictStr] = None
     dedup_key: StrictStr
     correlation_id: Optional[StrictStr] = None
-    context_bundle: Optional[Dict[str, Any]] = None
-    rca_candidates: Optional[Dict[str, Any]] = None
+    context_bundle: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    rca_candidates: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     alert_count: Optional[StrictInt] = None
     first_seen_at: Optional[datetime] = None
     last_seen_at: Optional[datetime] = None
@@ -131,6 +131,16 @@ class Incident(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if context_bundle (nullable) is None
+        # and model_fields_set contains the field
+        if self.context_bundle is None and "context_bundle" in self.model_fields_set:
+            _dict['context_bundle'] = None
+
+        # set to None if rca_candidates (nullable) is None
+        # and model_fields_set contains the field
+        if self.rca_candidates is None and "rca_candidates" in self.model_fields_set:
+            _dict['rca_candidates'] = None
+
         return _dict
 
     @classmethod

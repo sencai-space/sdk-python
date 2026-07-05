@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,7 +35,7 @@ class CreateCodeReviewRequestRequestData(BaseModel):
     diff_patch: Optional[StrictStr] = None
     status: StrictStr
     review_summary: Optional[StrictStr] = None
-    issues: Optional[Dict[str, Any]] = None
+    issues: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     score: Optional[StrictInt] = None
     model_used: Optional[StrictStr] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -90,6 +90,11 @@ class CreateCodeReviewRequestRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if issues (nullable) is None
+        # and model_fields_set contains the field
+        if self.issues is None and "issues" in self.model_fields_set:
+            _dict['issues'] = None
+
         return _dict
 
     @classmethod

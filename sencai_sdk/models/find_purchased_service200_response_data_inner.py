@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.purchased_service import PurchasedService
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,33 @@ class FindPurchasedService200ResponseDataInner(BaseModel):
     """
     FindPurchasedService200ResponseDataInner
     """ # noqa: E501
+    users_permissions_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    gitea_toolbox_repository: Optional[CreateAccessReviewRequestDataReviewer] = None
+    state: Optional[StrictStr] = None
+    purchase_date: Optional[datetime] = None
+    account_type: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cost_stats: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    activation_date: Optional[datetime] = None
+    termination_date: Optional[datetime] = None
+    service_url: Optional[StrictStr] = None
+    configuration: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[PurchasedService] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["users_permissions_user", "gitea_toolbox_repository", "state", "purchase_date", "account_type", "cost_stats", "activation_date", "termination_date", "service_url", "configuration", "monthly_cost", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('state')
+    def state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'active', 'inactive', 'suspended', 'terminated']):
+            raise ValueError("must be one of enum values ('pending', 'active', 'inactive', 'suspended', 'terminated')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +97,25 @@ class FindPurchasedService200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of users_permissions_user
+        if self.users_permissions_user:
+            _dict['users_permissions_user'] = self.users_permissions_user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of gitea_toolbox_repository
+        if self.gitea_toolbox_repository:
+            _dict['gitea_toolbox_repository'] = self.gitea_toolbox_repository.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of account_type
+        if self.account_type:
+            _dict['account_type'] = self.account_type.to_dict()
+        # set to None if cost_stats (nullable) is None
+        # and model_fields_set contains the field
+        if self.cost_stats is None and "cost_stats" in self.model_fields_set:
+            _dict['cost_stats'] = None
+
+        # set to None if configuration (nullable) is None
+        # and model_fields_set contains the field
+        if self.configuration is None and "configuration" in self.model_fields_set:
+            _dict['configuration'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +133,19 @@ class FindPurchasedService200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "users_permissions_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["users_permissions_user"]) if obj.get("users_permissions_user") is not None else None,
+            "gitea_toolbox_repository": CreateAccessReviewRequestDataReviewer.from_dict(obj["gitea_toolbox_repository"]) if obj.get("gitea_toolbox_repository") is not None else None,
+            "state": obj.get("state"),
+            "purchase_date": obj.get("purchase_date"),
+            "account_type": CreateAccessReviewRequestDataReviewer.from_dict(obj["account_type"]) if obj.get("account_type") is not None else None,
+            "cost_stats": obj.get("cost_stats"),
+            "activation_date": obj.get("activation_date"),
+            "termination_date": obj.get("termination_date"),
+            "service_url": obj.get("service_url"),
+            "configuration": obj.get("configuration"),
+            "monthly_cost": obj.get("monthly_cost"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": PurchasedService.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

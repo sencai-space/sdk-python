@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -38,7 +38,7 @@ class CreateSencaiAgentRequestData(BaseModel):
     arch: Optional[StrictStr] = None
     enrolled_at: Optional[datetime] = None
     last_heartbeat_at: Optional[datetime] = None
-    capabilities: Optional[Dict[str, Any]] = None
+    capabilities: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     cert_fingerprint: Optional[StrictStr] = None
     enrollment_token: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
@@ -109,6 +109,11 @@ class CreateSencaiAgentRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of cloud_instance
         if self.cloud_instance:
             _dict['cloud_instance'] = self.cloud_instance.to_dict()
+        # set to None if capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.capabilities is None and "capabilities" in self.model_fields_set:
+            _dict['capabilities'] = None
+
         return _dict
 
     @classmethod

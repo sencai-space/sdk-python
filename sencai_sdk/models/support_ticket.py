@@ -44,8 +44,8 @@ class SupportTicket(BaseModel):
     resolved_at: Optional[datetime] = None
     first_response_at: Optional[datetime] = None
     sla_breach: Optional[StrictBool] = None
-    tags: Optional[Dict[str, Any]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     freshdesk_ticket_id: Optional[StrictStr] = None
     comments: Optional[CreateAccessReviewRequestDataReviewer] = None
     feedback_type: Optional[StrictStr] = None
@@ -151,6 +151,16 @@ class SupportTicket(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of comments
         if self.comments:
             _dict['comments'] = self.comments.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

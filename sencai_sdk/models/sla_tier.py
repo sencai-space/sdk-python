@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
@@ -33,7 +33,7 @@ class SlaTier(BaseModel):
     resolution_minutes: Optional[StrictInt] = None
     uptime_slo: Optional[Union[StrictFloat, StrictInt]] = None
     subscription_plan: StrictStr
-    escalation_contacts: Optional[Dict[str, Any]] = None
+    escalation_contacts: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["name", "first_response_minutes", "resolution_minutes", "uptime_slo", "subscription_plan", "escalation_contacts"]
 
     @field_validator('subscription_plan')
@@ -82,6 +82,11 @@ class SlaTier(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if escalation_contacts (nullable) is None
+        # and model_fields_set contains the field
+        if self.escalation_contacts is None and "escalation_contacts" in self.model_fields_set:
+            _dict['escalation_contacts'] = None
+
         return _dict
 
     @classmethod

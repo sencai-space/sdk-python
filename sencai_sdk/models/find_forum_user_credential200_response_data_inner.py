@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.forum_user_credential import ForumUserCredential
+from typing_extensions import Annotated
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,17 @@ class FindForumUserCredential200ResponseDataInner(BaseModel):
     """
     FindForumUserCredential200ResponseDataInner
     """ # noqa: E501
+    kc_sub: Annotated[str, Field(min_length=1, strict=True, max_length=255)] = Field(description="Keycloak preferred_username claim — the stable per-user key forum-connector looks up on every visit.")
+    lemmy_username: Annotated[str, Field(min_length=3, strict=True, max_length=20)] = Field(description="Sanitized Lemmy-safe username actually registered in Lemmy ([a-zA-Z0-9_], 3-20 chars).")
+    encrypted_password: StrictStr = Field(description="AES-256-GCM encrypted internal Lemmy password (format iv:authTag:ciphertext:salt). NEVER returned in any API response. Decrypted only by forum-connector to perform Lemmy login on repeat visits.")
+    is_lemmy_admin: StrictBool = Field(description="Mirrors current Lemmy admin flag — set by F4.FORUM.03 (KC role forum-admin mapping).")
+    last_login_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ForumUserCredential] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["kc_sub", "lemmy_username", "encrypted_password", "is_lemmy_admin", "last_login_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +81,6 @@ class FindForumUserCredential200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +98,13 @@ class FindForumUserCredential200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "kc_sub": obj.get("kc_sub"),
+            "lemmy_username": obj.get("lemmy_username"),
+            "encrypted_password": obj.get("encrypted_password"),
+            "is_lemmy_admin": obj.get("is_lemmy_admin"),
+            "last_login_at": obj.get("last_login_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ForumUserCredential.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -34,8 +34,8 @@ class IntegrationChannel(BaseModel):
     description: Optional[StrictStr] = None
     type: StrictStr
     endpoint_url: StrictStr
-    trigger_events: Optional[Dict[str, Any]] = None
-    payload_template: Optional[Dict[str, Any]] = None
+    trigger_events: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    payload_template: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     auth_header_name: Optional[StrictStr] = None
     auth_header_value: Optional[StrictStr] = None
     is_enabled: Optional[StrictBool] = None
@@ -109,6 +109,16 @@ class IntegrationChannel(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if trigger_events (nullable) is None
+        # and model_fields_set contains the field
+        if self.trigger_events is None and "trigger_events" in self.model_fields_set:
+            _dict['trigger_events'] = None
+
+        # set to None if payload_template (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload_template is None and "payload_template" in self.model_fields_set:
+            _dict['payload_template'] = None
+
         return _dict
 
     @classmethod

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cogs_record import CogsRecord
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,49 @@ class FindCogsRecord200ResponseDataInner(BaseModel):
     """
     FindCogsRecord200ResponseDataInner
     """ # noqa: E501
+    org_doc_id: StrictStr
+    period_start: datetime
+    period_end: datetime
+    period_type: Optional[StrictStr] = None
+    provider_id: Optional[StrictStr] = None
+    service_category: Optional[StrictStr] = None
+    billed_cost: Optional[Union[StrictFloat, StrictInt]] = None
+    effective_cost: Optional[Union[StrictFloat, StrictInt]] = None
+    currency: Optional[StrictStr] = None
+    managed_hosts: Optional[StrictInt] = None
+    llm_token_cost_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    llm_tokens_total: Optional[StrictInt] = None
+    cloud_compute_cost_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    focus_version: Optional[StrictStr] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    idempotency_key: Optional[StrictStr] = None
+    organisation: CreateAccessReviewRequestDataReviewer
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CogsRecord] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["org_doc_id", "period_start", "period_end", "period_type", "provider_id", "service_category", "billed_cost", "effective_cost", "currency", "managed_hosts", "llm_token_cost_usd", "llm_tokens_total", "cloud_compute_cost_usd", "focus_version", "tags", "idempotency_key", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('period_type')
+    def period_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['daily', 'monthly']):
+            raise ValueError("must be one of enum values ('daily', 'monthly')")
+        return value
+
+    @field_validator('service_category')
+    def service_category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['compute', 'storage', 'networking', 'ai_inference', 'other']):
+            raise ValueError("must be one of enum values ('compute', 'storage', 'networking', 'ai_inference', 'other')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +113,14 @@ class FindCogsRecord200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +138,25 @@ class FindCogsRecord200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "org_doc_id": obj.get("org_doc_id"),
+            "period_start": obj.get("period_start"),
+            "period_end": obj.get("period_end"),
+            "period_type": obj.get("period_type"),
+            "provider_id": obj.get("provider_id"),
+            "service_category": obj.get("service_category"),
+            "billed_cost": obj.get("billed_cost"),
+            "effective_cost": obj.get("effective_cost"),
+            "currency": obj.get("currency"),
+            "managed_hosts": obj.get("managed_hosts"),
+            "llm_token_cost_usd": obj.get("llm_token_cost_usd"),
+            "llm_tokens_total": obj.get("llm_tokens_total"),
+            "cloud_compute_cost_usd": obj.get("cloud_compute_cost_usd"),
+            "focus_version": obj.get("focus_version"),
+            "tags": obj.get("tags"),
+            "idempotency_key": obj.get("idempotency_key"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CogsRecord.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

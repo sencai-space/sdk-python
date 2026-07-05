@@ -34,11 +34,11 @@ class CloudCredential(BaseModel):
     name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
     provider: StrictStr
     is_active: StrictBool
-    credential_data: Optional[Dict[str, Any]] = None
+    credential_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     encrypted_payload: Optional[StrictStr] = Field(default=None, description="AES-256-GCM šifrovaný JSON s credentials (F2.C.03). NIKDY se nevrací v API. Dešifruje cloud-connector sdíleným BYOC_ENCRYPTION_KEY.")
     validation_status: StrictStr = Field(description="Stav ověření credentials reálným API voláním (F2.C.03).")
     last_validated_at: Optional[datetime] = None
-    scopes: Optional[Dict[str, Any]] = Field(default=None, description="Detekovaná oprávnění z validace (např. ['ec2:read','rds:write']).")
+    scopes: Optional[Any] = Field(default=None, description="Detekovaná oprávnění z validace (např. ['ec2:read','rds:write']).")
     last_used_at: Optional[datetime] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     created_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -127,6 +127,16 @@ class CloudCredential(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of created_by_user
         if self.created_by_user:
             _dict['created_by_user'] = self.created_by_user.to_dict()
+        # set to None if credential_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.credential_data is None and "credential_data" in self.model_fields_set:
+            _dict['credential_data'] = None
+
+        # set to None if scopes (nullable) is None
+        # and model_fields_set contains the field
+        if self.scopes is None and "scopes" in self.model_fields_set:
+            _dict['scopes'] = None
+
         return _dict
 
     @classmethod

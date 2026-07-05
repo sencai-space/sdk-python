@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.custom_registry import CustomRegistry
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,41 @@ class FindCustomRegistry200ResponseDataInner(BaseModel):
     """
     FindCustomRegistry200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=255)]
+    url: Annotated[str, Field(min_length=1, strict=True, max_length=1024)]
+    username: Optional[StrictStr] = Field(default=None, description="Username for Basic auth (e.g. 'oauth2' for GitLab PAT). Leave empty to use token as Bearer.")
+    token: Optional[StrictStr] = Field(default=None, description="Encrypted authentication token (PAT or password). Never returned in API responses.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    status: Optional[StrictStr] = None
+    last_checked: Optional[datetime] = None
+    error_message: Optional[StrictStr] = None
+    api_url: Optional[Annotated[str, Field(strict=True, max_length=1024)]] = Field(default=None, description="Optional: GitLab/Harbor API base URL for registry discovery (e.g. https://gitlab.example.com). Required for full repository auto-discovery.")
+    is_active: Optional[StrictBool] = Field(default=None, description="Soft-delete flag. Set to false instead of deleting the record.")
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CustomRegistry] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "url", "username", "token", "organisation", "status", "last_checked", "error_message", "api_url", "is_active", "home_region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'ok', 'error', 'unauthorized']):
+            raise ValueError("must be one of enum values ('pending', 'ok', 'error', 'unauthorized')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,9 @@ class FindCustomRegistry200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +126,20 @@ class FindCustomRegistry200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "url": obj.get("url"),
+            "username": obj.get("username"),
+            "token": obj.get("token"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "status": obj.get("status"),
+            "last_checked": obj.get("last_checked"),
+            "error_message": obj.get("error_message"),
+            "api_url": obj.get("api_url"),
+            "is_active": obj.get("is_active"),
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CustomRegistry.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

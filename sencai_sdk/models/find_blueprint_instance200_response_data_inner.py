@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.blueprint_instance import BlueprintInstance
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,33 @@ class FindBlueprintInstance200ResponseDataInner(BaseModel):
     """
     FindBlueprintInstance200ResponseDataInner
     """ # noqa: E501
+    blueprint: CreateAccessReviewRequestDataReviewer
+    param_values: Optional[Any] = Field(description="Resolved parameter values used when rendering the blueprint template, e.g. {\"region\": \"eu-central-1\", \"size\": \"cx21\"}.")
+    status: StrictStr
+    cloud_instance: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: CreateAccessReviewRequestDataReviewer
+    deployed_by: Optional[CreateAccessReviewRequestDataReviewer] = None
+    deployed_at: Optional[datetime] = None
+    notes: Optional[StrictStr] = None
+    resources: Optional[Any] = Field(default=None, description="Per-resource progress array: [{resource_id, resource_type, name, status: 'pending'|'provisioning'|'ready'|'failed', provider, region, cost_estimate_usd, error_msg?}]")
+    total_cost_estimate_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Sum of all resource cost estimates in USD/month.")
+    resource_count: Optional[StrictInt] = Field(default=None, description="Total number of resources in this blueprint instance.")
+    resources_ready: Optional[StrictInt] = Field(default=None, description="Number of resources in 'ready' state.")
+    resources_failed: Optional[StrictInt] = Field(default=None, description="Number of resources in 'failed' state.")
+    progress_pct: Optional[StrictInt] = Field(default=None, description="(ready + failed) / resource_count * 100")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BlueprintInstance] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["blueprint", "param_values", "status", "cloud_instance", "organisation", "deployed_by", "deployed_at", "notes", "resources", "total_cost_estimate_usd", "resource_count", "resources_ready", "resources_failed", "progress_pct", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'provisioning', 'ready', 'failed', 'destroyed', 'deployed']):
+            raise ValueError("must be one of enum values ('pending', 'provisioning', 'ready', 'failed', 'destroyed', 'deployed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +97,28 @@ class FindBlueprintInstance200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of blueprint
+        if self.blueprint:
+            _dict['blueprint'] = self.blueprint.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_instance
+        if self.cloud_instance:
+            _dict['cloud_instance'] = self.cloud_instance.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of deployed_by
+        if self.deployed_by:
+            _dict['deployed_by'] = self.deployed_by.to_dict()
+        # set to None if param_values (nullable) is None
+        # and model_fields_set contains the field
+        if self.param_values is None and "param_values" in self.model_fields_set:
+            _dict['param_values'] = None
+
+        # set to None if resources (nullable) is None
+        # and model_fields_set contains the field
+        if self.resources is None and "resources" in self.model_fields_set:
+            _dict['resources'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +136,22 @@ class FindBlueprintInstance200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "blueprint": CreateAccessReviewRequestDataReviewer.from_dict(obj["blueprint"]) if obj.get("blueprint") is not None else None,
+            "param_values": obj.get("param_values"),
+            "status": obj.get("status"),
+            "cloud_instance": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_instance"]) if obj.get("cloud_instance") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "deployed_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["deployed_by"]) if obj.get("deployed_by") is not None else None,
+            "deployed_at": obj.get("deployed_at"),
+            "notes": obj.get("notes"),
+            "resources": obj.get("resources"),
+            "total_cost_estimate_usd": obj.get("total_cost_estimate_usd"),
+            "resource_count": obj.get("resource_count"),
+            "resources_ready": obj.get("resources_ready"),
+            "resources_failed": obj.get("resources_failed"),
+            "progress_pct": obj.get("progress_pct"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BlueprintInstance.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

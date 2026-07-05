@@ -34,7 +34,7 @@ class CreateCloudPolicyRequestData(BaseModel):
     severity: StrictStr = Field(description="block = job is rejected; warn = job proceeds but a warning is emitted in audit.")
     provider: StrictStr = Field(description="Cloud provider this policy applies to. 'all' matches any provider.")
     resource_type: Optional[StrictStr] = Field(default=None, description="Free-text resource type filter (e.g. 'ec2', 's3', 'all'). 'all' or empty = matches any resource type.")
-    expression: Optional[Dict[str, Any]] = Field(default=None, description="Simple JSON DSL: { \"and\": [...] } or { \"or\": [...] } with leaf nodes { \"field\": string, \"op\": \"eq\"|\"neq\"|\"contains\"|\"exists\"|\"not-exists\"|\"gt\"|\"lt\", \"value\": any }. Field is a dot-path into the job payload (e.g. 'config.public_access').")
+    expression: Optional[Any] = Field(default=None, description="Simple JSON DSL: { \"and\": [...] } or { \"or\": [...] } with leaf nodes { \"field\": string, \"op\": \"eq\"|\"neq\"|\"contains\"|\"exists\"|\"not-exists\"|\"gt\"|\"lt\", \"value\": any }. Field is a dot-path into the job payload (e.g. 'config.public_access').")
     is_active: Optional[StrictBool] = Field(default=None, description="When false the policy is soft-disabled (skipped by the evaluator) without deleting it.")
     is_builtin: Optional[StrictBool] = Field(default=None, description="Built-in CIS-aligned policies seeded by bootstrap. True = platform-wide, read-only default (organisation=null). False = custom per-org.")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -98,6 +98,11 @@ class CreateCloudPolicyRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if expression (nullable) is None
+        # and model_fields_set contains the field
+        if self.expression is None and "expression" in self.model_fields_set:
+            _dict['expression'] = None
+
         return _dict
 
     @classmethod

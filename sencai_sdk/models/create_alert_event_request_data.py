@@ -42,7 +42,7 @@ class CreateAlertEventRequestData(BaseModel):
     notified_at: Optional[datetime] = Field(default=None, alias="notifiedAt")
     resolved_at: Optional[datetime] = Field(default=None, alias="resolvedAt")
     status: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["alertRule", "instanceId", "provider", "region", "metric", "metricValue", "threshold", "severity", "message", "notifiedAt", "resolvedAt", "status", "metadata"]
 
     @field_validator('severity')
@@ -104,6 +104,11 @@ class CreateAlertEventRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of alert_rule
         if self.alert_rule:
             _dict['alertRule'] = self.alert_rule.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

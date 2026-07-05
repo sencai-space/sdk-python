@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,7 +35,7 @@ class Invoice(BaseModel):
     total_amount: Union[StrictFloat, StrictInt]
     currency: StrictStr
     state: StrictStr
-    invoice_items: Dict[str, Any]
+    invoice_items: Optional[Any] = Field(description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     issue_date: datetime
     due_date: Optional[datetime] = None
     paid_date: Optional[datetime] = None
@@ -112,6 +112,11 @@ class Invoice(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of users_permissions_user
         if self.users_permissions_user:
             _dict['users_permissions_user'] = self.users_permissions_user.to_dict()
+        # set to None if invoice_items (nullable) is None
+        # and model_fields_set contains the field
+        if self.invoice_items is None and "invoice_items" in self.model_fields_set:
+            _dict['invoice_items'] = None
+
         return _dict
 
     @classmethod

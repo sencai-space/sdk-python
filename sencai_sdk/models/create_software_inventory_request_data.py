@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,8 +32,8 @@ class CreateSoftwareInventoryRequestData(BaseModel):
     """ # noqa: E501
     sencai_agent: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
-    packages: Optional[Dict[str, Any]] = None
-    eol_findings: Optional[Dict[str, Any]] = None
+    packages: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    eol_findings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     packages_count: Optional[StrictInt] = None
     eol_critical_count: Optional[StrictInt] = None
     eol_warning_count: Optional[StrictInt] = None
@@ -85,6 +85,16 @@ class CreateSoftwareInventoryRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if packages (nullable) is None
+        # and model_fields_set contains the field
+        if self.packages is None and "packages" in self.model_fields_set:
+            _dict['packages'] = None
+
+        # set to None if eol_findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.eol_findings is None and "eol_findings" in self.model_fields_set:
+            _dict['eol_findings'] = None
+
         return _dict
 
     @classmethod

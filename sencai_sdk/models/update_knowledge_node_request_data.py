@@ -34,7 +34,7 @@ class UpdateKnowledgeNodeRequestData(BaseModel):
     label: StrictStr = Field(description="Human-readable identifier, e.g. 'backend:1337', 'ec2-i-abc123', 'postgres-prod'.")
     resource_id: Optional[StrictStr] = Field(default=None, description="Internal Strapi documentId or cloud provider resource ID.")
     resource_type: Optional[StrictStr] = Field(default=None, description="Strapi content-type slug or cloud resource kind, e.g. 'cloud-instance', 'organisation-member', 'dns-zone'.")
-    properties: Optional[Dict[str, Any]] = Field(default=None, description="Arbitrary key-value metadata for this node (provider, region, tags, etc.).")
+    properties: Optional[Any] = Field(default=None, description="Arbitrary key-value metadata for this node (provider, region, tags, etc.).")
     last_seen_at: Optional[datetime] = None
     is_active: Optional[StrictBool] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -89,6 +89,11 @@ class UpdateKnowledgeNodeRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if properties (nullable) is None
+        # and model_fields_set contains the field
+        if self.properties is None and "properties" in self.model_fields_set:
+            _dict['properties'] = None
+
         return _dict
 
     @classmethod

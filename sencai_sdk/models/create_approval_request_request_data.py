@@ -32,12 +32,12 @@ class CreateApprovalRequestRequestData(BaseModel):
     """ # noqa: E501
     action_type: StrictStr = Field(description="Machine-readable action identifier, e.g. backup.policy.apply, runbook.execute, bulk.deauth")
     action_label: Optional[StrictStr] = Field(default=None, description="Human-readable label for the action")
-    payload: Dict[str, Any] = Field(description="The action payload that will be executed on approval")
+    payload: Optional[Any] = Field(description="The action payload that will be executed on approval")
     status: StrictStr
-    blast_radius: Optional[Dict[str, Any]] = Field(default=None, description="{ resource_count: number, resource_types: string[], estimated_impact: string }")
+    blast_radius: Optional[Any] = Field(default=None, description="{ resource_count: number, resource_types: string[], estimated_impact: string }")
     cost_delta: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Estimated cost change in USD (negative = savings)")
     rollback_plan: Optional[StrictStr] = Field(default=None, description="Step-by-step rollback instructions")
-    dry_run_result: Optional[Dict[str, Any]] = Field(default=None, description="Result of pre-execution dry run")
+    dry_run_result: Optional[Any] = Field(default=None, description="Result of pre-execution dry run")
     dry_run_status: Optional[StrictStr] = Field(default=None, description="Lifecycle status of the dry-run simulation")
     cost_delta_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Estimated cost change in USD from running this action (negative = savings)")
     expires_at: datetime = Field(description="Approval TTL — auto-set to now+4h on create")
@@ -113,6 +113,21 @@ class CreateApprovalRequestRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of approved_by
         if self.approved_by:
             _dict['approved_by'] = self.approved_by.to_dict()
+        # set to None if payload (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload is None and "payload" in self.model_fields_set:
+            _dict['payload'] = None
+
+        # set to None if blast_radius (nullable) is None
+        # and model_fields_set contains the field
+        if self.blast_radius is None and "blast_radius" in self.model_fields_set:
+            _dict['blast_radius'] = None
+
+        # set to None if dry_run_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.dry_run_result is None and "dry_run_result" in self.model_fields_set:
+            _dict['dry_run_result'] = None
+
         return _dict
 
     @classmethod

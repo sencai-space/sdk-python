@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.backup_validation import BackupValidation
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,38 @@ class FindBackupValidation200ResponseDataInner(BaseModel):
     """
     FindBackupValidation200ResponseDataInner
     """ # noqa: E501
+    backup_type: StrictStr
+    source: Optional[StrictStr] = None
+    size_bytes: Optional[StrictInt] = None
+    checksum: Optional[StrictStr] = None
+    validated_at: Optional[datetime] = None
+    restore_test_result: Optional[StrictStr] = None
+    rto_seconds: Optional[StrictInt] = None
+    error_message: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[BackupValidation] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["backup_type", "source", "size_bytes", "checksum", "validated_at", "restore_test_result", "rto_seconds", "error_message", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('backup_type')
+    def backup_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['mysql', 'postgresql', 'files', 'full']):
+            raise ValueError("must be one of enum values ('mysql', 'postgresql', 'files', 'full')")
+        return value
+
+    @field_validator('restore_test_result')
+    def restore_test_result_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['passed', 'failed', 'skipped']):
+            raise ValueError("must be one of enum values ('passed', 'failed', 'skipped')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +102,9 @@ class FindBackupValidation200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +122,17 @@ class FindBackupValidation200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "backup_type": obj.get("backup_type"),
+            "source": obj.get("source"),
+            "size_bytes": obj.get("size_bytes"),
+            "checksum": obj.get("checksum"),
+            "validated_at": obj.get("validated_at"),
+            "restore_test_result": obj.get("restore_test_result"),
+            "rto_seconds": obj.get("rto_seconds"),
+            "error_message": obj.get("error_message"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": BackupValidation.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.elevation_request import ElevationRequest
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,42 @@ class FindElevationRequest200ResponseDataInner(BaseModel):
     """
     FindElevationRequest200ResponseDataInner
     """ # noqa: E501
+    requesting_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    requesting_org: Optional[CreateAccessReviewRequestDataReviewer] = None
+    target_org: Optional[CreateAccessReviewRequestDataReviewer] = None
+    requested_capabilities: Optional[Any] = Field(description="List of capability names being requested")
+    justification: StrictStr
+    duration_minutes: StrictInt
+    status: StrictStr
+    approver: Optional[CreateAccessReviewRequestDataReviewer] = None
+    approved_at: Optional[datetime] = None
+    auto_expire_at: Optional[datetime] = None
+    denial_reason: Optional[StrictStr] = None
+    used: Optional[StrictBool] = Field(default=None, description="Single-use guard — true once the grant has been consumed (JIT)")
+    used_at: Optional[datetime] = Field(default=None, description="Timestamp when the grant was consumed (single-use)")
+    relationship: Optional[CreateAccessReviewRequestDataReviewer] = None
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ElevationRequest] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["requesting_user", "requesting_org", "target_org", "requested_capabilities", "justification", "duration_minutes", "status", "approver", "approved_at", "auto_expire_at", "denial_reason", "used", "used_at", "relationship", "home_region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'approved', 'denied', 'expired', 'revoked']):
+            raise ValueError("must be one of enum values ('pending', 'approved', 'denied', 'expired', 'revoked')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,26 @@ class FindElevationRequest200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of requesting_user
+        if self.requesting_user:
+            _dict['requesting_user'] = self.requesting_user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of requesting_org
+        if self.requesting_org:
+            _dict['requesting_org'] = self.requesting_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of target_org
+        if self.target_org:
+            _dict['target_org'] = self.target_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of approver
+        if self.approver:
+            _dict['approver'] = self.approver.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of relationship
+        if self.relationship:
+            _dict['relationship'] = self.relationship.to_dict()
+        # set to None if requested_capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.requested_capabilities is None and "requested_capabilities" in self.model_fields_set:
+            _dict['requested_capabilities'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +143,24 @@ class FindElevationRequest200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "requesting_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["requesting_user"]) if obj.get("requesting_user") is not None else None,
+            "requesting_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["requesting_org"]) if obj.get("requesting_org") is not None else None,
+            "target_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["target_org"]) if obj.get("target_org") is not None else None,
+            "requested_capabilities": obj.get("requested_capabilities"),
+            "justification": obj.get("justification"),
+            "duration_minutes": obj.get("duration_minutes"),
+            "status": obj.get("status"),
+            "approver": CreateAccessReviewRequestDataReviewer.from_dict(obj["approver"]) if obj.get("approver") is not None else None,
+            "approved_at": obj.get("approved_at"),
+            "auto_expire_at": obj.get("auto_expire_at"),
+            "denial_reason": obj.get("denial_reason"),
+            "used": obj.get("used"),
+            "used_at": obj.get("used_at"),
+            "relationship": CreateAccessReviewRequestDataReviewer.from_dict(obj["relationship"]) if obj.get("relationship") is not None else None,
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ElevationRequest.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

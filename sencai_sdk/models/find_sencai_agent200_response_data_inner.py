@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.sencai_agent import SencaiAgent
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,44 @@ class FindSencaiAgent200ResponseDataInner(BaseModel):
     """
     FindSencaiAgent200ResponseDataInner
     """ # noqa: E501
+    hostname: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cloud_instance: Optional[CreateAccessReviewRequestDataReviewer] = None
+    version: Optional[StrictStr] = None
+    os: Optional[StrictStr] = None
+    arch: Optional[StrictStr] = None
+    enrolled_at: Optional[datetime] = None
+    last_heartbeat_at: Optional[datetime] = None
+    capabilities: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    cert_fingerprint: Optional[StrictStr] = None
+    enrollment_token: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SencaiAgent] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["hostname", "organisation", "cloud_instance", "version", "os", "arch", "enrolled_at", "last_heartbeat_at", "capabilities", "cert_fingerprint", "enrollment_token", "status", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('os')
+    def os_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['linux', 'windows']):
+            raise ValueError("must be one of enum values ('linux', 'windows')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'active', 'disconnected', 'revoked']):
+            raise ValueError("must be one of enum values ('pending', 'active', 'disconnected', 'revoked')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +108,17 @@ class FindSencaiAgent200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_instance
+        if self.cloud_instance:
+            _dict['cloud_instance'] = self.cloud_instance.to_dict()
+        # set to None if capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.capabilities is None and "capabilities" in self.model_fields_set:
+            _dict['capabilities'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +136,20 @@ class FindSencaiAgent200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "hostname": obj.get("hostname"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "cloud_instance": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_instance"]) if obj.get("cloud_instance") is not None else None,
+            "version": obj.get("version"),
+            "os": obj.get("os"),
+            "arch": obj.get("arch"),
+            "enrolled_at": obj.get("enrolled_at"),
+            "last_heartbeat_at": obj.get("last_heartbeat_at"),
+            "capabilities": obj.get("capabilities"),
+            "cert_fingerprint": obj.get("cert_fingerprint"),
+            "enrollment_token": obj.get("enrollment_token"),
+            "status": obj.get("status"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SencaiAgent.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

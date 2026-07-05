@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.chaos_experiment import ChaosExperiment
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,55 @@ class FindChaosExperiment200ResponseDataInner(BaseModel):
     """
     FindChaosExperiment200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    description: Optional[StrictStr] = None
+    type: StrictStr
+    target_instance_id: Optional[StrictStr] = None
+    target_instance_name: Optional[StrictStr] = None
+    duration_minutes: StrictInt
+    blast_radius: Optional[StrictStr] = None
+    success_criteria: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    rollback_plan: StrictStr
+    status: Optional[StrictStr] = None
+    result_summary: Optional[StrictStr] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    approved_by: Optional[StrictStr] = None
+    change_request_id: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ChaosExperiment] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "type", "target_instance_id", "target_instance_name", "duration_minutes", "blast_radius", "success_criteria", "rollback_plan", "status", "result_summary", "started_at", "completed_at", "approved_by", "change_request_id", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['network_partition', 'cpu_stress', 'disk_fill', 'service_kill', 'latency_inject', 'memory_pressure']):
+            raise ValueError("must be one of enum values ('network_partition', 'cpu_stress', 'disk_fill', 'service_kill', 'latency_inject', 'memory_pressure')")
+        return value
+
+    @field_validator('blast_radius')
+    def blast_radius_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['single_instance', 'service_tier', 'availability_zone']):
+            raise ValueError("must be one of enum values ('single_instance', 'service_tier', 'availability_zone')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'approved', 'running', 'completed', 'failed', 'rolled_back']):
+            raise ValueError("must be one of enum values ('draft', 'approved', 'running', 'completed', 'failed', 'rolled_back')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +119,14 @@ class FindChaosExperiment200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if success_criteria (nullable) is None
+        # and model_fields_set contains the field
+        if self.success_criteria is None and "success_criteria" in self.model_fields_set:
+            _dict['success_criteria'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +144,24 @@ class FindChaosExperiment200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "type": obj.get("type"),
+            "target_instance_id": obj.get("target_instance_id"),
+            "target_instance_name": obj.get("target_instance_name"),
+            "duration_minutes": obj.get("duration_minutes"),
+            "blast_radius": obj.get("blast_radius"),
+            "success_criteria": obj.get("success_criteria"),
+            "rollback_plan": obj.get("rollback_plan"),
+            "status": obj.get("status"),
+            "result_summary": obj.get("result_summary"),
+            "started_at": obj.get("started_at"),
+            "completed_at": obj.get("completed_at"),
+            "approved_by": obj.get("approved_by"),
+            "change_request_id": obj.get("change_request_id"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ChaosExperiment.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

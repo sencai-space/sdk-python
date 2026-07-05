@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.usage_event import UsageEvent
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,32 @@ class FindUsageEvent200ResponseDataInner(BaseModel):
     """
     FindUsageEvent200ResponseDataInner
     """ # noqa: E501
+    event_type: StrictStr
+    quantity: Optional[StrictInt] = None
+    unit: Optional[StrictStr] = None
+    resource_id: Optional[StrictStr] = None
+    resource_type: Optional[StrictStr] = None
+    idempotency_key: Optional[StrictStr] = None
+    region: Optional[StrictStr] = None
+    period_start: datetime
+    period_end: Optional[datetime] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    billed: Optional[StrictBool] = None
+    billed_at: Optional[datetime] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[UsageEvent] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["event_type", "quantity", "unit", "resource_id", "resource_type", "idempotency_key", "region", "period_start", "period_end", "organisation", "billed", "billed_at", "metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('event_type')
+    def event_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['managed_host_observed', 'server_patched', 'org_managed', 'cloud_scan_completed', 'agent_heartbeat', 'backup_completed', 'compliance_scan_completed', 'dns_record_changed', 'cdn_invalidation', 'support_ticket_opened']):
+            raise ValueError("must be one of enum values ('managed_host_observed', 'server_patched', 'org_managed', 'cloud_scan_completed', 'agent_heartbeat', 'backup_completed', 'compliance_scan_completed', 'dns_record_changed', 'cdn_invalidation', 'support_ticket_opened')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +96,14 @@ class FindUsageEvent200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +121,21 @@ class FindUsageEvent200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "event_type": obj.get("event_type"),
+            "quantity": obj.get("quantity"),
+            "unit": obj.get("unit"),
+            "resource_id": obj.get("resource_id"),
+            "resource_type": obj.get("resource_type"),
+            "idempotency_key": obj.get("idempotency_key"),
+            "region": obj.get("region"),
+            "period_start": obj.get("period_start"),
+            "period_end": obj.get("period_end"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "billed": obj.get("billed"),
+            "billed_at": obj.get("billed_at"),
+            "metadata": obj.get("metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": UsageEvent.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

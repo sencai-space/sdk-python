@@ -31,14 +31,14 @@ class BlueprintInstance(BaseModel):
     BlueprintInstance
     """ # noqa: E501
     blueprint: CreateAccessReviewRequestDataReviewer
-    param_values: Dict[str, Any] = Field(description="Resolved parameter values used when rendering the blueprint template, e.g. {\"region\": \"eu-central-1\", \"size\": \"cx21\"}.")
+    param_values: Optional[Any] = Field(description="Resolved parameter values used when rendering the blueprint template, e.g. {\"region\": \"eu-central-1\", \"size\": \"cx21\"}.")
     status: StrictStr
     cloud_instance: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: CreateAccessReviewRequestDataReviewer
     deployed_by: Optional[CreateAccessReviewRequestDataReviewer] = None
     deployed_at: Optional[datetime] = None
     notes: Optional[StrictStr] = None
-    resources: Optional[Dict[str, Any]] = Field(default=None, description="Per-resource progress array: [{resource_id, resource_type, name, status: 'pending'|'provisioning'|'ready'|'failed', provider, region, cost_estimate_usd, error_msg?}]")
+    resources: Optional[Any] = Field(default=None, description="Per-resource progress array: [{resource_id, resource_type, name, status: 'pending'|'provisioning'|'ready'|'failed', provider, region, cost_estimate_usd, error_msg?}]")
     total_cost_estimate_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Sum of all resource cost estimates in USD/month.")
     resource_count: Optional[StrictInt] = Field(default=None, description="Total number of resources in this blueprint instance.")
     resources_ready: Optional[StrictInt] = Field(default=None, description="Number of resources in 'ready' state.")
@@ -104,6 +104,16 @@ class BlueprintInstance(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of deployed_by
         if self.deployed_by:
             _dict['deployed_by'] = self.deployed_by.to_dict()
+        # set to None if param_values (nullable) is None
+        # and model_fields_set contains the field
+        if self.param_values is None and "param_values" in self.model_fields_set:
+            _dict['param_values'] = None
+
+        # set to None if resources (nullable) is None
+        # and model_fields_set contains the field
+        if self.resources is None and "resources" in self.model_fields_set:
+            _dict['resources'] = None
+
         return _dict
 
     @classmethod

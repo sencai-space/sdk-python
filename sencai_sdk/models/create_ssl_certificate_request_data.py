@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,7 +32,7 @@ class CreateSslCertificateRequestData(BaseModel):
     """ # noqa: E501
     domain: StrictStr
     issuer: Optional[StrictStr] = None
-    subject_alt_names: Optional[Dict[str, Any]] = None
+    subject_alt_names: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     issued_at: Optional[datetime] = None
     expires_at: datetime
     is_wildcard: Optional[StrictBool] = None
@@ -106,6 +106,11 @@ class CreateSslCertificateRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if subject_alt_names (nullable) is None
+        # and model_fields_set contains the field
+        if self.subject_alt_names is None and "subject_alt_names" in self.model_fields_set:
+            _dict['subject_alt_names'] = None
+
         return _dict
 
     @classmethod

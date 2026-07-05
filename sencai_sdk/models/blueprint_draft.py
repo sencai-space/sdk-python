@@ -37,14 +37,14 @@ class BlueprintDraft(BaseModel):
     description: Optional[StrictStr] = None
     category: Optional[StrictStr] = None
     provider: Optional[StrictStr] = None
-    steps: Optional[Dict[str, Any]] = Field(default=None, description="Array of {id, name, type: 'provision'|'configure'|'verify', resource_type, config JSON, depends_on: string[]}.")
-    variables: Optional[Dict[str, Any]] = Field(default=None, description="JSON Schema for input variables, e.g. {\"region\": {\"type\": \"string\", \"default\": \"eu-west-1\"}}.")
-    resource_types: Optional[Dict[str, Any]] = Field(default=None, description="Array of strings listing the cloud resource types used in this blueprint.")
+    steps: Optional[Any] = Field(default=None, description="Array of {id, name, type: 'provision'|'configure'|'verify', resource_type, config JSON, depends_on: string[]}.")
+    variables: Optional[Any] = Field(default=None, description="JSON Schema for input variables, e.g. {\"region\": {\"type\": \"string\", \"default\": \"eu-west-1\"}}.")
+    resource_types: Optional[Any] = Field(default=None, description="Array of strings listing the cloud resource types used in this blueprint.")
     estimated_cost_monthly: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Estimated monthly cost in USD.")
     cost_notes: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
     version: Optional[StrictStr] = None
-    tags: Optional[Dict[str, Any]] = Field(default=None, description="Array of string tags.")
+    tags: Optional[Any] = Field(default=None, description="Array of string tags.")
     __properties: ClassVar[List[str]] = ["organisation", "author", "name", "slug", "description", "category", "provider", "steps", "variables", "resource_types", "estimated_cost_monthly", "cost_notes", "status", "version", "tags"]
 
     @field_validator('category')
@@ -122,6 +122,26 @@ class BlueprintDraft(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of author
         if self.author:
             _dict['author'] = self.author.to_dict()
+        # set to None if steps (nullable) is None
+        # and model_fields_set contains the field
+        if self.steps is None and "steps" in self.model_fields_set:
+            _dict['steps'] = None
+
+        # set to None if variables (nullable) is None
+        # and model_fields_set contains the field
+        if self.variables is None and "variables" in self.model_fields_set:
+            _dict['variables'] = None
+
+        # set to None if resource_types (nullable) is None
+        # and model_fields_set contains the field
+        if self.resource_types is None and "resource_types" in self.model_fields_set:
+            _dict['resource_types'] = None
+
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         return _dict
 
     @classmethod

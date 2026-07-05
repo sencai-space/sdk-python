@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_instance import CloudInstance
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,75 @@ class FindCloudInstance200ResponseDataInner(BaseModel):
     """
     FindCloudInstance200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    provider: StrictStr
+    region: StrictStr
+    instance_type: StrictStr
+    os_image: Optional[StrictStr] = Field(default=None, description="Provider OS image / snapshot identifier requested at create time (mapped to cloudConfig.imageId in the provision message).")
+    root_disk_gb: Optional[StrictInt] = Field(default=None, description="Requested root/boot disk size in GB (mapped to cloudConfig.rootDiskGb).")
+    additional_disks: Optional[Any] = Field(default=None, description="Optional extra data volumes requested at create time: array of { sizeGb, type?, label? } (mapped to cloudConfig.additionalDisks).")
+    status: StrictStr
+    ip_address: Optional[StrictStr] = None
+    ipv6_address: Optional[StrictStr] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    error_message: Optional[StrictStr] = None
+    monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
+    currency: StrictStr
+    external_id: Optional[StrictStr] = Field(default=None, description="Provider-specific instance identifier (e.g. Hetzner server ID, AWS instance-id). For source='terraform' this is the Terraform resource address (e.g. \"aws_instance.web\") — used as the IaC-import dedup key (F3.IMPORT.01).")
+    source: StrictStr = Field(description="Provenance of this record: 'sencai' = provisioned through cloud-connector (default); 'terraform' = imported from an existing terraform.tfstate (F3.IMPORT.01, IMPORT ONLY — never generates/exports .tf).")
+    provisioned_at: Optional[datetime] = None
+    terminated_at: Optional[datetime] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    created_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    connector_status: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cloud_credential: Optional[CreateAccessReviewRequestDataReviewer] = None
+    network: Optional[CreateAccessReviewRequestDataReviewer] = None
+    subnet: Optional[CreateAccessReviewRequestDataReviewer] = None
+    security_groups: Optional[CreateAccessReviewRequestDataReviewer] = None
+    agents: Optional[CreateAccessReviewRequestDataReviewer] = None
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudInstance] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "provider", "region", "instance_type", "os_image", "root_disk_gb", "additional_disks", "status", "ip_address", "ipv6_address", "metadata", "error_message", "monthly_cost", "currency", "external_id", "source", "provisioned_at", "terminated_at", "organisation", "created_by_user", "connector_status", "cloud_credential", "network", "subnet", "security_groups", "agents", "home_region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean']):
+            raise ValueError("must be one of enum values ('hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'provisioning', 'running', 'starting', 'stopping', 'stopped', 'terminating', 'terminated', 'failed', 'imported']):
+            raise ValueError("must be one of enum values ('pending', 'provisioning', 'running', 'starting', 'stopping', 'stopped', 'terminating', 'terminated', 'failed', 'imported')")
+        return value
+
+    @field_validator('currency')
+    def currency_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['EUR', 'USD', 'CZK', 'GBP']):
+            raise ValueError("must be one of enum values ('EUR', 'USD', 'CZK', 'GBP')")
+        return value
+
+    @field_validator('source')
+    def source_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['sencai', 'terraform']):
+            raise ValueError("must be one of enum values ('sencai', 'terraform')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +140,40 @@ class FindCloudInstance200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of created_by_user
+        if self.created_by_user:
+            _dict['created_by_user'] = self.created_by_user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of connector_status
+        if self.connector_status:
+            _dict['connector_status'] = self.connector_status.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_credential
+        if self.cloud_credential:
+            _dict['cloud_credential'] = self.cloud_credential.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of network
+        if self.network:
+            _dict['network'] = self.network.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of subnet
+        if self.subnet:
+            _dict['subnet'] = self.subnet.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of security_groups
+        if self.security_groups:
+            _dict['security_groups'] = self.security_groups.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of agents
+        if self.agents:
+            _dict['agents'] = self.agents.to_dict()
+        # set to None if additional_disks (nullable) is None
+        # and model_fields_set contains the field
+        if self.additional_disks is None and "additional_disks" in self.model_fields_set:
+            _dict['additional_disks'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +191,36 @@ class FindCloudInstance200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "provider": obj.get("provider"),
+            "region": obj.get("region"),
+            "instance_type": obj.get("instance_type"),
+            "os_image": obj.get("os_image"),
+            "root_disk_gb": obj.get("root_disk_gb"),
+            "additional_disks": obj.get("additional_disks"),
+            "status": obj.get("status"),
+            "ip_address": obj.get("ip_address"),
+            "ipv6_address": obj.get("ipv6_address"),
+            "metadata": obj.get("metadata"),
+            "error_message": obj.get("error_message"),
+            "monthly_cost": obj.get("monthly_cost"),
+            "currency": obj.get("currency"),
+            "external_id": obj.get("external_id"),
+            "source": obj.get("source"),
+            "provisioned_at": obj.get("provisioned_at"),
+            "terminated_at": obj.get("terminated_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "created_by_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["created_by_user"]) if obj.get("created_by_user") is not None else None,
+            "connector_status": CreateAccessReviewRequestDataReviewer.from_dict(obj["connector_status"]) if obj.get("connector_status") is not None else None,
+            "cloud_credential": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_credential"]) if obj.get("cloud_credential") is not None else None,
+            "network": CreateAccessReviewRequestDataReviewer.from_dict(obj["network"]) if obj.get("network") is not None else None,
+            "subnet": CreateAccessReviewRequestDataReviewer.from_dict(obj["subnet"]) if obj.get("subnet") is not None else None,
+            "security_groups": CreateAccessReviewRequestDataReviewer.from_dict(obj["security_groups"]) if obj.get("security_groups") is not None else None,
+            "agents": CreateAccessReviewRequestDataReviewer.from_dict(obj["agents"]) if obj.get("agents") is not None else None,
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudInstance.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

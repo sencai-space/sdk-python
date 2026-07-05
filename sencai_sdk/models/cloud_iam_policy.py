@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,10 +32,10 @@ class CloudIamPolicy(BaseModel):
     name: StrictStr
     provider: StrictStr
     arn_or_policy_id: Optional[StrictStr] = None
-    policy_document: Optional[Dict[str, Any]] = None
+    policy_document: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_managed: Optional[StrictBool] = None
     external_id: Optional[StrictStr] = None
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["name", "provider", "arn_or_policy_id", "policy_document", "is_managed", "external_id", "metadata", "credential", "organisation"]
@@ -92,6 +92,16 @@ class CloudIamPolicy(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if policy_document (nullable) is None
+        # and model_fields_set contains the field
+        if self.policy_document is None and "policy_document" in self.model_fields_set:
+            _dict['policy_document'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         return _dict
 
     @classmethod

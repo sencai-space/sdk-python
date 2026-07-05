@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
@@ -36,7 +36,7 @@ class SubscriptionPlan(BaseModel):
     max_members: Optional[StrictInt] = None
     max_monthly_budget: Optional[Union[StrictFloat, StrictInt]] = None
     max_agents: Optional[StrictInt] = None
-    features: Optional[Dict[str, Any]] = None
+    features: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_public: Optional[StrictBool] = None
     stripe_price_id: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["name", "account_tier", "price_eur_per_host", "price_eur_base", "max_instances", "max_members", "max_monthly_budget", "max_agents", "features", "is_public", "stripe_price_id"]
@@ -87,6 +87,11 @@ class SubscriptionPlan(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if features (nullable) is None
+        # and model_fields_set contains the field
+        if self.features is None and "features" in self.model_fields_set:
+            _dict['features'] = None
+
         return _dict
 
     @classmethod

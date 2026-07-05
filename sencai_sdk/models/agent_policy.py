@@ -35,13 +35,13 @@ class AgentPolicy(BaseModel):
     scope_type: StrictStr = Field(description="Determines what scope_value refers to: org = org-level policy, environment = named env (dev/prod/…), action_type = action type pattern.")
     scope_value: Optional[StrictStr] = Field(default=None, description="The scoped value: org documentId, environment name, or action type pattern. Null means applies to all within the org.")
     autonomy_level: StrictStr = Field(description="L0=observe only (no writes), L1=suggest only (no writes), L2=execute with approval, L3=auto-execute within policy.")
-    freeze_windows: Optional[Dict[str, Any]] = Field(default=None, description="Array of time windows where all agent actions are blocked. Format: [{name: string, start: 'HH:MM', end: 'HH:MM', days: number[], timezone: string}]. days: 0=Sunday…6=Saturday.")
+    freeze_windows: Optional[Any] = Field(default=None, description="Array of time windows where all agent actions are blocked. Format: [{name: string, start: 'HH:MM', end: 'HH:MM', days: number[], timezone: string}]. days: 0=Sunday…6=Saturday.")
     max_blast_radius: Optional[StrictStr] = Field(default=None, description="Maximum scope of impact a single agent action may have under this policy.")
-    allowed_action_types: Optional[Dict[str, Any]] = Field(default=None, description="Explicit allowlist of action type strings. Null = all action types are allowed within the autonomy_level.")
-    blocked_action_types: Optional[Dict[str, Any]] = Field(default=None, description="Explicit blocklist of action type strings. Takes precedence over allowed_action_types.")
+    allowed_action_types: Optional[Any] = Field(default=None, description="Explicit allowlist of action type strings. Null = all action types are allowed within the autonomy_level.")
+    blocked_action_types: Optional[Any] = Field(default=None, description="Explicit blocklist of action type strings. Takes precedence over allowed_action_types.")
     is_active: StrictBool
     created_by_agent: Optional[StrictBool] = Field(default=None, description="True when this policy was created by an agent. Used by no-self-policy-mutation guard to reject agent-initiated mutations.")
-    policy_document: Optional[Dict[str, Any]] = Field(default=None, description="Legacy OPA-compatible policy document. Format: { allow_actions: string[], deny_actions: string[], conditions: { max_instances_per_day?: number, allowed_regions?: string[], ... } }")
+    policy_document: Optional[Any] = Field(default=None, description="Legacy OPA-compatible policy document. Format: { allow_actions: string[], deny_actions: string[], conditions: { max_instances_per_day?: number, allowed_regions?: string[], ... } }")
     scope: Optional[StrictStr] = Field(default=None, description="Legacy: Policy specificity scope for OPA matching priority (per-action > per-env > per-provider > global).")
     provider: Optional[StrictStr] = None
     environment: Optional[StrictStr] = None
@@ -144,6 +144,26 @@ class AgentPolicy(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if freeze_windows (nullable) is None
+        # and model_fields_set contains the field
+        if self.freeze_windows is None and "freeze_windows" in self.model_fields_set:
+            _dict['freeze_windows'] = None
+
+        # set to None if allowed_action_types (nullable) is None
+        # and model_fields_set contains the field
+        if self.allowed_action_types is None and "allowed_action_types" in self.model_fields_set:
+            _dict['allowed_action_types'] = None
+
+        # set to None if blocked_action_types (nullable) is None
+        # and model_fields_set contains the field
+        if self.blocked_action_types is None and "blocked_action_types" in self.model_fields_set:
+            _dict['blocked_action_types'] = None
+
+        # set to None if policy_document (nullable) is None
+        # and model_fields_set contains the field
+        if self.policy_document is None and "policy_document" in self.model_fields_set:
+            _dict['policy_document'] = None
+
         return _dict
 
     @classmethod

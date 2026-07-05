@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cost_anomaly import CostAnomaly
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,52 @@ class FindCostAnomaly200ResponseDataInner(BaseModel):
     """
     FindCostAnomaly200ResponseDataInner
     """ # noqa: E501
+    org_id: StrictStr = Field(description="Organisation documentId the anomaly belongs to.")
+    resource_id: Optional[StrictStr] = Field(default=None, description="cloud-instance documentId or service name. Null = org-total anomaly.")
+    resource_type: Optional[StrictStr] = None
+    expected_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Expected cost derived from historical baseline (IQR median or mean).")
+    actual_usd: Union[StrictFloat, StrictInt] = Field(description="Observed cost that triggered the anomaly.")
+    deviation_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Signed percentage deviation: (actual - expected) / expected * 100.")
+    detection_method: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    acknowledged_at: Optional[datetime] = None
+    acknowledged_by: Optional[StrictStr] = Field(default=None, description="User ID (Strapi numeric id or email) who acknowledged the anomaly.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CostAnomaly] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["org_id", "resource_id", "resource_type", "expected_usd", "actual_usd", "deviation_pct", "detection_method", "status", "acknowledged_at", "acknowledged_by", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('resource_type')
+    def resource_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['cloud_instance', 'service', 'database', 'network', 'total']):
+            raise ValueError("must be one of enum values ('cloud_instance', 'service', 'database', 'network', 'total')")
+        return value
+
+    @field_validator('detection_method')
+    def detection_method_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['iqr', 'z_score', 'threshold']):
+            raise ValueError("must be one of enum values ('iqr', 'z_score', 'threshold')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['open', 'acknowledged', 'false_positive']):
+            raise ValueError("must be one of enum values ('open', 'acknowledged', 'false_positive')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +115,6 @@ class FindCostAnomaly200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +132,18 @@ class FindCostAnomaly200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "org_id": obj.get("org_id"),
+            "resource_id": obj.get("resource_id"),
+            "resource_type": obj.get("resource_type"),
+            "expected_usd": obj.get("expected_usd"),
+            "actual_usd": obj.get("actual_usd"),
+            "deviation_pct": obj.get("deviation_pct"),
+            "detection_method": obj.get("detection_method"),
+            "status": obj.get("status"),
+            "acknowledged_at": obj.get("acknowledged_at"),
+            "acknowledged_by": obj.get("acknowledged_by"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CostAnomaly.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

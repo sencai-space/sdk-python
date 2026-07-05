@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.knowledge_edge import KnowledgeEdge
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,28 @@ class FindKnowledgeEdge200ResponseDataInner(BaseModel):
     """
     FindKnowledgeEdge200ResponseDataInner
     """ # noqa: E501
+    source_node: Optional[CreateAccessReviewRequestDataReviewer] = None
+    target_node: Optional[CreateAccessReviewRequestDataReviewer] = None
+    relation_type: StrictStr
+    weight: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Edge weight; higher = stronger or more recent relationship signal.")
+    last_changed_at: Optional[datetime] = None
+    change_source: Optional[StrictStr] = Field(default=None, description="platform-event correlation_id that triggered this edge, or 'manual'.")
+    properties: Optional[Any] = Field(default=None, description="Arbitrary metadata for this edge.")
+    is_active: Optional[StrictBool] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[KnowledgeEdge] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["source_node", "target_node", "relation_type", "weight", "last_changed_at", "change_source", "properties", "is_active", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('relation_type')
+    def relation_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['depends_on', 'connects_to', 'managed_by', 'deployed_on', 'member_of', 'exposes', 'replicates_to']):
+            raise ValueError("must be one of enum values ('depends_on', 'connects_to', 'managed_by', 'deployed_on', 'member_of', 'exposes', 'replicates_to')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +92,20 @@ class FindKnowledgeEdge200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of source_node
+        if self.source_node:
+            _dict['source_node'] = self.source_node.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of target_node
+        if self.target_node:
+            _dict['target_node'] = self.target_node.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if properties (nullable) is None
+        # and model_fields_set contains the field
+        if self.properties is None and "properties" in self.model_fields_set:
+            _dict['properties'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +123,17 @@ class FindKnowledgeEdge200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "source_node": CreateAccessReviewRequestDataReviewer.from_dict(obj["source_node"]) if obj.get("source_node") is not None else None,
+            "target_node": CreateAccessReviewRequestDataReviewer.from_dict(obj["target_node"]) if obj.get("target_node") is not None else None,
+            "relation_type": obj.get("relation_type"),
+            "weight": obj.get("weight"),
+            "last_changed_at": obj.get("last_changed_at"),
+            "change_source": obj.get("change_source"),
+            "properties": obj.get("properties"),
+            "is_active": obj.get("is_active"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": KnowledgeEdge.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

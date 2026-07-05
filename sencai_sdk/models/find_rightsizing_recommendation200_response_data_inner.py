@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.rightsizing_recommendation import RightsizingRecommendation
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,45 @@ class FindRightsizingRecommendation200ResponseDataInner(BaseModel):
     """
     FindRightsizingRecommendation200ResponseDataInner
     """ # noqa: E501
+    cloud_instance_id: Optional[StrictStr] = Field(default=None, description="documentId of the source cloud-instance record")
+    current_instance_type: Optional[StrictStr] = None
+    recommended_instance_type: Optional[StrictStr] = None
+    provider: Optional[StrictStr] = None
+    region: Optional[StrictStr] = None
+    monthly_cost_current_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    monthly_cost_recommended_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    monthly_savings_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    reason: Optional[StrictStr] = None
+    confidence: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    analysis_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[RightsizingRecommendation] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["cloud_instance_id", "current_instance_type", "recommended_instance_type", "provider", "region", "monthly_cost_current_usd", "monthly_cost_recommended_usd", "monthly_savings_usd", "reason", "confidence", "status", "analysis_data", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('confidence')
+    def confidence_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['high', 'medium', 'low']):
+            raise ValueError("must be one of enum values ('high', 'medium', 'low')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'applied', 'dismissed']):
+            raise ValueError("must be one of enum values ('pending', 'applied', 'dismissed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +109,14 @@ class FindRightsizingRecommendation200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if analysis_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.analysis_data is None and "analysis_data" in self.model_fields_set:
+            _dict['analysis_data'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +134,21 @@ class FindRightsizingRecommendation200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "cloud_instance_id": obj.get("cloud_instance_id"),
+            "current_instance_type": obj.get("current_instance_type"),
+            "recommended_instance_type": obj.get("recommended_instance_type"),
+            "provider": obj.get("provider"),
+            "region": obj.get("region"),
+            "monthly_cost_current_usd": obj.get("monthly_cost_current_usd"),
+            "monthly_cost_recommended_usd": obj.get("monthly_cost_recommended_usd"),
+            "monthly_savings_usd": obj.get("monthly_savings_usd"),
+            "reason": obj.get("reason"),
+            "confidence": obj.get("confidence"),
+            "status": obj.get("status"),
+            "analysis_data": obj.get("analysis_data"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": RightsizingRecommendation.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

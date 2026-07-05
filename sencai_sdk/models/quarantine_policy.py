@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -31,7 +31,7 @@ class QuarantinePolicy(BaseModel):
     """ # noqa: E501
     name: StrictStr
     trigger_type: StrictStr
-    conditions: Optional[Dict[str, Any]] = None
+    conditions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     auto_release_hours: Optional[StrictInt] = None
     notify_on_trigger: Optional[StrictBool] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -86,6 +86,11 @@ class QuarantinePolicy(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if conditions (nullable) is None
+        # and model_fields_set contains the field
+        if self.conditions is None and "conditions" in self.model_fields_set:
+            _dict['conditions'] = None
+
         return _dict
 
     @classmethod

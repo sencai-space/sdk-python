@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.audit_log import AuditLog
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,41 @@ class FindAuditLog200ResponseDataInner(BaseModel):
     """
     FindAuditLog200ResponseDataInner
     """ # noqa: E501
+    action: StrictStr
+    actor_user_id: Optional[StrictStr] = None
+    actor_org_id: Optional[StrictStr] = None
+    customer_scope: Optional[StrictStr] = None
+    actor_org_scope: Optional[StrictStr] = None
+    elevation_grant_id: Optional[StrictStr] = None
+    resource_type: StrictStr
+    resource_id: Optional[StrictStr] = None
+    changes: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    correlation_id: Optional[StrictStr] = None
+    risk_level: Optional[StrictStr] = None
+    prev_hash: Optional[StrictStr] = None
+    entry_hash: Optional[StrictStr] = None
+    anchor_id: Optional[StrictStr] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    ip_address: Optional[StrictStr] = None
+    user_agent: Optional[StrictStr] = None
+    region: Optional[StrictStr] = Field(default=None, description="Data-residency region of the tenant at time of audit event (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within the region at time of audit event (CELL invariant, F2.CELL.01)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AuditLog] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["action", "actor_user_id", "actor_org_id", "customer_scope", "actor_org_scope", "elevation_grant_id", "resource_type", "resource_id", "changes", "correlation_id", "risk_level", "prev_hash", "entry_hash", "anchor_id", "metadata", "ip_address", "user_agent", "region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('risk_level')
+    def risk_level_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['low', 'medium', 'high', 'critical']):
+            raise ValueError("must be one of enum values ('low', 'medium', 'high', 'critical')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +104,16 @@ class FindAuditLog200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if changes (nullable) is None
+        # and model_fields_set contains the field
+        if self.changes is None and "changes" in self.model_fields_set:
+            _dict['changes'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +131,27 @@ class FindAuditLog200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "action": obj.get("action"),
+            "actor_user_id": obj.get("actor_user_id"),
+            "actor_org_id": obj.get("actor_org_id"),
+            "customer_scope": obj.get("customer_scope"),
+            "actor_org_scope": obj.get("actor_org_scope"),
+            "elevation_grant_id": obj.get("elevation_grant_id"),
+            "resource_type": obj.get("resource_type"),
+            "resource_id": obj.get("resource_id"),
+            "changes": obj.get("changes"),
+            "correlation_id": obj.get("correlation_id"),
+            "risk_level": obj.get("risk_level"),
+            "prev_hash": obj.get("prev_hash"),
+            "entry_hash": obj.get("entry_hash"),
+            "anchor_id": obj.get("anchor_id"),
+            "metadata": obj.get("metadata"),
+            "ip_address": obj.get("ip_address"),
+            "user_agent": obj.get("user_agent"),
+            "region": obj.get("region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AuditLog.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

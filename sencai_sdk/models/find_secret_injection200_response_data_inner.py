@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.secret_injection import SecretInjection
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,37 @@ class FindSecretInjection200ResponseDataInner(BaseModel):
     """
     FindSecretInjection200ResponseDataInner
     """ # noqa: E501
+    organisation: CreateAccessReviewRequestDataReviewer
+    cloud_instance: Optional[CreateAccessReviewRequestDataReviewer] = None
+    secret_name: StrictStr = Field(description="Logical name identifying the secret (no value stored).")
+    secret_ref: StrictStr = Field(description="Vault path or external reference, e.g. secret/data/myapp/db-password.")
+    target_service: StrictStr = Field(description="Name of the service or process into which the secret is injected.")
+    injection_method: StrictStr = Field(description="How the secret is delivered to the workload.")
+    env_var_name: Optional[StrictStr] = Field(default=None, description="Environment variable name (only when injection_method=env_var).")
+    file_path: Optional[StrictStr] = Field(default=None, description="Absolute path inside the container (only when injection_method=file).")
+    status: StrictStr
+    last_injected_at: Optional[datetime] = None
+    notes: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SecretInjection] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "cloud_instance", "secret_name", "secret_ref", "target_service", "injection_method", "env_var_name", "file_path", "status", "last_injected_at", "notes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('injection_method')
+    def injection_method_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['env_var', 'file', 'k8s_secret']):
+            raise ValueError("must be one of enum values ('env_var', 'file', 'k8s_secret')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'injected', 'failed', 'revoked']):
+            raise ValueError("must be one of enum values ('pending', 'injected', 'failed', 'revoked')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +101,12 @@ class FindSecretInjection200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_instance
+        if self.cloud_instance:
+            _dict['cloud_instance'] = self.cloud_instance.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +124,19 @@ class FindSecretInjection200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "cloud_instance": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_instance"]) if obj.get("cloud_instance") is not None else None,
+            "secret_name": obj.get("secret_name"),
+            "secret_ref": obj.get("secret_ref"),
+            "target_service": obj.get("target_service"),
+            "injection_method": obj.get("injection_method"),
+            "env_var_name": obj.get("env_var_name"),
+            "file_path": obj.get("file_path"),
+            "status": obj.get("status"),
+            "last_injected_at": obj.get("last_injected_at"),
+            "notes": obj.get("notes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SecretInjection.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

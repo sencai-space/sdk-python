@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -32,13 +32,13 @@ class CreateAgentReleaseRequestData(BaseModel):
     binary_url: Optional[StrictStr] = None
     checksum_sha256: Optional[StrictStr] = None
     release_notes: Optional[StrictStr] = None
-    rollout_policy: Optional[Dict[str, Any]] = None
+    rollout_policy: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     rollout_percentage: Optional[StrictInt] = None
     is_stable: Optional[StrictBool] = None
     channel: Optional[StrictStr] = None
     min_agent_version: Optional[StrictStr] = None
-    binary_urls: Optional[Dict[str, Any]] = None
-    architectures: Optional[Dict[str, Any]] = None
+    binary_urls: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    architectures: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["version", "binary_url", "checksum_sha256", "release_notes", "rollout_policy", "rollout_percentage", "is_stable", "channel", "min_agent_version", "binary_urls", "architectures"]
 
     @field_validator('channel')
@@ -90,6 +90,21 @@ class CreateAgentReleaseRequestData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if rollout_policy (nullable) is None
+        # and model_fields_set contains the field
+        if self.rollout_policy is None and "rollout_policy" in self.model_fields_set:
+            _dict['rollout_policy'] = None
+
+        # set to None if binary_urls (nullable) is None
+        # and model_fields_set contains the field
+        if self.binary_urls is None and "binary_urls" in self.model_fields_set:
+            _dict['binary_urls'] = None
+
+        # set to None if architectures (nullable) is None
+        # and model_fields_set contains the field
+        if self.architectures is None and "architectures" in self.model_fields_set:
+            _dict['architectures'] = None
+
         return _dict
 
     @classmethod

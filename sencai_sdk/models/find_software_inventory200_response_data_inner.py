@@ -21,7 +21,7 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.software_inventory import SoftwareInventory
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,20 @@ class FindSoftwareInventory200ResponseDataInner(BaseModel):
     """
     FindSoftwareInventory200ResponseDataInner
     """ # noqa: E501
+    sencai_agent: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    packages: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    eol_findings: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    packages_count: Optional[StrictInt] = None
+    eol_critical_count: Optional[StrictInt] = None
+    eol_warning_count: Optional[StrictInt] = None
+    collected_at: Optional[datetime] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SoftwareInventory] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["sencai_agent", "organisation", "packages", "eol_findings", "packages_count", "eol_critical_count", "eol_warning_count", "collected_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +84,22 @@ class FindSoftwareInventory200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of sencai_agent
+        if self.sencai_agent:
+            _dict['sencai_agent'] = self.sencai_agent.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if packages (nullable) is None
+        # and model_fields_set contains the field
+        if self.packages is None and "packages" in self.model_fields_set:
+            _dict['packages'] = None
+
+        # set to None if eol_findings (nullable) is None
+        # and model_fields_set contains the field
+        if self.eol_findings is None and "eol_findings" in self.model_fields_set:
+            _dict['eol_findings'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +117,16 @@ class FindSoftwareInventory200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "sencai_agent": CreateAccessReviewRequestDataReviewer.from_dict(obj["sencai_agent"]) if obj.get("sencai_agent") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "packages": obj.get("packages"),
+            "eol_findings": obj.get("eol_findings"),
+            "packages_count": obj.get("packages_count"),
+            "eol_critical_count": obj.get("eol_critical_count"),
+            "eol_warning_count": obj.get("eol_warning_count"),
+            "collected_at": obj.get("collected_at"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SoftwareInventory.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

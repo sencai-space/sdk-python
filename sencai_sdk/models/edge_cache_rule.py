@@ -34,7 +34,7 @@ class EdgeCacheRule(BaseModel):
     query_string_caching: Optional[StrictStr] = Field(default=None, description="Controls how query strings affect the cache key.")
     cookie_forwarding: Optional[StrictStr] = Field(default=None, description="Controls whether cookies are forwarded to the origin.")
     compress: Optional[StrictBool] = Field(default=None, description="Whether the CDN should compress eligible responses (gzip/Brotli).")
-    allowed_methods: Optional[Dict[str, Any]] = Field(default=None, description="HTTP methods allowed through this behavior (string[]), e.g. [\"GET\",\"HEAD\"].")
+    allowed_methods: Optional[Any] = Field(default=None, description="HTTP methods allowed through this behavior (string[]), e.g. [\"GET\",\"HEAD\"].")
     is_active: Optional[StrictBool] = Field(default=None, description="Whether this rule is currently applied to the distribution.")
     cdn_distribution: Optional[CreateAccessReviewRequestDataReviewer] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -105,6 +105,11 @@ class EdgeCacheRule(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if allowed_methods (nullable) is None
+        # and model_fields_set contains the field
+        if self.allowed_methods is None and "allowed_methods" in self.model_fields_set:
+            _dict['allowed_methods'] = None
+
         return _dict
 
     @classmethod

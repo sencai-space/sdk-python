@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.blueprint import Blueprint
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,41 @@ class FindBlueprint200ResponseDataInner(BaseModel):
     """
     FindBlueprint200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    description: Optional[StrictStr] = None
+    category: StrictStr
+    provider: Optional[StrictStr] = None
+    icon: Optional[StrictStr] = Field(default=None, description="MDI icon name, e.g. mdi-server")
+    template: Optional[Any] = Field(description="Parameterized config: { params: [{key, label, type, options?, default?, required?}], cloud_instance: {...} }. Supports {{key}} placeholder substitution.")
+    version: Optional[StrictStr] = None
+    is_public: Optional[StrictBool] = Field(default=None, description="When true, visible in the global catalog for all users.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    deploy_count: Optional[StrictInt] = Field(default=None, description="Usage counter incremented on each successful deploy.")
+    tags: Optional[Any] = Field(default=None, description="Array of string tags for search and filtering.")
+    cost_estimate: Optional[Any] = Field(default=None, description="Cost estimate for this blueprint: {resources: [{type, provider, region, monthly_usd}], total_monthly_usd}.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Blueprint] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "category", "provider", "icon", "template", "version", "is_public", "organisation", "deploy_count", "tags", "cost_estimate", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('category')
+    def category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['compute', 'kubernetes', 'database', 'networking', 'storage', 'full_stack', 'custom']):
+            raise ValueError("must be one of enum values ('compute', 'kubernetes', 'database', 'networking', 'storage', 'full_stack', 'custom')")
+        return value
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws', 'gcp', 'azure', 'hetzner', 'digitalocean', 'any']):
+            raise ValueError("must be one of enum values ('aws', 'gcp', 'azure', 'hetzner', 'digitalocean', 'any')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,24 @@ class FindBlueprint200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if template (nullable) is None
+        # and model_fields_set contains the field
+        if self.template is None and "template" in self.model_fields_set:
+            _dict['template'] = None
+
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if cost_estimate (nullable) is None
+        # and model_fields_set contains the field
+        if self.cost_estimate is None and "cost_estimate" in self.model_fields_set:
+            _dict['cost_estimate'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +141,20 @@ class FindBlueprint200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "category": obj.get("category"),
+            "provider": obj.get("provider"),
+            "icon": obj.get("icon"),
+            "template": obj.get("template"),
+            "version": obj.get("version"),
+            "is_public": obj.get("is_public"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "deploy_count": obj.get("deploy_count"),
+            "tags": obj.get("tags"),
+            "cost_estimate": obj.get("cost_estimate"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Blueprint.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.user_subscription_enrollment import UserSubscriptionEnrollment
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,31 @@ class FindUserSubscriptionEnrollment200ResponseDataInner(BaseModel):
     """
     FindUserSubscriptionEnrollment200ResponseDataInner
     """ # noqa: E501
+    user: CreateAccessReviewRequestDataReviewer
+    plan: Optional[CreateAccessReviewRequestDataReviewer] = None
+    status: StrictStr
+    started_at: Optional[datetime] = None
+    trial_ends_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    sponsor: Optional[CreateAccessReviewRequestDataReviewer] = None
+    stripe_customer_id: Optional[StrictStr] = Field(default=None, description="Convention: user-${userId}, symmetric to the existing org-${orgId} convention (see billing-adapter.ts / checkout.ts).")
+    stripe_subscription_id: Optional[StrictStr] = None
+    sponsorship_invitation_token: Optional[StrictStr] = Field(default=None, description="F3.USERPLAN.04 — 7-day JWT (mirrors organisation-member.invitation_token) proving the sponsor invited THIS beneficiary. Set on POST /:sponsorId/sponsor, cleared once accepted (or replaced by a new invite).")
+    pending_sponsorship: Optional[Any] = Field(default=None, description="F3.USERPLAN.04 — set while a sponsorship invitation is outstanding (not yet accepted by the beneficiary): { sponsorId, sponsorEnrollmentId, tierId, beneficiaryEmail, invitedAt }. Cleared on accept (sponsor/plan/status become authoritative) or on a fresh re-invite.")
+    sponsorship_stripe_item_id: Optional[StrictStr] = Field(default=None, description="F3.USERPLAN.04 — id of the Stripe subscription item added to the SPONSOR's existing subscription for this beneficiary (stripe.subscriptionItems). Required to remove exactly this line item on revoke without touching the sponsor's own base plan item or other beneficiaries' items.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[UserSubscriptionEnrollment] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["user", "plan", "status", "started_at", "trial_ends_at", "expires_at", "sponsor", "stripe_customer_id", "stripe_subscription_id", "sponsorship_invitation_token", "pending_sponsorship", "sponsorship_stripe_item_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['trial', 'active', 'pending_downgrade', 'grace_period', 'cancelled']):
+            raise ValueError("must be one of enum values ('trial', 'active', 'pending_downgrade', 'grace_period', 'cancelled')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +95,20 @@ class FindUserSubscriptionEnrollment200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of user
+        if self.user:
+            _dict['user'] = self.user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of plan
+        if self.plan:
+            _dict['plan'] = self.plan.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of sponsor
+        if self.sponsor:
+            _dict['sponsor'] = self.sponsor.to_dict()
+        # set to None if pending_sponsorship (nullable) is None
+        # and model_fields_set contains the field
+        if self.pending_sponsorship is None and "pending_sponsorship" in self.model_fields_set:
+            _dict['pending_sponsorship'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +126,20 @@ class FindUserSubscriptionEnrollment200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "plan": CreateAccessReviewRequestDataReviewer.from_dict(obj["plan"]) if obj.get("plan") is not None else None,
+            "status": obj.get("status"),
+            "started_at": obj.get("started_at"),
+            "trial_ends_at": obj.get("trial_ends_at"),
+            "expires_at": obj.get("expires_at"),
+            "sponsor": CreateAccessReviewRequestDataReviewer.from_dict(obj["sponsor"]) if obj.get("sponsor") is not None else None,
+            "stripe_customer_id": obj.get("stripe_customer_id"),
+            "stripe_subscription_id": obj.get("stripe_subscription_id"),
+            "sponsorship_invitation_token": obj.get("sponsorship_invitation_token"),
+            "pending_sponsorship": obj.get("pending_sponsorship"),
+            "sponsorship_stripe_item_id": obj.get("sponsorship_stripe_item_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": UserSubscriptionEnrollment.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

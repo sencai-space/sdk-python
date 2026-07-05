@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.ddos_posture import DdosPosture
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,50 @@ class FindDdosPosture200ResponseDataInner(BaseModel):
     """
     FindDdosPosture200ResponseDataInner
     """ # noqa: E501
+    provider: StrictStr
+    resource_id: StrictStr
+    resource_name: Optional[StrictStr] = None
+    protection_level: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    monthly_cost_usd: Optional[Union[StrictFloat, StrictInt]] = None
+    last_checked_at: Optional[datetime] = None
+    recommendation: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    credential: Optional[CreateAccessReviewRequestDataReviewer] = None
+    provider_metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[DdosPosture] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["provider", "resource_id", "resource_name", "protection_level", "status", "monthly_cost_usd", "last_checked_at", "recommendation", "organisation", "credential", "provider_metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'azure', 'cloudflare']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'cloudflare')")
+        return value
+
+    @field_validator('protection_level')
+    def protection_level_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['none', 'standard', 'advanced']):
+            raise ValueError("must be one of enum values ('none', 'standard', 'advanced')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'disabled', 'unknown']):
+            raise ValueError("must be one of enum values ('active', 'disabled', 'unknown')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +114,17 @@ class FindDdosPosture200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of credential
+        if self.credential:
+            _dict['credential'] = self.credential.to_dict()
+        # set to None if provider_metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_metadata is None and "provider_metadata" in self.model_fields_set:
+            _dict['provider_metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +142,19 @@ class FindDdosPosture200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "provider": obj.get("provider"),
+            "resource_id": obj.get("resource_id"),
+            "resource_name": obj.get("resource_name"),
+            "protection_level": obj.get("protection_level"),
+            "status": obj.get("status"),
+            "monthly_cost_usd": obj.get("monthly_cost_usd"),
+            "last_checked_at": obj.get("last_checked_at"),
+            "recommendation": obj.get("recommendation"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "credential": CreateAccessReviewRequestDataReviewer.from_dict(obj["credential"]) if obj.get("credential") is not None else None,
+            "provider_metadata": obj.get("provider_metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": DdosPosture.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

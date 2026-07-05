@@ -40,7 +40,7 @@ class RightsizingRecommendation(BaseModel):
     reason: Optional[StrictStr] = None
     confidence: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
-    analysis_data: Optional[Dict[str, Any]] = None
+    analysis_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["cloud_instance_id", "current_instance_type", "recommended_instance_type", "provider", "region", "monthly_cost_current_usd", "monthly_cost_recommended_usd", "monthly_savings_usd", "reason", "confidence", "status", "analysis_data", "organisation"]
 
@@ -106,6 +106,11 @@ class RightsizingRecommendation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if analysis_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.analysis_data is None and "analysis_data" in self.model_fields_set:
+            _dict['analysis_data'] = None
+
         return _dict
 
     @classmethod

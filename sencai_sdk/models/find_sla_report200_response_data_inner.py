@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.sla_report import SlaReport
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,36 @@ class FindSlaReport200ResponseDataInner(BaseModel):
     """
     FindSlaReport200ResponseDataInner
     """ # noqa: E501
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    period_start: datetime
+    period_end: datetime
+    uptime_percentage: Optional[Union[StrictFloat, StrictInt]] = None
+    p1_response_avg_minutes: Optional[Union[StrictFloat, StrictInt]] = None
+    p2_response_avg_minutes: Optional[Union[StrictFloat, StrictInt]] = None
+    p3_response_avg_minutes: Optional[Union[StrictFloat, StrictInt]] = None
+    total_incidents: Optional[StrictInt] = None
+    p1_incidents: Optional[StrictInt] = None
+    sla_breached: Optional[StrictBool] = None
+    breach_details: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    credit_percentage: Optional[Union[StrictFloat, StrictInt]] = None
+    pdf_url: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[SlaReport] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["organisation", "period_start", "period_end", "uptime_percentage", "p1_response_avg_minutes", "p2_response_avg_minutes", "p3_response_avg_minutes", "total_incidents", "p1_incidents", "sla_breached", "breach_details", "credit_percentage", "pdf_url", "status", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['draft', 'published']):
+            raise ValueError("must be one of enum values ('draft', 'published')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +100,14 @@ class FindSlaReport200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if breach_details (nullable) is None
+        # and model_fields_set contains the field
+        if self.breach_details is None and "breach_details" in self.model_fields_set:
+            _dict['breach_details'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +125,22 @@ class FindSlaReport200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "period_start": obj.get("period_start"),
+            "period_end": obj.get("period_end"),
+            "uptime_percentage": obj.get("uptime_percentage"),
+            "p1_response_avg_minutes": obj.get("p1_response_avg_minutes"),
+            "p2_response_avg_minutes": obj.get("p2_response_avg_minutes"),
+            "p3_response_avg_minutes": obj.get("p3_response_avg_minutes"),
+            "total_incidents": obj.get("total_incidents"),
+            "p1_incidents": obj.get("p1_incidents"),
+            "sla_breached": obj.get("sla_breached"),
+            "breach_details": obj.get("breach_details"),
+            "credit_percentage": obj.get("credit_percentage"),
+            "pdf_url": obj.get("pdf_url"),
+            "status": obj.get("status"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": SlaReport.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

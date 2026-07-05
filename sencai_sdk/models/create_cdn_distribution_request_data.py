@@ -31,14 +31,14 @@ class CreateCdnDistributionRequestData(BaseModel):
     """ # noqa: E501
     provider: StrictStr
     name: StrictStr = Field(description="Human-readable distribution name or domain.")
-    domains: Optional[Dict[str, Any]] = Field(default=None, description="Custom/alternate domain names served by this distribution (string[]).")
-    origins: Optional[Dict[str, Any]] = Field(default=None, description="CDN origins (CdnOrigin[]) — { id, domain, protocol }.")
+    domains: Optional[Any] = Field(default=None, description="Custom/alternate domain names served by this distribution (string[]).")
+    origins: Optional[Any] = Field(default=None, description="CDN origins (CdnOrigin[]) — { id, domain, protocol }.")
     status: Optional[StrictStr] = None
     provider_distribution_id: StrictStr = Field(description="Provider-side distribution identifier (CloudFront distribution ID, Azure Front Door endpoint ARM path, GCP backend service selfLink, Cloudflare zone ID).")
-    cache_behaviors: Optional[Dict[str, Any]] = Field(default=None, description="Provider-specific cache behaviors and TTL config.")
+    cache_behaviors: Optional[Any] = Field(default=None, description="Provider-specific cache behaviors and TTL config.")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
-    provider_metadata: Optional[Dict[str, Any]] = Field(default=None, description="Provider-specific metadata (ARN, fingerprint, profile name, etc.).")
+    provider_metadata: Optional[Any] = Field(default=None, description="Provider-specific metadata (ARN, fingerprint, profile name, etc.).")
     __properties: ClassVar[List[str]] = ["provider", "name", "domains", "origins", "status", "provider_distribution_id", "cache_behaviors", "organisation", "credential", "provider_metadata"]
 
     @field_validator('provider')
@@ -103,6 +103,26 @@ class CreateCdnDistributionRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of credential
         if self.credential:
             _dict['credential'] = self.credential.to_dict()
+        # set to None if domains (nullable) is None
+        # and model_fields_set contains the field
+        if self.domains is None and "domains" in self.model_fields_set:
+            _dict['domains'] = None
+
+        # set to None if origins (nullable) is None
+        # and model_fields_set contains the field
+        if self.origins is None and "origins" in self.model_fields_set:
+            _dict['origins'] = None
+
+        # set to None if cache_behaviors (nullable) is None
+        # and model_fields_set contains the field
+        if self.cache_behaviors is None and "cache_behaviors" in self.model_fields_set:
+            _dict['cache_behaviors'] = None
+
+        # set to None if provider_metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_metadata is None and "provider_metadata" in self.model_fields_set:
+            _dict['provider_metadata'] = None
+
         return _dict
 
     @classmethod

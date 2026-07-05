@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.knowledge_node import KnowledgeNode
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,27 @@ class FindKnowledgeNode200ResponseDataInner(BaseModel):
     """
     FindKnowledgeNode200ResponseDataInner
     """ # noqa: E501
+    node_type: StrictStr
+    label: StrictStr = Field(description="Human-readable identifier, e.g. 'backend:1337', 'ec2-i-abc123', 'postgres-prod'.")
+    resource_id: Optional[StrictStr] = Field(default=None, description="Internal Strapi documentId or cloud provider resource ID.")
+    resource_type: Optional[StrictStr] = Field(default=None, description="Strapi content-type slug or cloud resource kind, e.g. 'cloud-instance', 'organisation-member', 'dns-zone'.")
+    properties: Optional[Any] = Field(default=None, description="Arbitrary key-value metadata for this node (provider, region, tags, etc.).")
+    last_seen_at: Optional[datetime] = None
+    is_active: Optional[StrictBool] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[KnowledgeNode] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["node_type", "label", "resource_id", "resource_type", "properties", "last_seen_at", "is_active", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('node_type')
+    def node_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['service', 'resource', 'user', 'policy', 'network', 'database']):
+            raise ValueError("must be one of enum values ('service', 'resource', 'user', 'policy', 'network', 'database')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +91,14 @@ class FindKnowledgeNode200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if properties (nullable) is None
+        # and model_fields_set contains the field
+        if self.properties is None and "properties" in self.model_fields_set:
+            _dict['properties'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +116,16 @@ class FindKnowledgeNode200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "node_type": obj.get("node_type"),
+            "label": obj.get("label"),
+            "resource_id": obj.get("resource_id"),
+            "resource_type": obj.get("resource_type"),
+            "properties": obj.get("properties"),
+            "last_seen_at": obj.get("last_seen_at"),
+            "is_active": obj.get("is_active"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": KnowledgeNode.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

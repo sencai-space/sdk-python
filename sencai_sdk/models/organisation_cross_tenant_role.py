@@ -32,7 +32,7 @@ class OrganisationCrossTenantRole(BaseModel):
     """ # noqa: E501
     name: Annotated[str, Field(strict=True, max_length=100)]
     description: Optional[StrictStr] = None
-    capabilities: Optional[Dict[str, Any]] = Field(default=None, description="Array of capability strings like ['compute:read', 'network:*', '*:*']")
+    capabilities: Optional[Any] = Field(default=None, description="Array of capability strings like ['compute:read', 'network:*', '*:*']")
     scope_all_tenants: Optional[StrictBool] = Field(default=None, description="If true, applies to all managed tenants. If false, only tenant_subset.")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     tenant_subset: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -84,6 +84,11 @@ class OrganisationCrossTenantRole(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of tenant_subset
         if self.tenant_subset:
             _dict['tenant_subset'] = self.tenant_subset.to_dict()
+        # set to None if capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.capabilities is None and "capabilities" in self.model_fields_set:
+            _dict['capabilities'] = None
+
         return _dict
 
     @classmethod

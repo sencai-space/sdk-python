@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -33,7 +33,7 @@ class RcaCandidate(BaseModel):
     incident_id: StrictStr
     incident_doc_id: StrictStr
     probable_cause: StrictStr
-    evidence: Optional[Dict[str, Any]] = None
+    evidence: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     confidence: Optional[Union[StrictFloat, StrictInt]] = None
     suggested_fix: Optional[StrictStr] = None
     status: Optional[StrictStr] = None
@@ -94,6 +94,11 @@ class RcaCandidate(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if evidence (nullable) is None
+        # and model_fields_set contains the field
+        if self.evidence is None and "evidence" in self.model_fields_set:
+            _dict['evidence'] = None
+
         return _dict
 
     @classmethod

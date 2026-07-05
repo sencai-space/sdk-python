@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.correlation_finding import CorrelationFinding
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,52 @@ class FindCorrelationFinding200ResponseDataInner(BaseModel):
     """
     FindCorrelationFinding200ResponseDataInner
     """ # noqa: E501
+    pattern: StrictStr
+    confidence: Optional[StrictStr] = None
+    affected_services: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    evidence_count: Optional[StrictInt] = None
+    evidence_summary: Optional[StrictStr] = None
+    finding_type: Optional[StrictStr] = None
+    status: Optional[StrictStr] = None
+    first_seen_at: Optional[datetime] = None
+    last_seen_at: Optional[datetime] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CorrelationFinding] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["pattern", "confidence", "affected_services", "evidence_count", "evidence_summary", "finding_type", "status", "first_seen_at", "last_seen_at", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('confidence')
+    def confidence_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['low', 'medium', 'high']):
+            raise ValueError("must be one of enum values ('low', 'medium', 'high')")
+        return value
+
+    @field_validator('finding_type')
+    def finding_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['performance', 'security', 'cost', 'availability', 'cascade_failure']):
+            raise ValueError("must be one of enum values ('performance', 'security', 'cost', 'availability', 'cascade_failure')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['new', 'investigating', 'resolved', 'false_positive']):
+            raise ValueError("must be one of enum values ('new', 'investigating', 'resolved', 'false_positive')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +116,14 @@ class FindCorrelationFinding200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if affected_services (nullable) is None
+        # and model_fields_set contains the field
+        if self.affected_services is None and "affected_services" in self.model_fields_set:
+            _dict['affected_services'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +141,18 @@ class FindCorrelationFinding200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "pattern": obj.get("pattern"),
+            "confidence": obj.get("confidence"),
+            "affected_services": obj.get("affected_services"),
+            "evidence_count": obj.get("evidence_count"),
+            "evidence_summary": obj.get("evidence_summary"),
+            "finding_type": obj.get("finding_type"),
+            "status": obj.get("status"),
+            "first_seen_at": obj.get("first_seen_at"),
+            "last_seen_at": obj.get("last_seen_at"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CorrelationFinding.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

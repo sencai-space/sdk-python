@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
@@ -33,7 +33,7 @@ class ApiVersionPolicy(BaseModel):
     description: Optional[StrictStr] = None
     deprecated_at: Optional[datetime] = None
     sunset_at: Optional[datetime] = None
-    breaking_changes: Optional[Dict[str, Any]] = None
+    breaking_changes: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_current: Optional[StrictBool] = None
     migration_guide_url: Optional[StrictStr] = None
     __properties: ClassVar[List[str]] = ["version", "description", "deprecated_at", "sunset_at", "breaking_changes", "is_current", "migration_guide_url"]
@@ -77,6 +77,11 @@ class ApiVersionPolicy(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if breaking_changes (nullable) is None
+        # and model_fields_set contains the field
+        if self.breaking_changes is None and "breaking_changes" in self.model_fields_set:
+            _dict['breaking_changes'] = None
+
         return _dict
 
     @classmethod

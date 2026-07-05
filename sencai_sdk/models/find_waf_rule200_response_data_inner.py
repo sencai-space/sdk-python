@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.waf_rule import WafRule
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,53 @@ class FindWafRule200ResponseDataInner(BaseModel):
     """
     FindWafRule200ResponseDataInner
     """ # noqa: E501
+    name: StrictStr
+    description: Optional[StrictStr] = None
+    rule_type: Optional[StrictStr] = None
+    rule_config: Optional[Any] = Field(description="Provider-agnostic rule configuration. Shape depends on rule_type: rate_limit={requests_per_minute,action}, ip_block={ip_addresses[]}, geo_block={countries[],action}, header_check={header,required,pattern}.")
+    provider: Optional[StrictStr] = None
+    provider_rule_id: Optional[StrictStr] = Field(default=None, description="Provider-side rule/resource identifier returned after sync.")
+    enabled: Optional[StrictBool] = None
+    priority: Optional[StrictInt] = None
+    last_synced_at: Optional[datetime] = None
+    sync_status: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WafRule] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "rule_type", "rule_config", "provider", "provider_rule_id", "enabled", "priority", "last_synced_at", "sync_status", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('rule_type')
+    def rule_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['rate_limit', 'ip_block', 'geo_block', 'header_check', 'sql_injection', 'xss_protection', 'custom']):
+            raise ValueError("must be one of enum values ('rate_limit', 'ip_block', 'geo_block', 'header_check', 'sql_injection', 'xss_protection', 'custom')")
+        return value
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['aws', 'azure', 'gcp', 'cloudflare', 'manual']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'gcp', 'cloudflare', 'manual')")
+        return value
+
+    @field_validator('sync_status')
+    def sync_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'synced', 'error', 'manual']):
+            raise ValueError("must be one of enum values ('pending', 'synced', 'error', 'manual')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +117,14 @@ class FindWafRule200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if rule_config (nullable) is None
+        # and model_fields_set contains the field
+        if self.rule_config is None and "rule_config" in self.model_fields_set:
+            _dict['rule_config'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +142,19 @@ class FindWafRule200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "rule_type": obj.get("rule_type"),
+            "rule_config": obj.get("rule_config"),
+            "provider": obj.get("provider"),
+            "provider_rule_id": obj.get("provider_rule_id"),
+            "enabled": obj.get("enabled"),
+            "priority": obj.get("priority"),
+            "last_synced_at": obj.get("last_synced_at"),
+            "sync_status": obj.get("sync_status"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WafRule.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

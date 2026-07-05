@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.organisation_relationship import OrganisationRelationship
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,55 @@ class FindOrganisationRelationship200ResponseDataInner(BaseModel):
     """
     FindOrganisationRelationship200ResponseDataInner
     """ # noqa: E501
+    parent_org: Optional[CreateAccessReviewRequestDataReviewer] = None
+    child_org: Optional[CreateAccessReviewRequestDataReviewer] = None
+    type: StrictStr
+    scope: Optional[Any] = Field(default=None, description="List of capability names parent org has over child org")
+    status: StrictStr
+    granted_by: Optional[CreateAccessReviewRequestDataReviewer] = None
+    accepted_by_managed: Optional[StrictBool] = Field(default=None, description="Child org owner must explicitly accept the relationship")
+    expires_at: Optional[datetime] = None
+    notes: Optional[StrictStr] = None
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
+    billing_model: Optional[StrictStr] = Field(default=None, description="Who is billed: agency_billed = operator pays for managed tenant; managed_billed = tenant pays separately; sencai_internal = Sencai-internal relationship")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[OrganisationRelationship] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["parent_org", "child_org", "type", "scope", "status", "granted_by", "accepted_by_managed", "expires_at", "notes", "home_region", "cell_id", "billing_model", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['managed-by', 'partnership', 'sencai-internal']):
+            raise ValueError("must be one of enum values ('managed-by', 'partnership', 'sencai-internal')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'active', 'suspended', 'revoked']):
+            raise ValueError("must be one of enum values ('pending', 'active', 'suspended', 'revoked')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
+
+    @field_validator('billing_model')
+    def billing_model_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['agency_billed', 'managed_billed', 'sencai_internal']):
+            raise ValueError("must be one of enum values ('agency_billed', 'managed_billed', 'sencai_internal')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +119,20 @@ class FindOrganisationRelationship200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of parent_org
+        if self.parent_org:
+            _dict['parent_org'] = self.parent_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of child_org
+        if self.child_org:
+            _dict['child_org'] = self.child_org.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of granted_by
+        if self.granted_by:
+            _dict['granted_by'] = self.granted_by.to_dict()
+        # set to None if scope (nullable) is None
+        # and model_fields_set contains the field
+        if self.scope is None and "scope" in self.model_fields_set:
+            _dict['scope'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +150,20 @@ class FindOrganisationRelationship200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "parent_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["parent_org"]) if obj.get("parent_org") is not None else None,
+            "child_org": CreateAccessReviewRequestDataReviewer.from_dict(obj["child_org"]) if obj.get("child_org") is not None else None,
+            "type": obj.get("type"),
+            "scope": obj.get("scope"),
+            "status": obj.get("status"),
+            "granted_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["granted_by"]) if obj.get("granted_by") is not None else None,
+            "accepted_by_managed": obj.get("accepted_by_managed"),
+            "expires_at": obj.get("expires_at"),
+            "notes": obj.get("notes"),
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
+            "billing_model": obj.get("billing_model"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": OrganisationRelationship.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

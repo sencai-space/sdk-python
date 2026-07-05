@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.alert_event import AlertEvent
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,42 @@ class FindAlertEvent200ResponseDataInner(BaseModel):
     """
     FindAlertEvent200ResponseDataInner
     """ # noqa: E501
+    alert_rule: Optional[CreateAccessReviewRequestDataReviewer] = Field(default=None, alias="alertRule")
+    instance_id: StrictStr = Field(alias="instanceId")
+    provider: Optional[StrictStr] = None
+    region: Optional[StrictStr] = None
+    metric: StrictStr
+    metric_value: Union[StrictFloat, StrictInt] = Field(alias="metricValue")
+    threshold: Union[StrictFloat, StrictInt]
+    severity: StrictStr
+    message: Optional[StrictStr] = None
+    notified_at: Optional[datetime] = Field(default=None, alias="notifiedAt")
+    resolved_at: Optional[datetime] = Field(default=None, alias="resolvedAt")
+    status: Optional[StrictStr] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AlertEvent] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["alertRule", "instanceId", "provider", "region", "metric", "metricValue", "threshold", "severity", "message", "notifiedAt", "resolvedAt", "status", "metadata", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('severity')
+    def severity_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['info', 'warning', 'critical']):
+            raise ValueError("must be one of enum values ('info', 'warning', 'critical')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['firing', 'resolved']):
+            raise ValueError("must be one of enum values ('firing', 'resolved')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,14 @@ class FindAlertEvent200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of alert_rule
+        if self.alert_rule:
+            _dict['alertRule'] = self.alert_rule.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +131,21 @@ class FindAlertEvent200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "alertRule": CreateAccessReviewRequestDataReviewer.from_dict(obj["alertRule"]) if obj.get("alertRule") is not None else None,
+            "instanceId": obj.get("instanceId"),
+            "provider": obj.get("provider"),
+            "region": obj.get("region"),
+            "metric": obj.get("metric"),
+            "metricValue": obj.get("metricValue"),
+            "threshold": obj.get("threshold"),
+            "severity": obj.get("severity"),
+            "message": obj.get("message"),
+            "notifiedAt": obj.get("notifiedAt"),
+            "resolvedAt": obj.get("resolvedAt"),
+            "status": obj.get("status"),
+            "metadata": obj.get("metadata"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AlertEvent.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.invoice import Invoice
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,50 @@ class FindInvoice200ResponseDataInner(BaseModel):
     """
     FindInvoice200ResponseDataInner
     """ # noqa: E501
+    invoice_number: StrictStr
+    users_permissions_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    total_amount: Union[StrictFloat, StrictInt]
+    currency: StrictStr
+    state: StrictStr
+    invoice_items: Optional[Any] = Field(description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    issue_date: datetime
+    due_date: Optional[datetime] = None
+    paid_date: Optional[datetime] = None
+    payment_method: Optional[StrictStr] = None
+    notes: Optional[StrictStr] = None
+    tax_amount: Optional[Union[StrictFloat, StrictInt]] = None
+    subtotal: Union[StrictFloat, StrictInt]
+    pdf_url: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[Invoice] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["invoice_number", "users_permissions_user", "total_amount", "currency", "state", "invoice_items", "issue_date", "due_date", "paid_date", "payment_method", "notes", "tax_amount", "subtotal", "pdf_url", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('currency')
+    def currency_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['EUR', 'USD', 'CZK', 'PLN', 'HUF', 'RON', 'BGN', 'SEK', 'DKK', 'NOK']):
+            raise ValueError("must be one of enum values ('EUR', 'USD', 'CZK', 'PLN', 'HUF', 'RON', 'BGN', 'SEK', 'DKK', 'NOK')")
+        return value
+
+    @field_validator('state')
+    def state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['draft', 'pending', 'paid', 'cancelled', 'refunded']):
+            raise ValueError("must be one of enum values ('draft', 'pending', 'paid', 'cancelled', 'refunded')")
+        return value
+
+    @field_validator('payment_method')
+    def payment_method_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['free', 'stripe', 'bank_transfer']):
+            raise ValueError("must be one of enum values ('free', 'stripe', 'bank_transfer')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +114,14 @@ class FindInvoice200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of users_permissions_user
+        if self.users_permissions_user:
+            _dict['users_permissions_user'] = self.users_permissions_user.to_dict()
+        # set to None if invoice_items (nullable) is None
+        # and model_fields_set contains the field
+        if self.invoice_items is None and "invoice_items" in self.model_fields_set:
+            _dict['invoice_items'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +139,22 @@ class FindInvoice200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "invoice_number": obj.get("invoice_number"),
+            "users_permissions_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["users_permissions_user"]) if obj.get("users_permissions_user") is not None else None,
+            "total_amount": obj.get("total_amount"),
+            "currency": obj.get("currency"),
+            "state": obj.get("state"),
+            "invoice_items": obj.get("invoice_items"),
+            "issue_date": obj.get("issue_date"),
+            "due_date": obj.get("due_date"),
+            "paid_date": obj.get("paid_date"),
+            "payment_method": obj.get("payment_method"),
+            "notes": obj.get("notes"),
+            "tax_amount": obj.get("tax_amount"),
+            "subtotal": obj.get("subtotal"),
+            "pdf_url": obj.get("pdf_url"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": Invoice.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

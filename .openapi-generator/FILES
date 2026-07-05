@@ -1152,9 +1152,12 @@ sencai_sdk/models/org_operation.py
 sencai_sdk/models/organisation.py
 sencai_sdk/models/organisation_agent_count200_response.py
 sencai_sdk/models/organisation_cross_tenant_role.py
+sencai_sdk/models/organisation_invite_member200_response.py
+sencai_sdk/models/organisation_invite_member200_response_data.py
+sencai_sdk/models/organisation_invite_member200_response_data_attributes.py
+sencai_sdk/models/organisation_invite_member_request.py
 sencai_sdk/models/organisation_member.py
 sencai_sdk/models/organisation_member_accept_invite_request.py
-sencai_sdk/models/organisation_member_invite_request.py
 sencai_sdk/models/organisation_onboard_managed_request.py
 sencai_sdk/models/organisation_relationship.py
 sencai_sdk/models/organisation_update_member_role_request.py

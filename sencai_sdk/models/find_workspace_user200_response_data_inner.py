@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.workspace_user import WorkspaceUser
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,23 @@ class FindWorkspaceUser200ResponseDataInner(BaseModel):
     """
     FindWorkspaceUser200ResponseDataInner
     """ # noqa: E501
+    google_id: StrictStr
+    primary_email: StrictStr
+    display_name: Optional[StrictStr] = None
+    given_name: Optional[StrictStr] = None
+    family_name: Optional[StrictStr] = None
+    org_unit_path: Optional[StrictStr] = None
+    is_suspended: Optional[StrictBool] = None
+    is_admin: Optional[StrictBool] = None
+    last_login_time: Optional[datetime] = None
+    workspace_tenant: Optional[CreateAccessReviewRequestDataReviewer] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WorkspaceUser] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["google_id", "primary_email", "display_name", "given_name", "family_name", "org_unit_path", "is_suspended", "is_admin", "last_login_time", "workspace_tenant", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +87,12 @@ class FindWorkspaceUser200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of workspace_tenant
+        if self.workspace_tenant:
+            _dict['workspace_tenant'] = self.workspace_tenant.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +110,19 @@ class FindWorkspaceUser200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "google_id": obj.get("google_id"),
+            "primary_email": obj.get("primary_email"),
+            "display_name": obj.get("display_name"),
+            "given_name": obj.get("given_name"),
+            "family_name": obj.get("family_name"),
+            "org_unit_path": obj.get("org_unit_path"),
+            "is_suspended": obj.get("is_suspended"),
+            "is_admin": obj.get("is_admin"),
+            "last_login_time": obj.get("last_login_time"),
+            "workspace_tenant": CreateAccessReviewRequestDataReviewer.from_dict(obj["workspace_tenant"]) if obj.get("workspace_tenant") is not None else None,
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WorkspaceUser.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

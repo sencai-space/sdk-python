@@ -1168,9 +1168,12 @@ __all__ = [
     "Organisation",
     "OrganisationAgentCount200Response",
     "OrganisationCrossTenantRole",
+    "OrganisationInviteMember200Response",
+    "OrganisationInviteMember200ResponseData",
+    "OrganisationInviteMember200ResponseDataAttributes",
+    "OrganisationInviteMemberRequest",
     "OrganisationMember",
     "OrganisationMemberAcceptInviteRequest",
-    "OrganisationMemberInviteRequest",
     "OrganisationOnboardManagedRequest",
     "OrganisationRelationship",
     "OrganisationUpdateMemberRoleRequest",
@@ -2409,9 +2412,12 @@ from sencai_sdk.models.org_operation import OrgOperation as OrgOperation
 from sencai_sdk.models.organisation import Organisation as Organisation
 from sencai_sdk.models.organisation_agent_count200_response import OrganisationAgentCount200Response as OrganisationAgentCount200Response
 from sencai_sdk.models.organisation_cross_tenant_role import OrganisationCrossTenantRole as OrganisationCrossTenantRole
+from sencai_sdk.models.organisation_invite_member200_response import OrganisationInviteMember200Response as OrganisationInviteMember200Response
+from sencai_sdk.models.organisation_invite_member200_response_data import OrganisationInviteMember200ResponseData as OrganisationInviteMember200ResponseData
+from sencai_sdk.models.organisation_invite_member200_response_data_attributes import OrganisationInviteMember200ResponseDataAttributes as OrganisationInviteMember200ResponseDataAttributes
+from sencai_sdk.models.organisation_invite_member_request import OrganisationInviteMemberRequest as OrganisationInviteMemberRequest
 from sencai_sdk.models.organisation_member import OrganisationMember as OrganisationMember
 from sencai_sdk.models.organisation_member_accept_invite_request import OrganisationMemberAcceptInviteRequest as OrganisationMemberAcceptInviteRequest
-from sencai_sdk.models.organisation_member_invite_request import OrganisationMemberInviteRequest as OrganisationMemberInviteRequest
 from sencai_sdk.models.organisation_onboard_managed_request import OrganisationOnboardManagedRequest as OrganisationOnboardManagedRequest
 from sencai_sdk.models.organisation_relationship import OrganisationRelationship as OrganisationRelationship
 from sencai_sdk.models.organisation_update_member_role_request import OrganisationUpdateMemberRoleRequest as OrganisationUpdateMemberRoleRequest

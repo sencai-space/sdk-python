@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.gitea_toolbox_repository import GiteaToolboxRepository
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,39 @@ class FindGiteaToolboxRepository200ResponseDataInner(BaseModel):
     """
     FindGiteaToolboxRepository200ResponseDataInner
     """ # noqa: E501
+    instance_id: StrictStr = Field(alias="instanceId")
+    repository_name: StrictStr = Field(alias="repositoryName")
+    repository_owner: StrictStr = Field(alias="repositoryOwner")
+    default_branch: Optional[StrictStr] = Field(default=None, alias="defaultBranch")
+    last_commit_hash: Optional[StrictStr] = Field(default=None, alias="lastCommitHash")
+    last_commit_message: Optional[StrictStr] = Field(default=None, alias="lastCommitMessage")
+    last_commit_author: Optional[StrictStr] = Field(default=None, alias="lastCommitAuthor")
+    last_commit_date: Optional[datetime] = Field(default=None, alias="lastCommitDate")
+    gitstatus: Optional[StrictStr] = None
+    last_sync_date: Optional[datetime] = Field(default=None, alias="lastSyncDate")
+    total_branches: Optional[StrictInt] = Field(default=None, alias="totalBranches")
+    total_tags: Optional[StrictInt] = Field(default=None, alias="totalTags")
+    total_commits: Optional[StrictInt] = Field(default=None, alias="totalCommits")
+    last_error: Optional[StrictStr] = Field(default=None, alias="lastError")
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    purchased_services: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cart_items: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[GiteaToolboxRepository] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["instanceId", "repositoryName", "repositoryOwner", "defaultBranch", "lastCommitHash", "lastCommitMessage", "lastCommitAuthor", "lastCommitDate", "gitstatus", "lastSyncDate", "totalBranches", "totalTags", "totalCommits", "lastError", "metadata", "purchased_services", "cart_items", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('gitstatus')
+    def gitstatus_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'inactive', 'error']):
+            raise ValueError("must be one of enum values ('active', 'inactive', 'error')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +103,17 @@ class FindGiteaToolboxRepository200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of purchased_services
+        if self.purchased_services:
+            _dict['purchased_services'] = self.purchased_services.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cart_items
+        if self.cart_items:
+            _dict['cart_items'] = self.cart_items.to_dict()
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +131,25 @@ class FindGiteaToolboxRepository200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "instanceId": obj.get("instanceId"),
+            "repositoryName": obj.get("repositoryName"),
+            "repositoryOwner": obj.get("repositoryOwner"),
+            "defaultBranch": obj.get("defaultBranch"),
+            "lastCommitHash": obj.get("lastCommitHash"),
+            "lastCommitMessage": obj.get("lastCommitMessage"),
+            "lastCommitAuthor": obj.get("lastCommitAuthor"),
+            "lastCommitDate": obj.get("lastCommitDate"),
+            "gitstatus": obj.get("gitstatus"),
+            "lastSyncDate": obj.get("lastSyncDate"),
+            "totalBranches": obj.get("totalBranches"),
+            "totalTags": obj.get("totalTags"),
+            "totalCommits": obj.get("totalCommits"),
+            "lastError": obj.get("lastError"),
+            "metadata": obj.get("metadata"),
+            "purchased_services": CreateAccessReviewRequestDataReviewer.from_dict(obj["purchased_services"]) if obj.get("purchased_services") is not None else None,
+            "cart_items": CreateAccessReviewRequestDataReviewer.from_dict(obj["cart_items"]) if obj.get("cart_items") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": GiteaToolboxRepository.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

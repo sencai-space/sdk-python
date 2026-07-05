@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -40,7 +40,7 @@ class DdosPosture(BaseModel):
     recommendation: Optional[StrictStr] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     credential: Optional[CreateAccessReviewRequestDataReviewer] = None
-    provider_metadata: Optional[Dict[str, Any]] = None
+    provider_metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     __properties: ClassVar[List[str]] = ["provider", "resource_id", "resource_name", "protection_level", "status", "monthly_cost_usd", "last_checked_at", "recommendation", "organisation", "credential", "provider_metadata"]
 
     @field_validator('provider')
@@ -115,6 +115,11 @@ class DdosPosture(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of credential
         if self.credential:
             _dict['credential'] = self.credential.to_dict()
+        # set to None if provider_metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.provider_metadata is None and "provider_metadata" in self.model_fields_set:
+            _dict['provider_metadata'] = None
+
         return _dict
 
     @classmethod

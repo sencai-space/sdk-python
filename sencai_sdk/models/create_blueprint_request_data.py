@@ -35,13 +35,13 @@ class CreateBlueprintRequestData(BaseModel):
     category: StrictStr
     provider: Optional[StrictStr] = None
     icon: Optional[StrictStr] = Field(default=None, description="MDI icon name, e.g. mdi-server")
-    template: Dict[str, Any] = Field(description="Parameterized config: { params: [{key, label, type, options?, default?, required?}], cloud_instance: {...} }. Supports {{key}} placeholder substitution.")
+    template: Optional[Any] = Field(description="Parameterized config: { params: [{key, label, type, options?, default?, required?}], cloud_instance: {...} }. Supports {{key}} placeholder substitution.")
     version: Optional[StrictStr] = None
     is_public: Optional[StrictBool] = Field(default=None, description="When true, visible in the global catalog for all users.")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     deploy_count: Optional[StrictInt] = Field(default=None, description="Usage counter incremented on each successful deploy.")
-    tags: Optional[Dict[str, Any]] = Field(default=None, description="Array of string tags for search and filtering.")
-    cost_estimate: Optional[Dict[str, Any]] = Field(default=None, description="Cost estimate for this blueprint: {resources: [{type, provider, region, monthly_usd}], total_monthly_usd}.")
+    tags: Optional[Any] = Field(default=None, description="Array of string tags for search and filtering.")
+    cost_estimate: Optional[Any] = Field(default=None, description="Cost estimate for this blueprint: {resources: [{type, provider, region, monthly_usd}], total_monthly_usd}.")
     __properties: ClassVar[List[str]] = ["name", "description", "category", "provider", "icon", "template", "version", "is_public", "organisation", "deploy_count", "tags", "cost_estimate"]
 
     @field_validator('category')
@@ -103,6 +103,21 @@ class CreateBlueprintRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if template (nullable) is None
+        # and model_fields_set contains the field
+        if self.template is None and "template" in self.model_fields_set:
+            _dict['template'] = None
+
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if cost_estimate (nullable) is None
+        # and model_fields_set contains the field
+        if self.cost_estimate is None and "cost_estimate" in self.model_fields_set:
+            _dict['cost_estimate'] = None
+
         return _dict
 
     @classmethod

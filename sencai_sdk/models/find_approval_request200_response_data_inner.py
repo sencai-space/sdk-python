@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.approval_request import ApprovalRequest
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,45 @@ class FindApprovalRequest200ResponseDataInner(BaseModel):
     """
     FindApprovalRequest200ResponseDataInner
     """ # noqa: E501
+    action_type: StrictStr = Field(description="Machine-readable action identifier, e.g. backup.policy.apply, runbook.execute, bulk.deauth")
+    action_label: Optional[StrictStr] = Field(default=None, description="Human-readable label for the action")
+    payload: Optional[Any] = Field(description="The action payload that will be executed on approval")
+    status: StrictStr
+    blast_radius: Optional[Any] = Field(default=None, description="{ resource_count: number, resource_types: string[], estimated_impact: string }")
+    cost_delta: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Estimated cost change in USD (negative = savings)")
+    rollback_plan: Optional[StrictStr] = Field(default=None, description="Step-by-step rollback instructions")
+    dry_run_result: Optional[Any] = Field(default=None, description="Result of pre-execution dry run")
+    dry_run_status: Optional[StrictStr] = Field(default=None, description="Lifecycle status of the dry-run simulation")
+    cost_delta_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Estimated cost change in USD from running this action (negative = savings)")
+    expires_at: datetime = Field(description="Approval TTL — auto-set to now+4h on create")
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    requester: Optional[CreateAccessReviewRequestDataReviewer] = None
+    approved_by: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ApprovalRequest] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["action_type", "action_label", "payload", "status", "blast_radius", "cost_delta", "rollback_plan", "dry_run_result", "dry_run_status", "cost_delta_usd", "expires_at", "approved_at", "rejection_reason", "organisation", "requester", "approved_by", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'approved', 'rejected', 'expired']):
+            raise ValueError("must be one of enum values ('pending', 'approved', 'rejected', 'expired')")
+        return value
+
+    @field_validator('dry_run_status')
+    def dry_run_status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['pending', 'running', 'completed', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'running', 'completed', 'failed')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +109,30 @@ class FindApprovalRequest200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of requester
+        if self.requester:
+            _dict['requester'] = self.requester.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of approved_by
+        if self.approved_by:
+            _dict['approved_by'] = self.approved_by.to_dict()
+        # set to None if payload (nullable) is None
+        # and model_fields_set contains the field
+        if self.payload is None and "payload" in self.model_fields_set:
+            _dict['payload'] = None
+
+        # set to None if blast_radius (nullable) is None
+        # and model_fields_set contains the field
+        if self.blast_radius is None and "blast_radius" in self.model_fields_set:
+            _dict['blast_radius'] = None
+
+        # set to None if dry_run_result (nullable) is None
+        # and model_fields_set contains the field
+        if self.dry_run_result is None and "dry_run_result" in self.model_fields_set:
+            _dict['dry_run_result'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +150,24 @@ class FindApprovalRequest200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "action_type": obj.get("action_type"),
+            "action_label": obj.get("action_label"),
+            "payload": obj.get("payload"),
+            "status": obj.get("status"),
+            "blast_radius": obj.get("blast_radius"),
+            "cost_delta": obj.get("cost_delta"),
+            "rollback_plan": obj.get("rollback_plan"),
+            "dry_run_result": obj.get("dry_run_result"),
+            "dry_run_status": obj.get("dry_run_status"),
+            "cost_delta_usd": obj.get("cost_delta_usd"),
+            "expires_at": obj.get("expires_at"),
+            "approved_at": obj.get("approved_at"),
+            "rejection_reason": obj.get("rejection_reason"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "requester": CreateAccessReviewRequestDataReviewer.from_dict(obj["requester"]) if obj.get("requester") is not None else None,
+            "approved_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["approved_by"]) if obj.get("approved_by") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ApprovalRequest.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

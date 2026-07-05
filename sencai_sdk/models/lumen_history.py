@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,7 +32,7 @@ class LumenHistory(BaseModel):
     """ # noqa: E501
     session_id: StrictStr
     session_title: Optional[StrictStr] = None
-    messages: Optional[Dict[str, Any]] = None
+    messages: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     message_count: Optional[StrictInt] = None
     last_message_at: Optional[datetime] = None
     actor_id: Optional[StrictStr] = None
@@ -82,6 +82,11 @@ class LumenHistory(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if messages (nullable) is None
+        # and model_fields_set contains the field
+        if self.messages is None and "messages" in self.model_fields_set:
+            _dict['messages'] = None
+
         return _dict
 
     @classmethod

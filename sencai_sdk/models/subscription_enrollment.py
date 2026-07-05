@@ -44,8 +44,8 @@ class SubscriptionEnrollment(BaseModel):
     stripe_price_id: Optional[StrictStr] = None
     current_period_end: Optional[datetime] = None
     cancel_at_period_end: Optional[StrictBool] = Field(default=None, description="F3.BILLING.02 — subscription is scheduled to cancel at current_period_end (Stripe cancel_at_period_end=true) rather than immediately. Enables reactivate before the period ends.")
-    pending_tier_change: Optional[Dict[str, Any]] = Field(default=None, description="F3.BILLING.02 — set when a period-end downgrade is scheduled (Stripe subscription_schedule / update at period end): { newTierId, newPlanName, effective_at }. Cleared once Stripe confirms the change via customer.subscription.updated.")
-    addons: Optional[Dict[str, Any]] = Field(default=None, description="F3.BILLING.02 — active addon Stripe subscription line items: [{ addon_id, stripe_price_id, quantity, stripe_item_id }]. Mirrors Stripe as the source of truth; updated by /addons action and the subscription.updated webhook.")
+    pending_tier_change: Optional[Any] = Field(default=None, description="F3.BILLING.02 — set when a period-end downgrade is scheduled (Stripe subscription_schedule / update at period end): { newTierId, newPlanName, effective_at }. Cleared once Stripe confirms the change via customer.subscription.updated.")
+    addons: Optional[Any] = Field(default=None, description="F3.BILLING.02 — active addon Stripe subscription line items: [{ addon_id, stripe_price_id, quantity, stripe_item_id }]. Mirrors Stripe as the source of truth; updated by /addons action and the subscription.updated webhook.")
     dunning_state: Optional[StrictStr] = Field(default=None, description="F3.BILLING.03 — sencai-watchdog dunning state machine. none = current on payment; payment_failed = day 0 (invoice.payment_failed received); grace_period = day 7 unpaid (in-app banner warning); suspended = day 14 unpaid (org.org_status also flips to 'suspended', read-only enforcement); terminated = day 30 unpaid (non-critical cloud instances terminated + org archived, gated behind WATCHDOG_AUTO_TERMINATE). Reset to 'none' on invoice.paid (restore). Owned exclusively by sencai-watchdog via service-secret endpoints — never written by any user-facing route.")
     dunning_state_changed_at: Optional[datetime] = Field(default=None, description="F3.BILLING.03 — timestamp of the last dunning_state transition. Used by sencai-watchdog to compute day-count thresholds (7d/14d/30d) idempotently across hourly cron runs.")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
@@ -113,6 +113,16 @@ class SubscriptionEnrollment(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if pending_tier_change (nullable) is None
+        # and model_fields_set contains the field
+        if self.pending_tier_change is None and "pending_tier_change" in self.model_fields_set:
+            _dict['pending_tier_change'] = None
+
+        # set to None if addons (nullable) is None
+        # and model_fields_set contains the field
+        if self.addons is None and "addons" in self.model_fields_set:
+            _dict['addons'] = None
+
         return _dict
 
     @classmethod

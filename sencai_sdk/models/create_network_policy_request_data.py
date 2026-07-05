@@ -18,7 +18,7 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -31,7 +31,7 @@ class CreateNetworkPolicyRequestData(BaseModel):
     """ # noqa: E501
     name: StrictStr
     description: Optional[StrictStr] = None
-    rules: Dict[str, Any]
+    rules: Optional[Any] = Field(description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     scope: Optional[StrictStr] = None
     enabled: Optional[StrictBool] = None
     priority: Optional[StrictInt] = None
@@ -90,6 +90,11 @@ class CreateNetworkPolicyRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if rules (nullable) is None
+        # and model_fields_set contains the field
+        if self.rules is None and "rules" in self.model_fields_set:
+            _dict['rules'] = None
+
         return _dict
 
     @classmethod

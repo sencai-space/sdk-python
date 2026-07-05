@@ -19,9 +19,8 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.compliance_control import ComplianceControl
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +29,27 @@ class FindComplianceControl200ResponseDataInner(BaseModel):
     """
     FindComplianceControl200ResponseDataInner
     """ # noqa: E501
+    control_id: StrictStr
+    framework: StrictStr
+    title: StrictStr
+    description: Optional[StrictStr] = None
+    audit_actions: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    coverage_score: Optional[Union[StrictFloat, StrictInt]] = None
+    last_evidence_at: Optional[datetime] = None
+    notes: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[ComplianceControl] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["control_id", "framework", "title", "description", "audit_actions", "coverage_score", "last_evidence_at", "notes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('framework')
+    def framework_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['iso27001', 'nis2', 'soc2', 'gdpr']):
+            raise ValueError("must be one of enum values ('iso27001', 'nis2', 'soc2', 'gdpr')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +90,11 @@ class FindComplianceControl200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # set to None if audit_actions (nullable) is None
+        # and model_fields_set contains the field
+        if self.audit_actions is None and "audit_actions" in self.model_fields_set:
+            _dict['audit_actions'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +112,16 @@ class FindComplianceControl200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "control_id": obj.get("control_id"),
+            "framework": obj.get("framework"),
+            "title": obj.get("title"),
+            "description": obj.get("description"),
+            "audit_actions": obj.get("audit_actions"),
+            "coverage_score": obj.get("coverage_score"),
+            "last_evidence_at": obj.get("last_evidence_at"),
+            "notes": obj.get("notes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": ComplianceControl.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

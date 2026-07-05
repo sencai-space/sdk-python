@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -31,7 +31,7 @@ class CreateLumenSuggestionRequestData(BaseModel):
     CreateLumenSuggestionRequestData
     """ # noqa: E501
     trigger_event: Optional[StrictStr] = None
-    trigger_data: Optional[Dict[str, Any]] = None
+    trigger_data: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     suggestion_text: StrictStr
     category: Optional[StrictStr] = None
     severity: Optional[StrictStr] = None
@@ -102,6 +102,11 @@ class CreateLumenSuggestionRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if trigger_data (nullable) is None
+        # and model_fields_set contains the field
+        if self.trigger_data is None and "trigger_data" in self.model_fields_set:
+            _dict['trigger_data'] = None
+
         return _dict
 
     @classmethod

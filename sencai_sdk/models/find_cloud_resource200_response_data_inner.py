@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.cloud_resource import CloudResource
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,80 @@ class FindCloudResource200ResponseDataInner(BaseModel):
     """
     FindCloudResource200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    kind: StrictStr = Field(description="Diskriminátor typu zdroje (ResourceKind v cloud-connectoru).")
+    service_type: Optional[StrictStr] = Field(default=None, description="Konkrétní managed služba (jen pro kind=managed-db / object-storage).")
+    provider: StrictStr
+    region: StrictStr
+    status: StrictStr
+    external_id: Optional[StrictStr] = Field(default=None, description="Provider-side identifikátor zdroje (ARN / resource id / bucket name).")
+    spec: Optional[Any] = Field(default=None, description="Požadovaná kind-specifická konfigurace (ManagedDatabaseSpec / ObjectStorageSpec / CloudConfig).")
+    outputs: Optional[Any] = Field(default=None, description="Provider výstupy (ip, endpoint, bucket url, …) — bez secretů.")
+    endpoint: Optional[StrictStr] = Field(default=None, description="DB host:port nebo URL bucketu (bez credentials).")
+    connection_secret: Optional[StrictStr] = Field(default=None, description="AES-256-GCM šifrovaný connection string / přístupový secret. NIKDY se nevrací v API plaintext.")
+    monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
+    currency: StrictStr
+    error_message: Optional[StrictStr] = None
+    provisioned_at: Optional[datetime] = None
+    terminated_at: Optional[datetime] = None
+    metadata: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    created_by_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    credential: Optional[CreateAccessReviewRequestDataReviewer] = None
+    cloud_instance: Optional[CreateAccessReviewRequestDataReviewer] = None
+    home_region: StrictStr = Field(description="Logical data-residency region of the tenant (CELL invariant, F2.CELL.01)")
+    cell_id: Optional[StrictStr] = Field(default=None, description="Deployment cell within home_region for blast-radius isolation (CELL invariant, F2.CELL.01)")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CloudResource] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "kind", "service_type", "provider", "region", "status", "external_id", "spec", "outputs", "endpoint", "connection_secret", "monthly_cost", "currency", "error_message", "provisioned_at", "terminated_at", "metadata", "organisation", "created_by_user", "credential", "cloud_instance", "home_region", "cell_id", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('kind')
+    def kind_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['instance', 'managed-db', 'object-storage', 'network', 'kubernetes', 'load-balancer', 'dns-zone']):
+            raise ValueError("must be one of enum values ('instance', 'managed-db', 'object-storage', 'network', 'kubernetes', 'load-balancer', 'dns-zone')")
+        return value
+
+    @field_validator('service_type')
+    def service_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['rds-postgres', 'rds-mysql', 'azure-db-postgres', 'azure-db-mysql', 'cloudsql-postgres', 'cloudsql-mysql', 's3', 'azure-blob', 'gcs']):
+            raise ValueError("must be one of enum values ('rds-postgres', 'rds-mysql', 'azure-db-postgres', 'azure-db-mysql', 'cloudsql-postgres', 'cloudsql-mysql', 's3', 'azure-blob', 'gcs')")
+        return value
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean']):
+            raise ValueError("must be one of enum values ('hetzner', 'ovhcloud', 'aws', 'gcp', 'azure', 'scaleway', 'upcloud', 'digitalocean')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'provisioning', 'running', 'stopping', 'stopped', 'terminating', 'terminated', 'failed']):
+            raise ValueError("must be one of enum values ('pending', 'provisioning', 'running', 'stopping', 'stopped', 'terminating', 'terminated', 'failed')")
+        return value
+
+    @field_validator('currency')
+    def currency_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['EUR', 'USD', 'CZK', 'GBP']):
+            raise ValueError("must be one of enum values ('EUR', 'USD', 'CZK', 'GBP')")
+        return value
+
+    @field_validator('home_region')
+    def home_region_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['eu', 'us', 'apac']):
+            raise ValueError("must be one of enum values ('eu', 'us', 'apac')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +145,33 @@ class FindCloudResource200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of created_by_user
+        if self.created_by_user:
+            _dict['created_by_user'] = self.created_by_user.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of credential
+        if self.credential:
+            _dict['credential'] = self.credential.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of cloud_instance
+        if self.cloud_instance:
+            _dict['cloud_instance'] = self.cloud_instance.to_dict()
+        # set to None if spec (nullable) is None
+        # and model_fields_set contains the field
+        if self.spec is None and "spec" in self.model_fields_set:
+            _dict['spec'] = None
+
+        # set to None if outputs (nullable) is None
+        # and model_fields_set contains the field
+        if self.outputs is None and "outputs" in self.model_fields_set:
+            _dict['outputs'] = None
+
+        # set to None if metadata (nullable) is None
+        # and model_fields_set contains the field
+        if self.metadata is None and "metadata" in self.model_fields_set:
+            _dict['metadata'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +189,31 @@ class FindCloudResource200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "kind": obj.get("kind"),
+            "service_type": obj.get("service_type"),
+            "provider": obj.get("provider"),
+            "region": obj.get("region"),
+            "status": obj.get("status"),
+            "external_id": obj.get("external_id"),
+            "spec": obj.get("spec"),
+            "outputs": obj.get("outputs"),
+            "endpoint": obj.get("endpoint"),
+            "connection_secret": obj.get("connection_secret"),
+            "monthly_cost": obj.get("monthly_cost"),
+            "currency": obj.get("currency"),
+            "error_message": obj.get("error_message"),
+            "provisioned_at": obj.get("provisioned_at"),
+            "terminated_at": obj.get("terminated_at"),
+            "metadata": obj.get("metadata"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "created_by_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["created_by_user"]) if obj.get("created_by_user") is not None else None,
+            "credential": CreateAccessReviewRequestDataReviewer.from_dict(obj["credential"]) if obj.get("credential") is not None else None,
+            "cloud_instance": CreateAccessReviewRequestDataReviewer.from_dict(obj["cloud_instance"]) if obj.get("cloud_instance") is not None else None,
+            "home_region": obj.get("home_region"),
+            "cell_id": obj.get("cell_id"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CloudResource.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

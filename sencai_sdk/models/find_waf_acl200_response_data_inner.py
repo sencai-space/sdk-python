@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.waf_acl import WafAcl
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,59 @@ class FindWafAcl200ResponseDataInner(BaseModel):
     """
     FindWafAcl200ResponseDataInner
     """ # noqa: E501
+    provider: StrictStr
+    name: StrictStr = Field(description="Human-readable ACL name.")
+    scope: Optional[StrictStr] = Field(default=None, description="WAF scope: CLOUDFRONT (AWS global), REGIONAL (AWS/Azure), GLOBAL (Cloudflare).")
+    default_action: Optional[StrictStr] = Field(default=None, description="Default action for requests that do not match any rule.")
+    rules: Optional[Any] = Field(default=None, description="WAF rules array (WafRule[]) — synced from provider.")
+    capacity: Optional[StrictInt] = Field(default=None, description="WCU capacity consumed by this ACL (AWS-specific).")
+    status: Optional[StrictStr] = None
+    provider_acl_id: StrictStr = Field(description="Provider-side ACL identifier (AWS WebACL ID, Azure ARM resource path, Cloudflare zone ID).")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    credential: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[WafAcl] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["provider", "name", "scope", "default_action", "rules", "capacity", "status", "provider_acl_id", "organisation", "credential", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('provider')
+    def provider_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['aws', 'azure', 'cloudflare']):
+            raise ValueError("must be one of enum values ('aws', 'azure', 'cloudflare')")
+        return value
+
+    @field_validator('scope')
+    def scope_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['CLOUDFRONT', 'REGIONAL', 'GLOBAL']):
+            raise ValueError("must be one of enum values ('CLOUDFRONT', 'REGIONAL', 'GLOBAL')")
+        return value
+
+    @field_validator('default_action')
+    def default_action_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['allow', 'block']):
+            raise ValueError("must be one of enum values ('allow', 'block')")
+        return value
+
+    @field_validator('status')
+    def status_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['active', 'error', 'importing']):
+            raise ValueError("must be one of enum values ('active', 'error', 'importing')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +123,17 @@ class FindWafAcl200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of credential
+        if self.credential:
+            _dict['credential'] = self.credential.to_dict()
+        # set to None if rules (nullable) is None
+        # and model_fields_set contains the field
+        if self.rules is None and "rules" in self.model_fields_set:
+            _dict['rules'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +151,18 @@ class FindWafAcl200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "provider": obj.get("provider"),
+            "name": obj.get("name"),
+            "scope": obj.get("scope"),
+            "default_action": obj.get("default_action"),
+            "rules": obj.get("rules"),
+            "capacity": obj.get("capacity"),
+            "status": obj.get("status"),
+            "provider_acl_id": obj.get("provider_acl_id"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "credential": CreateAccessReviewRequestDataReviewer.from_dict(obj["credential"]) if obj.get("credential") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": WafAcl.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

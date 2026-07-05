@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import date
-from pydantic import BaseModel, ConfigDict, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -37,8 +37,8 @@ class CreateNis2GapRequestData(BaseModel):
     status: Optional[StrictStr] = None
     target_date: Optional[date] = None
     owner: Optional[StrictStr] = None
-    evidence_links: Optional[Dict[str, Any]] = None
-    audit_action_evidence: Optional[Dict[str, Any]] = None
+    evidence_links: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    audit_action_evidence: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     __properties: ClassVar[List[str]] = ["requirement", "article", "annex", "gap_description", "status", "target_date", "owner", "evidence_links", "audit_action_evidence", "organisation"]
 
@@ -101,6 +101,16 @@ class CreateNis2GapRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if evidence_links (nullable) is None
+        # and model_fields_set contains the field
+        if self.evidence_links is None and "evidence_links" in self.model_fields_set:
+            _dict['evidence_links'] = None
+
+        # set to None if audit_action_evidence (nullable) is None
+        # and model_fields_set contains the field
+        if self.audit_action_evidence is None and "audit_action_evidence" in self.model_fields_set:
+            _dict['audit_action_evidence'] = None
+
         return _dict
 
     @classmethod

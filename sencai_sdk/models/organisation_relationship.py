@@ -33,7 +33,7 @@ class OrganisationRelationship(BaseModel):
     parent_org: Optional[CreateAccessReviewRequestDataReviewer] = None
     child_org: Optional[CreateAccessReviewRequestDataReviewer] = None
     type: StrictStr
-    scope: Optional[Dict[str, Any]] = Field(default=None, description="List of capability names parent org has over child org")
+    scope: Optional[Any] = Field(default=None, description="List of capability names parent org has over child org")
     status: StrictStr
     granted_by: Optional[CreateAccessReviewRequestDataReviewer] = None
     accepted_by_managed: Optional[StrictBool] = Field(default=None, description="Child org owner must explicitly accept the relationship")
@@ -123,6 +123,11 @@ class OrganisationRelationship(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of granted_by
         if self.granted_by:
             _dict['granted_by'] = self.granted_by.to_dict()
+        # set to None if scope (nullable) is None
+        # and model_fields_set contains the field
+        if self.scope is None and "scope" in self.model_fields_set:
+            _dict['scope'] = None
+
         return _dict
 
     @classmethod

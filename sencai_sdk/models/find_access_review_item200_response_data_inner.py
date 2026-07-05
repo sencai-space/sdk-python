@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.access_review_item import AccessReviewItem
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,31 @@ class FindAccessReviewItem200ResponseDataInner(BaseModel):
     """
     FindAccessReviewItem200ResponseDataInner
     """ # noqa: E501
+    access_review: CreateAccessReviewRequestDataReviewer
+    member: Optional[CreateAccessReviewRequestDataReviewer] = None
+    user_email: Optional[StrictStr] = None
+    user_name: Optional[StrictStr] = None
+    current_role: Optional[StrictStr] = Field(default=None, description="Snapshot of member role at review creation time")
+    recommendation: Optional[StrictStr] = None
+    reviewed_by: Optional[CreateAccessReviewRequestDataReviewer] = None
+    reviewed_at: Optional[datetime] = None
+    notes: Optional[StrictStr] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[AccessReviewItem] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["access_review", "member", "user_email", "user_name", "current_role", "recommendation", "reviewed_by", "reviewed_at", "notes", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('recommendation')
+    def recommendation_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['keep', 'revoke', 'downgrade']):
+            raise ValueError("must be one of enum values ('keep', 'revoke', 'downgrade')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +95,15 @@ class FindAccessReviewItem200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of access_review
+        if self.access_review:
+            _dict['access_review'] = self.access_review.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of member
+        if self.member:
+            _dict['member'] = self.member.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of reviewed_by
+        if self.reviewed_by:
+            _dict['reviewed_by'] = self.reviewed_by.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +121,17 @@ class FindAccessReviewItem200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "access_review": CreateAccessReviewRequestDataReviewer.from_dict(obj["access_review"]) if obj.get("access_review") is not None else None,
+            "member": CreateAccessReviewRequestDataReviewer.from_dict(obj["member"]) if obj.get("member") is not None else None,
+            "user_email": obj.get("user_email"),
+            "user_name": obj.get("user_name"),
+            "current_role": obj.get("current_role"),
+            "recommendation": obj.get("recommendation"),
+            "reviewed_by": CreateAccessReviewRequestDataReviewer.from_dict(obj["reviewed_by"]) if obj.get("reviewed_by") is not None else None,
+            "reviewed_at": obj.get("reviewed_at"),
+            "notes": obj.get("notes"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": AccessReviewItem.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

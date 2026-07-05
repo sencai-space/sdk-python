@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.remediation_rule import RemediationRule
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,36 @@ class FindRemediationRule200ResponseDataInner(BaseModel):
     """
     FindRemediationRule200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(min_length=1, strict=True, max_length=120)]
+    incident_pattern: StrictStr = Field(description="Regex or keyword to match against incident.title or incident.dedup_key. Regex must be a valid JS regex string (no surrounding slashes).")
+    alert_pattern: Optional[StrictStr] = Field(default=None, description="Alias for incident_pattern used by the SRE auto-trigger system (F2.OPS.09). Regex matched against incident title + description.")
+    severity_threshold: Optional[StrictStr] = Field(default=None, description="Only fire this trigger for incidents at or above this severity level (info < warning < error < critical).")
+    runbook: Optional[CreateAccessReviewRequestDataReviewer] = None
+    runbook_id: Optional[StrictStr] = Field(default=None, description="Legacy: documentId of the runbook to execute. Use the runbook relation instead when possible.")
+    auto_approve: Optional[StrictBool] = Field(default=None, description="When true, matching incidents trigger the runbook immediately without human approval.")
+    confidence_threshold: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Minimum confidence score (0.0–1.0) required to trigger this rule.")
+    enabled: Optional[StrictBool] = Field(default=None, description="Rule is disabled by default — must be explicitly enabled after testing.")
+    cooldown_minutes: Optional[StrictInt] = Field(default=None, description="Minimum minutes between executions for the same incident pattern.")
+    last_triggered_at: Optional[datetime] = None
+    last_fired_at: Optional[datetime] = Field(default=None, description="Alias for last_triggered_at used by the SRE auto-trigger system (F2.OPS.09).")
+    fire_count: Optional[StrictInt] = Field(default=None, description="Cumulative count of successful trigger firings.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[RemediationRule] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "incident_pattern", "alert_pattern", "severity_threshold", "runbook", "runbook_id", "auto_approve", "confidence_threshold", "enabled", "cooldown_minutes", "last_triggered_at", "last_fired_at", "fire_count", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('severity_threshold')
+    def severity_threshold_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['info', 'warning', 'error', 'critical']):
+            raise ValueError("must be one of enum values ('info', 'warning', 'error', 'critical')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +101,12 @@ class FindRemediationRule200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of runbook
+        if self.runbook:
+            _dict['runbook'] = self.runbook.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +124,22 @@ class FindRemediationRule200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "incident_pattern": obj.get("incident_pattern"),
+            "alert_pattern": obj.get("alert_pattern"),
+            "severity_threshold": obj.get("severity_threshold"),
+            "runbook": CreateAccessReviewRequestDataReviewer.from_dict(obj["runbook"]) if obj.get("runbook") is not None else None,
+            "runbook_id": obj.get("runbook_id"),
+            "auto_approve": obj.get("auto_approve"),
+            "confidence_threshold": obj.get("confidence_threshold"),
+            "enabled": obj.get("enabled"),
+            "cooldown_minutes": obj.get("cooldown_minutes"),
+            "last_triggered_at": obj.get("last_triggered_at"),
+            "last_fired_at": obj.get("last_fired_at"),
+            "fire_count": obj.get("fire_count"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": RemediationRule.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

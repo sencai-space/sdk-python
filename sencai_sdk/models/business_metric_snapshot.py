@@ -40,14 +40,14 @@ class BusinessMetricSnapshot(BaseModel):
     dau: Optional[StrictInt] = Field(default=None, description="Distinct active users (platform-event actor_user_id) in the trailing 24h window.")
     mau: Optional[StrictInt] = Field(default=None, description="Distinct active users (platform-event actor_user_id) in the trailing 30d window.")
     stickiness_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="DAU / MAU * 100 — engagement stickiness ratio.")
-    funnel: Optional[Dict[str, Any]] = Field(default=None, description="Activation funnel snapshot — reuses computeActivationFunnel() (F3.ONBOARDING.03), stored verbatim ({ steps, ttv, ... }).")
+    funnel: Optional[Any] = Field(default=None, description="Activation funnel snapshot — reuses computeActivationFunnel() (F3.ONBOARDING.03), stored verbatim ({ steps, ttv, ... }).")
     mttp_hours: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Mean time to paid — average hours between signup (onboarding.signup platform-event) and first billing-event for the same organisation.")
     ttv_median_hours: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Median time-to-value hours, taken from the activation-funnel ttv computation (signup -> first value event).")
     arpa_usd: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Average Revenue Per Account — mrr_usd / active_paid_accounts.")
     trial_conversion_rate_pct: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="% of trials started (trailing 90d) that converted to a paid subscription-enrollment.")
     active_paid_accounts: Optional[StrictInt] = None
     total_accounts: Optional[StrictInt] = None
-    raw: Optional[Dict[str, Any]] = Field(default=None, description="Full computation result object (BusinessMetricsResult) — superset of the flattened columns above, kept for forward-compatible dashboard consumption without a migration.")
+    raw: Optional[Any] = Field(default=None, description="Full computation result object (BusinessMetricsResult) — superset of the flattened columns above, kept for forward-compatible dashboard consumption without a migration.")
     __properties: ClassVar[List[str]] = ["snapshot_date", "computed_at", "mrr_usd", "mrr_growth_pct", "arr_usd", "logo_churn_rate_monthly", "revenue_churn_rate_monthly", "net_revenue_retention_pct", "dau", "mau", "stickiness_pct", "funnel", "mttp_hours", "ttv_median_hours", "arpa_usd", "trial_conversion_rate_pct", "active_paid_accounts", "total_accounts", "raw"]
 
     model_config = ConfigDict(
@@ -89,6 +89,16 @@ class BusinessMetricSnapshot(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if funnel (nullable) is None
+        # and model_fields_set contains the field
+        if self.funnel is None and "funnel" in self.model_fields_set:
+            _dict['funnel'] = None
+
+        # set to None if raw (nullable) is None
+        # and model_fields_set contains the field
+        if self.raw is None and "raw" in self.model_fields_set:
+            _dict['raw'] = None
+
         return _dict
 
     @classmethod

@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -35,11 +35,11 @@ class CreatePurchasedServiceRequestData(BaseModel):
     state: Optional[StrictStr] = None
     purchase_date: Optional[datetime] = None
     account_type: Optional[CreateAccessReviewRequestDataReviewer] = None
-    cost_stats: Optional[Dict[str, Any]] = None
+    cost_stats: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     activation_date: Optional[datetime] = None
     termination_date: Optional[datetime] = None
     service_url: Optional[StrictStr] = None
-    configuration: Optional[Dict[str, Any]] = None
+    configuration: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     monthly_cost: Optional[Union[StrictFloat, StrictInt]] = None
     __properties: ClassVar[List[str]] = ["users_permissions_user", "gitea_toolbox_repository", "state", "purchase_date", "account_type", "cost_stats", "activation_date", "termination_date", "service_url", "configuration", "monthly_cost"]
 
@@ -101,6 +101,16 @@ class CreatePurchasedServiceRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of account_type
         if self.account_type:
             _dict['account_type'] = self.account_type.to_dict()
+        # set to None if cost_stats (nullable) is None
+        # and model_fields_set contains the field
+        if self.cost_stats is None and "cost_stats" in self.model_fields_set:
+            _dict['cost_stats'] = None
+
+        # set to None if configuration (nullable) is None
+        # and model_fields_set contains the field
+        if self.configuration is None and "configuration" in self.model_fields_set:
+            _dict['configuration'] = None
+
         return _dict
 
     @classmethod

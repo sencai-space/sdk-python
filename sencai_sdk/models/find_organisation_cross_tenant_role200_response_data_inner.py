@@ -19,9 +19,10 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.organisation_cross_tenant_role import OrganisationCrossTenantRole
+from typing_extensions import Annotated
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +31,19 @@ class FindOrganisationCrossTenantRole200ResponseDataInner(BaseModel):
     """
     FindOrganisationCrossTenantRole200ResponseDataInner
     """ # noqa: E501
+    name: Annotated[str, Field(strict=True, max_length=100)]
+    description: Optional[StrictStr] = None
+    capabilities: Optional[Any] = Field(default=None, description="Array of capability strings like ['compute:read', 'network:*', '*:*']")
+    scope_all_tenants: Optional[StrictBool] = Field(default=None, description="If true, applies to all managed tenants. If false, only tenant_subset.")
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
+    tenant_subset: Optional[CreateAccessReviewRequestDataReviewer] = None
+    is_system_role: Optional[StrictBool] = Field(default=None, description="System roles are seeded and cannot be deleted via API")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[OrganisationCrossTenantRole] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "description", "capabilities", "scope_all_tenants", "organisation", "tenant_subset", "is_system_role", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +84,17 @@ class FindOrganisationCrossTenantRole200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of tenant_subset
+        if self.tenant_subset:
+            _dict['tenant_subset'] = self.tenant_subset.to_dict()
+        # set to None if capabilities (nullable) is None
+        # and model_fields_set contains the field
+        if self.capabilities is None and "capabilities" in self.model_fields_set:
+            _dict['capabilities'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +112,15 @@ class FindOrganisationCrossTenantRole200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "name": obj.get("name"),
+            "description": obj.get("description"),
+            "capabilities": obj.get("capabilities"),
+            "scope_all_tenants": obj.get("scope_all_tenants"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
+            "tenant_subset": CreateAccessReviewRequestDataReviewer.from_dict(obj["tenant_subset"]) if obj.get("tenant_subset") is not None else None,
+            "is_system_role": obj.get("is_system_role"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": OrganisationCrossTenantRole.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

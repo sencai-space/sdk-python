@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.knowledge_article import KnowledgeArticle
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,42 @@ class FindKnowledgeArticle200ResponseDataInner(BaseModel):
     """
     FindKnowledgeArticle200ResponseDataInner
     """ # noqa: E501
+    title: StrictStr
+    slug: Optional[StrictStr] = None
+    content: Optional[StrictStr] = None
+    summary: Optional[StrictStr] = None
+    category: Optional[StrictStr] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    scope: Optional[StrictStr] = None
+    view_count: Optional[StrictInt] = None
+    helpful_count: Optional[StrictInt] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[KnowledgeArticle] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["title", "slug", "content", "summary", "category", "tags", "scope", "view_count", "helpful_count", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('category')
+    def category_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['getting_started', 'billing', 'cloud', 'fleet', 'security', 'compliance', 'api', 'troubleshooting', 'other']):
+            raise ValueError("must be one of enum values ('getting_started', 'billing', 'cloud', 'fleet', 'security', 'compliance', 'api', 'troubleshooting', 'other')")
+        return value
+
+    @field_validator('scope')
+    def scope_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['global', 'org_specific']):
+            raise ValueError("must be one of enum values ('global', 'org_specific')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +106,14 @@ class FindKnowledgeArticle200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +131,18 @@ class FindKnowledgeArticle200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "title": obj.get("title"),
+            "slug": obj.get("slug"),
+            "content": obj.get("content"),
+            "summary": obj.get("summary"),
+            "category": obj.get("category"),
+            "tags": obj.get("tags"),
+            "scope": obj.get("scope"),
+            "view_count": obj.get("view_count"),
+            "helpful_count": obj.get("helpful_count"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": KnowledgeArticle.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

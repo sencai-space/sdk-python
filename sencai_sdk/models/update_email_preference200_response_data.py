@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.email_preference import EmailPreference
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,27 @@ class UpdateEmailPreference200ResponseData(BaseModel):
     """
     UpdateEmailPreference200ResponseData
     """ # noqa: E501
+    user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    product_updates: Optional[StrictBool] = Field(default=None, description="Feature announcements, changelog digests. Opt-out allowed.")
+    marketing: Optional[StrictBool] = Field(default=None, description="Promotional content, upsell nudges, trial/usage-limit nudge emails. Opt-out allowed.")
+    digest: Optional[StrictBool] = Field(default=None, description="Periodic summary emails (weekly/monthly usage digest). Opt-out allowed.")
+    updated_via: Optional[StrictStr] = Field(default=None, description="Last channel that changed this record — settings UI, one-click unsubscribe link, or auto-created default.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[EmailPreference] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["user", "product_updates", "marketing", "digest", "updated_via", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('updated_via')
+    def updated_via_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['settings', 'unsubscribe_link', 'system_default']):
+            raise ValueError("must be one of enum values ('settings', 'unsubscribe_link', 'system_default')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +91,9 @@ class UpdateEmailPreference200ResponseData(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of user
+        if self.user:
+            _dict['user'] = self.user.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +111,13 @@ class UpdateEmailPreference200ResponseData(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "product_updates": obj.get("product_updates"),
+            "marketing": obj.get("marketing"),
+            "digest": obj.get("digest"),
+            "updated_via": obj.get("updated_via"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": EmailPreference.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

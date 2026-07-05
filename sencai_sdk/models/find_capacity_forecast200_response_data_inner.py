@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.capacity_forecast import CapacityForecast
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,49 @@ class FindCapacityForecast200ResponseDataInner(BaseModel):
     """
     FindCapacityForecast200ResponseDataInner
     """ # noqa: E501
+    service: StrictStr
+    metric_type: StrictStr
+    current_usage: Optional[Union[StrictFloat, StrictInt]] = None
+    predicted_peak: Optional[Union[StrictFloat, StrictInt]] = None
+    recommended_size: Optional[StrictStr] = None
+    confidence: Optional[Union[StrictFloat, StrictInt]] = None
+    forecast_horizon_days: Optional[StrictInt] = None
+    model_type: Optional[StrictStr] = None
+    trend_direction: Optional[StrictStr] = None
+    organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[CapacityForecast] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["service", "metric_type", "current_usage", "predicted_peak", "recommended_size", "confidence", "forecast_horizon_days", "model_type", "trend_direction", "organisation", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('metric_type')
+    def metric_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['cpu', 'memory', 'disk', 'network', 'instances']):
+            raise ValueError("must be one of enum values ('cpu', 'memory', 'disk', 'network', 'instances')")
+        return value
+
+    @field_validator('model_type')
+    def model_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['linear_regression', 'moving_average', 'rule_based']):
+            raise ValueError("must be one of enum values ('linear_regression', 'moving_average', 'rule_based')")
+        return value
+
+    @field_validator('trend_direction')
+    def trend_direction_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in set(['increasing', 'stable', 'decreasing']):
+            raise ValueError("must be one of enum values ('increasing', 'stable', 'decreasing')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +113,9 @@ class FindCapacityForecast200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of organisation
+        if self.organisation:
+            _dict['organisation'] = self.organisation.to_dict()
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +133,18 @@ class FindCapacityForecast200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "service": obj.get("service"),
+            "metric_type": obj.get("metric_type"),
+            "current_usage": obj.get("current_usage"),
+            "predicted_peak": obj.get("predicted_peak"),
+            "recommended_size": obj.get("recommended_size"),
+            "confidence": obj.get("confidence"),
+            "forecast_horizon_days": obj.get("forecast_horizon_days"),
+            "model_type": obj.get("model_type"),
+            "trend_direction": obj.get("trend_direction"),
+            "organisation": CreateAccessReviewRequestDataReviewer.from_dict(obj["organisation"]) if obj.get("organisation") is not None else None,
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": CapacityForecast.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

@@ -39,8 +39,8 @@ class CreateAuditArtifactRequestData(BaseModel):
     effective_to: Optional[date] = None
     file_url: Optional[StrictStr] = None
     file_size_bytes: Optional[StrictInt] = None
-    tags: Optional[Dict[str, Any]] = None
-    linked_controls: Optional[Dict[str, Any]] = None
+    tags: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    linked_controls: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     is_public: Optional[StrictBool] = None
     organisation: Optional[CreateAccessReviewRequestDataReviewer] = None
     uploaded_by: Optional[StrictStr] = None
@@ -95,6 +95,16 @@ class CreateAuditArtifactRequestData(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of organisation
         if self.organisation:
             _dict['organisation'] = self.organisation.to_dict()
+        # set to None if tags (nullable) is None
+        # and model_fields_set contains the field
+        if self.tags is None and "tags" in self.model_fields_set:
+            _dict['tags'] = None
+
+        # set to None if linked_controls (nullable) is None
+        # and model_fields_set contains the field
+        if self.linked_controls is None and "linked_controls" in self.model_fields_set:
+            _dict['linked_controls'] = None
+
         return _dict
 
     @classmethod

@@ -19,9 +19,9 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
-from sencai_sdk.models.payment_gateway import PaymentGateway
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
@@ -30,13 +30,46 @@ class FindPaymentGateway200ResponseDataInner(BaseModel):
     """
     FindPaymentGateway200ResponseDataInner
     """ # noqa: E501
+    users_permissions_user: Optional[CreateAccessReviewRequestDataReviewer] = None
+    amount: Union[StrictFloat, StrictInt]
+    currency: StrictStr
+    state: StrictStr
+    payment_method: StrictStr
+    stripe_session_id: Optional[StrictStr] = None
+    stripe_payment_intent_id: Optional[StrictStr] = None
+    transaction_id: Optional[StrictStr] = None
+    gateway_response: Optional[Any] = Field(default=None, description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
+    error_message: Optional[StrictStr] = None
+    processed_at: Optional[datetime] = None
+    refunded_at: Optional[datetime] = None
+    refund_amount: Optional[Union[StrictFloat, StrictInt]] = None
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
-    attributes: Optional[PaymentGateway] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["documentId", "id", "attributes", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["users_permissions_user", "amount", "currency", "state", "payment_method", "stripe_session_id", "stripe_payment_intent_id", "transaction_id", "gateway_response", "error_message", "processed_at", "refunded_at", "refund_amount", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+
+    @field_validator('currency')
+    def currency_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['EUR', 'USD', 'CZK', 'PLN', 'HUF', 'RON', 'BGN', 'SEK', 'DKK', 'NOK']):
+            raise ValueError("must be one of enum values ('EUR', 'USD', 'CZK', 'PLN', 'HUF', 'RON', 'BGN', 'SEK', 'DKK', 'NOK')")
+        return value
+
+    @field_validator('state')
+    def state_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded']):
+            raise ValueError("must be one of enum values ('pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded')")
+        return value
+
+    @field_validator('payment_method')
+    def payment_method_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['stripe', 'free', 'bank_transfer']):
+            raise ValueError("must be one of enum values ('stripe', 'free', 'bank_transfer')")
+        return value
 
     model_config = ConfigDict(
         validate_by_name=True,
@@ -77,9 +110,14 @@ class FindPaymentGateway200ResponseDataInner(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of attributes
-        if self.attributes:
-            _dict['attributes'] = self.attributes.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of users_permissions_user
+        if self.users_permissions_user:
+            _dict['users_permissions_user'] = self.users_permissions_user.to_dict()
+        # set to None if gateway_response (nullable) is None
+        # and model_fields_set contains the field
+        if self.gateway_response is None and "gateway_response" in self.model_fields_set:
+            _dict['gateway_response'] = None
+
         # set to None if published_at (nullable) is None
         # and model_fields_set contains the field
         if self.published_at is None and "published_at" in self.model_fields_set:
@@ -97,9 +135,21 @@ class FindPaymentGateway200ResponseDataInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "users_permissions_user": CreateAccessReviewRequestDataReviewer.from_dict(obj["users_permissions_user"]) if obj.get("users_permissions_user") is not None else None,
+            "amount": obj.get("amount"),
+            "currency": obj.get("currency"),
+            "state": obj.get("state"),
+            "payment_method": obj.get("payment_method"),
+            "stripe_session_id": obj.get("stripe_session_id"),
+            "stripe_payment_intent_id": obj.get("stripe_payment_intent_id"),
+            "transaction_id": obj.get("transaction_id"),
+            "gateway_response": obj.get("gateway_response"),
+            "error_message": obj.get("error_message"),
+            "processed_at": obj.get("processed_at"),
+            "refunded_at": obj.get("refunded_at"),
+            "refund_amount": obj.get("refund_amount"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
-            "attributes": PaymentGateway.from_dict(obj["attributes"]) if obj.get("attributes") is not None else None,
             "createdAt": obj.get("createdAt"),
             "updatedAt": obj.get("updatedAt"),
             "publishedAt": obj.get("publishedAt")

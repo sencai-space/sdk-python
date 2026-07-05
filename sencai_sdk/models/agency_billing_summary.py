@@ -32,7 +32,7 @@ class AgencyBillingSummary(BaseModel):
     """ # noqa: E501
     period: StrictStr = Field(description="Billing period in YYYY-MM format (e.g. '2026-06')")
     operator_org: CreateAccessReviewRequestDataReviewer
-    line_items: Dict[str, Any] = Field(description="Array of {managed_org_id, org_name, billing_model, resource_count, mrr_usd, tier_name}")
+    line_items: Optional[Any] = Field(description="Array of {managed_org_id, org_name, billing_model, resource_count, mrr_usd, tier_name}")
     total_mrr_usd: Optional[Union[StrictFloat, StrictInt]] = None
     managed_tenant_count: Optional[StrictInt] = None
     agency_billed_count: Optional[StrictInt] = None
@@ -93,6 +93,11 @@ class AgencyBillingSummary(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of operator_org
         if self.operator_org:
             _dict['operator_org'] = self.operator_org.to_dict()
+        # set to None if line_items (nullable) is None
+        # and model_fields_set contains the field
+        if self.line_items is None and "line_items" in self.model_fields_set:
+            _dict['line_items'] = None
+
         return _dict
 
     @classmethod

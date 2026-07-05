@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -32,7 +32,7 @@ class ShoppingCart(BaseModel):
     """ # noqa: E501
     users_permissions_user: Optional[CreateAccessReviewRequestDataReviewer] = None
     session_id: Optional[StrictStr] = None
-    shopping_items: Dict[str, Any]
+    shopping_items: Optional[Any] = Field(description="Arbitrary JSON value (object, array, string, number, boolean, or null)")
     total_amount: Optional[Union[StrictFloat, StrictInt]] = None
     currency: Optional[StrictStr] = None
     expires_at: Optional[datetime] = None
@@ -94,6 +94,11 @@ class ShoppingCart(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of cart_items
         if self.cart_items:
             _dict['cart_items'] = self.cart_items.to_dict()
+        # set to None if shopping_items (nullable) is None
+        # and model_fields_set contains the field
+        if self.shopping_items is None and "shopping_items" in self.model_fields_set:
+            _dict['shopping_items'] = None
+
         return _dict
 
     @classmethod
