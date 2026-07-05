@@ -105,6 +105,7 @@ from sencai_sdk.api.lumen_recommendation_api import LumenRecommendationApi
 from sencai_sdk.api.lumen_suggestion_api import LumenSuggestionApi
 from sencai_sdk.api.ms365_integration_api import MS365IntegrationApi
 from sencai_sdk.api.ms365_licence_snapshot_api import MS365LicenceSnapshotApi
+from sencai_sdk.api.marketplace_app_api import MarketplaceAppApi
 from sencai_sdk.api.metering_event_api import MeteringEventApi
 from sencai_sdk.api.nis2_gap_api import NIS2GapApi
 from sencai_sdk.api.network_policy_api import NetworkPolicyApi

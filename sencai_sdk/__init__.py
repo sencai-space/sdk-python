@@ -123,6 +123,7 @@ __all__ = [
     "LumenSuggestionApi",
     "MS365IntegrationApi",
     "MS365LicenceSnapshotApi",
+    "MarketplaceAppApi",
     "MeteringEventApi",
     "NIS2GapApi",
     "NetworkPolicyApi",
@@ -537,6 +538,9 @@ __all__ = [
     "CreateLumenSuggestion200Response",
     "CreateLumenSuggestionRequest",
     "CreateLumenSuggestionRequestData",
+    "CreateMarketplaceApp200Response",
+    "CreateMarketplaceAppRequest",
+    "CreateMarketplaceAppRequestData",
     "CreateMeteringEvent200Response",
     "CreateMeteringEventRequest",
     "CreateMeteringEventRequestData",
@@ -943,6 +947,8 @@ __all__ = [
     "FindLumenRecommendation200ResponseDataInner",
     "FindLumenSuggestion200Response",
     "FindLumenSuggestion200ResponseDataInner",
+    "FindMarketplaceApp200Response",
+    "FindMarketplaceApp200ResponseDataInner",
     "FindMeteringEvent200Response",
     "FindMeteringEvent200ResponseDataInner",
     "FindMs365Integration200Response",
@@ -1161,6 +1167,7 @@ __all__ = [
     "LumenHistory",
     "LumenRecommendation",
     "LumenSuggestion",
+    "MarketplaceApp",
     "MeteringEvent",
     "Ms365Integration",
     "Ms365LicenceSnapshot",
@@ -1373,6 +1380,7 @@ from sencai_sdk.api.lumen_recommendation_api import LumenRecommendationApi as Lu
 from sencai_sdk.api.lumen_suggestion_api import LumenSuggestionApi as LumenSuggestionApi
 from sencai_sdk.api.ms365_integration_api import MS365IntegrationApi as MS365IntegrationApi
 from sencai_sdk.api.ms365_licence_snapshot_api import MS365LicenceSnapshotApi as MS365LicenceSnapshotApi
+from sencai_sdk.api.marketplace_app_api import MarketplaceAppApi as MarketplaceAppApi
 from sencai_sdk.api.metering_event_api import MeteringEventApi as MeteringEventApi
 from sencai_sdk.api.nis2_gap_api import NIS2GapApi as NIS2GapApi
 from sencai_sdk.api.network_policy_api import NetworkPolicyApi as NetworkPolicyApi
@@ -1791,6 +1799,9 @@ from sencai_sdk.models.create_llm_usage_request_data import CreateLlmUsageReques
 from sencai_sdk.models.create_lumen_suggestion200_response import CreateLumenSuggestion200Response as CreateLumenSuggestion200Response
 from sencai_sdk.models.create_lumen_suggestion_request import CreateLumenSuggestionRequest as CreateLumenSuggestionRequest
 from sencai_sdk.models.create_lumen_suggestion_request_data import CreateLumenSuggestionRequestData as CreateLumenSuggestionRequestData
+from sencai_sdk.models.create_marketplace_app200_response import CreateMarketplaceApp200Response as CreateMarketplaceApp200Response
+from sencai_sdk.models.create_marketplace_app_request import CreateMarketplaceAppRequest as CreateMarketplaceAppRequest
+from sencai_sdk.models.create_marketplace_app_request_data import CreateMarketplaceAppRequestData as CreateMarketplaceAppRequestData
 from sencai_sdk.models.create_metering_event200_response import CreateMeteringEvent200Response as CreateMeteringEvent200Response
 from sencai_sdk.models.create_metering_event_request import CreateMeteringEventRequest as CreateMeteringEventRequest
 from sencai_sdk.models.create_metering_event_request_data import CreateMeteringEventRequestData as CreateMeteringEventRequestData
@@ -2197,6 +2208,8 @@ from sencai_sdk.models.find_lumen_recommendation200_response import FindLumenRec
 from sencai_sdk.models.find_lumen_recommendation200_response_data_inner import FindLumenRecommendation200ResponseDataInner as FindLumenRecommendation200ResponseDataInner
 from sencai_sdk.models.find_lumen_suggestion200_response import FindLumenSuggestion200Response as FindLumenSuggestion200Response
 from sencai_sdk.models.find_lumen_suggestion200_response_data_inner import FindLumenSuggestion200ResponseDataInner as FindLumenSuggestion200ResponseDataInner
+from sencai_sdk.models.find_marketplace_app200_response import FindMarketplaceApp200Response as FindMarketplaceApp200Response
+from sencai_sdk.models.find_marketplace_app200_response_data_inner import FindMarketplaceApp200ResponseDataInner as FindMarketplaceApp200ResponseDataInner
 from sencai_sdk.models.find_metering_event200_response import FindMeteringEvent200Response as FindMeteringEvent200Response
 from sencai_sdk.models.find_metering_event200_response_data_inner import FindMeteringEvent200ResponseDataInner as FindMeteringEvent200ResponseDataInner
 from sencai_sdk.models.find_ms365_integration200_response import FindMs365Integration200Response as FindMs365Integration200Response
@@ -2415,6 +2428,7 @@ from sencai_sdk.models.llm_usage import LlmUsage as LlmUsage
 from sencai_sdk.models.lumen_history import LumenHistory as LumenHistory
 from sencai_sdk.models.lumen_recommendation import LumenRecommendation as LumenRecommendation
 from sencai_sdk.models.lumen_suggestion import LumenSuggestion as LumenSuggestion
+from sencai_sdk.models.marketplace_app import MarketplaceApp as MarketplaceApp
 from sencai_sdk.models.metering_event import MeteringEvent as MeteringEvent
 from sencai_sdk.models.ms365_integration import Ms365Integration as Ms365Integration
 from sencai_sdk.models.ms365_licence_snapshot import Ms365LicenceSnapshot as Ms365LicenceSnapshot

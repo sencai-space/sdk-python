@@ -116,6 +116,7 @@ sencai_sdk/api/llm_usage_api.py
 sencai_sdk/api/lumen_history_api.py
 sencai_sdk/api/lumen_recommendation_api.py
 sencai_sdk/api/lumen_suggestion_api.py
+sencai_sdk/api/marketplace_app_api.py
 sencai_sdk/api/metering_event_api.py
 sencai_sdk/api/ms365_integration_api.py
 sencai_sdk/api/ms365_licence_snapshot_api.py
@@ -521,6 +522,9 @@ sencai_sdk/models/create_llm_usage_request_data.py
 sencai_sdk/models/create_lumen_suggestion200_response.py
 sencai_sdk/models/create_lumen_suggestion_request.py
 sencai_sdk/models/create_lumen_suggestion_request_data.py
+sencai_sdk/models/create_marketplace_app200_response.py
+sencai_sdk/models/create_marketplace_app_request.py
+sencai_sdk/models/create_marketplace_app_request_data.py
 sencai_sdk/models/create_metering_event200_response.py
 sencai_sdk/models/create_metering_event_request.py
 sencai_sdk/models/create_metering_event_request_data.py
@@ -927,6 +931,8 @@ sencai_sdk/models/find_lumen_recommendation200_response.py
 sencai_sdk/models/find_lumen_recommendation200_response_data_inner.py
 sencai_sdk/models/find_lumen_suggestion200_response.py
 sencai_sdk/models/find_lumen_suggestion200_response_data_inner.py
+sencai_sdk/models/find_marketplace_app200_response.py
+sencai_sdk/models/find_marketplace_app200_response_data_inner.py
 sencai_sdk/models/find_metering_event200_response.py
 sencai_sdk/models/find_metering_event200_response_data_inner.py
 sencai_sdk/models/find_ms365_integration200_response.py
@@ -1145,6 +1151,7 @@ sencai_sdk/models/llm_usage.py
 sencai_sdk/models/lumen_history.py
 sencai_sdk/models/lumen_recommendation.py
 sencai_sdk/models/lumen_suggestion.py
+sencai_sdk/models/marketplace_app.py
 sencai_sdk/models/metering_event.py
 sencai_sdk/models/ms365_integration.py
 sencai_sdk/models/ms365_licence_snapshot.py
