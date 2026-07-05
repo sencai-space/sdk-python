@@ -19,7 +19,7 @@ import re  # noqa: F401
 import json
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
 from typing import Optional, Set
@@ -38,12 +38,13 @@ class FindUserRank200ResponseDataInner(BaseModel):
     current_streak_days: StrictInt
     longest_streak_days: StrictInt
     last_activity_at: Optional[datetime] = None
+    leaderboard_opt_out: Optional[StrictBool] = Field(default=None, description="F4.GAM.06 — per-user opt-out of org leaderboard exposure. Even when an organisation's leaderboard_enabled is true, a member with this set is excluded from GET /api/organisations/:id/leaderboard results. Self-service, but NOT writable via the generic service-only user-rank update route — the owning user sets it via the dedicated PUT /api/user-ranks/me/leaderboard-opt-out endpoint (the one exception to user-rank's service-write-only rule, scoped to this single boolean field).")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["user", "xp_total", "rank_level", "badges", "automation_score", "current_streak_days", "longest_streak_days", "last_activity_at", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["user", "xp_total", "rank_level", "badges", "automation_score", "current_streak_days", "longest_streak_days", "last_activity_at", "leaderboard_opt_out", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     @field_validator('rank_level')
     def rank_level_validate_enum(cls, value):
@@ -124,6 +125,7 @@ class FindUserRank200ResponseDataInner(BaseModel):
             "current_streak_days": obj.get("current_streak_days"),
             "longest_streak_days": obj.get("longest_streak_days"),
             "last_activity_at": obj.get("last_activity_at"),
+            "leaderboard_opt_out": obj.get("leaderboard_opt_out"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
             "createdAt": obj.get("createdAt"),

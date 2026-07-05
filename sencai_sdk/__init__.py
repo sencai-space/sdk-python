@@ -238,6 +238,8 @@ __all__ = [
     "AuditLog",
     "AuditLogVerifyChain200Response",
     "AuditLogVerifyChain200ResponseBrokenAt",
+    "AuthCheckSsoEnforcement200Response",
+    "AuthCheckSsoEnforcementRequest",
     "AuthUpdateMyProfileRequest",
     "BackupPolicy",
     "BackupValidation",
@@ -269,6 +271,9 @@ __all__ = [
     "CloudIdentityScan",
     "CloudImportJob",
     "CloudInstance",
+    "CloudInstanceExport202Response",
+    "CloudInstanceExport202ResponseData",
+    "CloudInstanceExportRequest",
     "CloudNatGateway",
     "CloudNetwork",
     "CloudPolicy",
@@ -1167,11 +1172,16 @@ __all__ = [
     "OrgOperation",
     "Organisation",
     "OrganisationAgentCount200Response",
+    "OrganisationAutomationScore200Response",
+    "OrganisationAutomationScore200ResponseData",
     "OrganisationCrossTenantRole",
     "OrganisationInviteMember200Response",
     "OrganisationInviteMember200ResponseData",
     "OrganisationInviteMember200ResponseDataAttributes",
     "OrganisationInviteMemberRequest",
+    "OrganisationLeaderboard200Response",
+    "OrganisationLeaderboard200ResponseDataInner",
+    "OrganisationLeaderboard200ResponseDataInnerUser",
     "OrganisationMember",
     "OrganisationMemberAcceptInviteRequest",
     "OrganisationOnboardManagedRequest",
@@ -1482,6 +1492,8 @@ from sencai_sdk.models.audit_export import AuditExport as AuditExport
 from sencai_sdk.models.audit_log import AuditLog as AuditLog
 from sencai_sdk.models.audit_log_verify_chain200_response import AuditLogVerifyChain200Response as AuditLogVerifyChain200Response
 from sencai_sdk.models.audit_log_verify_chain200_response_broken_at import AuditLogVerifyChain200ResponseBrokenAt as AuditLogVerifyChain200ResponseBrokenAt
+from sencai_sdk.models.auth_check_sso_enforcement200_response import AuthCheckSsoEnforcement200Response as AuthCheckSsoEnforcement200Response
+from sencai_sdk.models.auth_check_sso_enforcement_request import AuthCheckSsoEnforcementRequest as AuthCheckSsoEnforcementRequest
 from sencai_sdk.models.auth_update_my_profile_request import AuthUpdateMyProfileRequest as AuthUpdateMyProfileRequest
 from sencai_sdk.models.backup_policy import BackupPolicy as BackupPolicy
 from sencai_sdk.models.backup_validation import BackupValidation as BackupValidation
@@ -1513,6 +1525,9 @@ from sencai_sdk.models.cloud_iam_user import CloudIamUser as CloudIamUser
 from sencai_sdk.models.cloud_identity_scan import CloudIdentityScan as CloudIdentityScan
 from sencai_sdk.models.cloud_import_job import CloudImportJob as CloudImportJob
 from sencai_sdk.models.cloud_instance import CloudInstance as CloudInstance
+from sencai_sdk.models.cloud_instance_export202_response import CloudInstanceExport202Response as CloudInstanceExport202Response
+from sencai_sdk.models.cloud_instance_export202_response_data import CloudInstanceExport202ResponseData as CloudInstanceExport202ResponseData
+from sencai_sdk.models.cloud_instance_export_request import CloudInstanceExportRequest as CloudInstanceExportRequest
 from sencai_sdk.models.cloud_nat_gateway import CloudNatGateway as CloudNatGateway
 from sencai_sdk.models.cloud_network import CloudNetwork as CloudNetwork
 from sencai_sdk.models.cloud_policy import CloudPolicy as CloudPolicy
@@ -2411,11 +2426,16 @@ from sencai_sdk.models.operator_time_entry import OperatorTimeEntry as OperatorT
 from sencai_sdk.models.org_operation import OrgOperation as OrgOperation
 from sencai_sdk.models.organisation import Organisation as Organisation
 from sencai_sdk.models.organisation_agent_count200_response import OrganisationAgentCount200Response as OrganisationAgentCount200Response
+from sencai_sdk.models.organisation_automation_score200_response import OrganisationAutomationScore200Response as OrganisationAutomationScore200Response
+from sencai_sdk.models.organisation_automation_score200_response_data import OrganisationAutomationScore200ResponseData as OrganisationAutomationScore200ResponseData
 from sencai_sdk.models.organisation_cross_tenant_role import OrganisationCrossTenantRole as OrganisationCrossTenantRole
 from sencai_sdk.models.organisation_invite_member200_response import OrganisationInviteMember200Response as OrganisationInviteMember200Response
 from sencai_sdk.models.organisation_invite_member200_response_data import OrganisationInviteMember200ResponseData as OrganisationInviteMember200ResponseData
 from sencai_sdk.models.organisation_invite_member200_response_data_attributes import OrganisationInviteMember200ResponseDataAttributes as OrganisationInviteMember200ResponseDataAttributes
 from sencai_sdk.models.organisation_invite_member_request import OrganisationInviteMemberRequest as OrganisationInviteMemberRequest
+from sencai_sdk.models.organisation_leaderboard200_response import OrganisationLeaderboard200Response as OrganisationLeaderboard200Response
+from sencai_sdk.models.organisation_leaderboard200_response_data_inner import OrganisationLeaderboard200ResponseDataInner as OrganisationLeaderboard200ResponseDataInner
+from sencai_sdk.models.organisation_leaderboard200_response_data_inner_user import OrganisationLeaderboard200ResponseDataInnerUser as OrganisationLeaderboard200ResponseDataInnerUser
 from sencai_sdk.models.organisation_member import OrganisationMember as OrganisationMember
 from sencai_sdk.models.organisation_member_accept_invite_request import OrganisationMemberAcceptInviteRequest as OrganisationMemberAcceptInviteRequest
 from sencai_sdk.models.organisation_onboard_managed_request import OrganisationOnboardManagedRequest as OrganisationOnboardManagedRequest

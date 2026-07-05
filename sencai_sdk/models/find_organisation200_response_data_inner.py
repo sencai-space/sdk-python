@@ -80,12 +80,13 @@ class FindOrganisation200ResponseDataInner(BaseModel):
     ip_allowlist: Optional[Any] = Field(default=None, description="F4.ENTERPRISE.03 — JSON array of CIDR ranges (IPv4/IPv6, e.g. [\"203.0.113.0/24\", \"2001:db8::/32\"]) restricting platform access for members of this organisation. Nullable/empty = no restriction (backward-compatible default). Enforced server-side by global::ip-allowlist-guard against the resolved client IP (X-Forwarded-For aware, see middleware doc comment).")
     lemmy_community_id: Optional[StrictInt] = Field(default=None, description="F4.FORUM.05 — numeric Lemmy community id auto-provisioned for this organisation by forum-connector. Null until the async organisation.forum-community-requested event has been processed (best-effort, never blocks org creation).")
     lemmy_community_name: Optional[StrictStr] = Field(default=None, description="F4.FORUM.05 — sanitized Lemmy community `name` (URL-safe slug) matching lemmy_community_id, kept alongside it so the frontend can link straight to forum.sencai.space/c/<name> without an extra Lemmy lookup.")
+    leaderboard_enabled: Optional[StrictBool] = Field(default=None, description="F4.GAM.06 — opt-in per-org gamification leaderboard (default OFF: comparing employees' XP is sensitive, never default-on). Self-service field, toggled by an org admin/owner via PUT /api/organisations/:id (is-organisation-role minRole:'admin'). Gates GET /api/organisations/:id/leaderboard — the endpoint returns 403 while this is false, even for an org admin.")
     document_id: Optional[StrictStr] = Field(default=None, alias="documentId")
     id: Optional[StrictInt] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     updated_at: Optional[datetime] = Field(default=None, alias="updatedAt")
     published_at: Optional[datetime] = Field(default=None, alias="publishedAt")
-    __properties: ClassVar[List[str]] = ["name", "slug", "description", "logo", "street_number", "vat_id", "company_id", "zip_code", "state", "num_of_users", "org_disabled", "creator", "users", "members", "cloud_credentials", "sencai_agents", "account_type", "gitea_org_name", "gitea_org_id", "gitea_registry_url", "deleted_at", "budget_monthly", "budget_currency", "budget_notifications", "budget_state", "budget_period_spend", "budget_override", "home_region", "cell_id", "workspace_domain", "sso_enforced", "plan_type", "agent_limit", "account_tier", "max_instances", "max_members", "max_monthly_budget", "plan_valid_until", "cookie_consents", "ropa_entries", "platform_events", "org_status", "org_status_changed_at", "billing_country", "is_business", "vat_validated", "vat_validated_at", "ip_allowlist", "lemmy_community_id", "lemmy_community_name", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
+    __properties: ClassVar[List[str]] = ["name", "slug", "description", "logo", "street_number", "vat_id", "company_id", "zip_code", "state", "num_of_users", "org_disabled", "creator", "users", "members", "cloud_credentials", "sencai_agents", "account_type", "gitea_org_name", "gitea_org_id", "gitea_registry_url", "deleted_at", "budget_monthly", "budget_currency", "budget_notifications", "budget_state", "budget_period_spend", "budget_override", "home_region", "cell_id", "workspace_domain", "sso_enforced", "plan_type", "agent_limit", "account_tier", "max_instances", "max_members", "max_monthly_budget", "plan_valid_until", "cookie_consents", "ropa_entries", "platform_events", "org_status", "org_status_changed_at", "billing_country", "is_business", "vat_validated", "vat_validated_at", "ip_allowlist", "lemmy_community_id", "lemmy_community_name", "leaderboard_enabled", "documentId", "id", "createdAt", "updatedAt", "publishedAt"]
 
     @field_validator('budget_currency')
     def budget_currency_validate_enum(cls, value):
@@ -281,6 +282,7 @@ class FindOrganisation200ResponseDataInner(BaseModel):
             "ip_allowlist": obj.get("ip_allowlist"),
             "lemmy_community_id": obj.get("lemmy_community_id"),
             "lemmy_community_name": obj.get("lemmy_community_name"),
+            "leaderboard_enabled": obj.get("leaderboard_enabled"),
             "documentId": obj.get("documentId"),
             "id": obj.get("id"),
             "createdAt": obj.get("createdAt"),

@@ -222,6 +222,8 @@ sencai_sdk/models/audit_export.py
 sencai_sdk/models/audit_log.py
 sencai_sdk/models/audit_log_verify_chain200_response.py
 sencai_sdk/models/audit_log_verify_chain200_response_broken_at.py
+sencai_sdk/models/auth_check_sso_enforcement200_response.py
+sencai_sdk/models/auth_check_sso_enforcement_request.py
 sencai_sdk/models/auth_update_my_profile_request.py
 sencai_sdk/models/backup_policy.py
 sencai_sdk/models/backup_validation.py
@@ -253,6 +255,9 @@ sencai_sdk/models/cloud_iam_user.py
 sencai_sdk/models/cloud_identity_scan.py
 sencai_sdk/models/cloud_import_job.py
 sencai_sdk/models/cloud_instance.py
+sencai_sdk/models/cloud_instance_export202_response.py
+sencai_sdk/models/cloud_instance_export202_response_data.py
+sencai_sdk/models/cloud_instance_export_request.py
 sencai_sdk/models/cloud_nat_gateway.py
 sencai_sdk/models/cloud_network.py
 sencai_sdk/models/cloud_policy.py
@@ -1151,11 +1156,16 @@ sencai_sdk/models/operator_time_entry.py
 sencai_sdk/models/org_operation.py
 sencai_sdk/models/organisation.py
 sencai_sdk/models/organisation_agent_count200_response.py
+sencai_sdk/models/organisation_automation_score200_response.py
+sencai_sdk/models/organisation_automation_score200_response_data.py
 sencai_sdk/models/organisation_cross_tenant_role.py
 sencai_sdk/models/organisation_invite_member200_response.py
 sencai_sdk/models/organisation_invite_member200_response_data.py
 sencai_sdk/models/organisation_invite_member200_response_data_attributes.py
 sencai_sdk/models/organisation_invite_member_request.py
+sencai_sdk/models/organisation_leaderboard200_response.py
+sencai_sdk/models/organisation_leaderboard200_response_data_inner.py
+sencai_sdk/models/organisation_leaderboard200_response_data_inner_user.py
 sencai_sdk/models/organisation_member.py
 sencai_sdk/models/organisation_member_accept_invite_request.py
 sencai_sdk/models/organisation_onboard_managed_request.py

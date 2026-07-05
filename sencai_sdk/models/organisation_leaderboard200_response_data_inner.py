@@ -18,32 +18,30 @@ import pprint
 import re  # noqa: F401
 import json
 
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictFloat, StrictInt, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
-from sencai_sdk.models.create_access_review_request_data_reviewer import CreateAccessReviewRequestDataReviewer
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
+from sencai_sdk.models.organisation_leaderboard200_response_data_inner_user import OrganisationLeaderboard200ResponseDataInnerUser
 from typing import Optional, Set
 from typing_extensions import Self
 from pydantic_core import to_jsonable_python
 
-class UserRank(BaseModel):
+class OrganisationLeaderboard200ResponseDataInner(BaseModel):
     """
-    UserRank
+    OrganisationLeaderboard200ResponseDataInner
     """ # noqa: E501
-    user: CreateAccessReviewRequestDataReviewer
-    xp_total: StrictInt
-    rank_level: StrictStr
-    badges: Optional[Any] = Field(default=None, description="Array of { badge_code, awarded_at } — badge_code references badge-definition.code")
-    automation_score: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="Latest automation-score snapshot; historical values live in gamification-event, not here")
-    current_streak_days: StrictInt
-    longest_streak_days: StrictInt
-    last_activity_at: Optional[datetime] = None
-    leaderboard_opt_out: Optional[StrictBool] = Field(default=None, description="F4.GAM.06 — per-user opt-out of org leaderboard exposure. Even when an organisation's leaderboard_enabled is true, a member with this set is excluded from GET /api/organisations/:id/leaderboard results. Self-service, but NOT writable via the generic service-only user-rank update route — the owning user sets it via the dedicated PUT /api/user-ranks/me/leaderboard-opt-out endpoint (the one exception to user-rank's service-write-only rule, scoped to this single boolean field).")
-    __properties: ClassVar[List[str]] = ["user", "xp_total", "rank_level", "badges", "automation_score", "current_streak_days", "longest_streak_days", "last_activity_at", "leaderboard_opt_out"]
+    position: Optional[StrictInt] = None
+    user: Optional[OrganisationLeaderboard200ResponseDataInnerUser] = None
+    xp_total: Optional[StrictInt] = None
+    rank_level: Optional[StrictStr] = None
+    badge_count: Optional[StrictInt] = None
+    __properties: ClassVar[List[str]] = ["position", "user", "xp_total", "rank_level", "badge_count"]
 
     @field_validator('rank_level')
     def rank_level_validate_enum(cls, value):
         """Validates the enum"""
+        if value is None:
+            return value
+
         if value not in set(['bronze', 'silver', 'gold', 'platinum', 'diamond', 'sencai_master']):
             raise ValueError("must be one of enum values ('bronze', 'silver', 'gold', 'platinum', 'diamond', 'sencai_master')")
         return value
@@ -66,7 +64,7 @@ class UserRank(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of UserRank from a JSON string"""
+        """Create an instance of OrganisationLeaderboard200ResponseDataInner from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -90,16 +88,16 @@ class UserRank(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of user
         if self.user:
             _dict['user'] = self.user.to_dict()
-        # set to None if badges (nullable) is None
+        # set to None if user (nullable) is None
         # and model_fields_set contains the field
-        if self.badges is None and "badges" in self.model_fields_set:
-            _dict['badges'] = None
+        if self.user is None and "user" in self.model_fields_set:
+            _dict['user'] = None
 
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of UserRank from a dict"""
+        """Create an instance of OrganisationLeaderboard200ResponseDataInner from a dict"""
         if obj is None:
             return None
 
@@ -107,15 +105,11 @@ class UserRank(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "user": CreateAccessReviewRequestDataReviewer.from_dict(obj["user"]) if obj.get("user") is not None else None,
+            "position": obj.get("position"),
+            "user": OrganisationLeaderboard200ResponseDataInnerUser.from_dict(obj["user"]) if obj.get("user") is not None else None,
             "xp_total": obj.get("xp_total"),
             "rank_level": obj.get("rank_level"),
-            "badges": obj.get("badges"),
-            "automation_score": obj.get("automation_score"),
-            "current_streak_days": obj.get("current_streak_days"),
-            "longest_streak_days": obj.get("longest_streak_days"),
-            "last_activity_at": obj.get("last_activity_at"),
-            "leaderboard_opt_out": obj.get("leaderboard_opt_out")
+            "badge_count": obj.get("badge_count")
         })
         return _obj
 
