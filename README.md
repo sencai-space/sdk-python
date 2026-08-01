@@ -17,7 +17,14 @@ Tento adresář je z většiny **generovaný** (`sencai_sdk/`, `setup.py`, `pypr
 `.openapi-generator-ignore` (regenerace je nikdy nepřepíše): tento `README.md`,
 `CHANGELOG.md`, `.env.example`.
 
-Regenerace po změně specu:
+> **⚠️ Regenerace je dnes nefunkční.** `scripts/sdk-generate.sh` čte spec z
+> `sencai.space/openapi/sencai-platform.public.v1.yaml` — `sencai.space` (Strapi) byl ale
+> **smazán 2026-07-30**, adresář v monorepu vůbec neexistuje. Skript proto skončí hned na
+> úvodní kontrole existence souboru. Committed generovaný kód (`sencai_sdk/`) zůstává
+> instalovatelný (viz Smoke test níže) — je jen zamrzlý na posledním stavu specu, dokud
+> nevznikne nový zdroj (typicky vygenerovaný z `sencai-backend`, Go náhrady Strapi).
+
+Regenerace po změně specu (až bude mít skript kde číst):
 
 ```bash
 cd sencai.space && npm run openapi:generate   # F4.DEVPORTAL.01, pokud se spec změnil
