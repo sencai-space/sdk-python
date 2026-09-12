@@ -18,7 +18,12 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/GIT_USER_ID/GIT_REPO_ID"
+# These were the OpenAPI generator's literal placeholders (GIT_USER_ID/GIT_REPO_ID)
+# until 2026-09-12 — which would have shipped a dead link as the package's only
+# stated home. The org is `sencai-space`, not `sencai`.
+Homepage = "https://sencai.space"
+Documentation = "https://docs.sencai.space"
+Repository = "https://github.com/sencai-space/sdk-python"
 
 [tool.poetry]
 requires-poetry = ">=2.0"
